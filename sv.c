@@ -3014,6 +3014,9 @@ Perl_sv_2pv_flags(pTHX_ SV *const sv, STRLEN *const lp, const I32 flags)
 		STRLEN stashnamelen = 0; /* hush, gcc */
 		const char *buffer_end;
 
+		Perl_ck_warner(aTHX_ packWARN(WARN_STRINGIFY),
+			       "Stringifying a reference to %s", typestr);
+
 		if (SvOBJECT(referent)) {
 		    const HEK *const name = HvNAME_HEK(SvSTASH(referent));
 

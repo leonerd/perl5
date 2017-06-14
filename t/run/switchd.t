@@ -131,7 +131,7 @@ like(
 like(
   runperl(
     switches => [ '-Ilib', '-d:nodb' ],
-    prog     => [ '1' ],
+    prog     => '1',
     stderr   => 1,
   ),
   qr/^No DB::DB routine defined/,

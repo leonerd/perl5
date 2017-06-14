@@ -1,6 +1,6 @@
 package overload;
 
-our $VERSION = '1.28';
+our $VERSION = '1.29';
 
 %ops = (
     with_assign         => "+ - * / % ** << >> x .",
@@ -142,6 +142,7 @@ sub mycan {				# Real can would leave stubs.
 use warnings::register;
 sub constant {
   # Arguments: what, sub
+  require Scalar::Util;
   while (@_) {
     if (@_ == 1) {
         warnings::warnif ("Odd number of arguments for overload::constant");
@@ -150,9 +151,7 @@ sub constant {
     elsif (!exists $constants {$_ [0]}) {
         warnings::warnif ("'$_[0]' is not an overloadable type");
     }
-    elsif (!ref $_ [1] || "$_[1]" !~ /(^|=)CODE\(0x[0-9a-f]+\)$/) {
-        # Can't use C<ref $_[1] eq "CODE"> above as code references can be
-        # blessed, and C<ref> would return the package the ref is blessed into.
+    elsif (!ref $_ [1] || Scalar::Util::reftype($_[1]) ne "CODE") {
         if (warnings::enabled) {
             $_ [1] = "undef" unless defined $_ [1];
             warnings::warn ("'$_[1]' is not a code reference");

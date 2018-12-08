@@ -2272,6 +2272,9 @@ S_parse_body(pTHX_ char **env, XSINIT_t xsinit)
 	    }
 	}
     }
+    else if(PerlEnv_getenv("PERL5OPTS"))
+	Perl_warner(aTHX_ packWARN(WARN_MISC),
+	    "The PERL5OPTS environment variable is set - did you mean PERL5OPT instead?\n");
     }
 
 #ifndef NO_PERL_INTERNAL_RAND_SEED

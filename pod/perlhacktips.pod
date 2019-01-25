@@ -1481,6 +1481,8 @@ determine whether to log the event, and if so how:
     $ENV{PERL_MEM_LOG} =~ /s/           Log all SV ops
     $ENV{PERL_MEM_LOG} =~ /t/           include timestamp in Log
     $ENV{PERL_MEM_LOG} =~ /^(\d+)/      write to FD given (default is 2)
+    $ENV{PERL_MEM_LOG} =~ /c/           Additionally log C backtrace
+                                        during newSV
 
 Memory logging is somewhat similar to C<-Dm> but is independent of
 C<-DDEBUGGING>, and at a higher level; all uses of Newx(), Renew(), and

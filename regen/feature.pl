@@ -39,6 +39,7 @@ my %feature = (
     isa             => 'isa',
     indirect        => 'indirect',
     multidimensional => 'multidimensional',
+    trim            => 'trim',
 );
 
 # NOTE: If a feature is ever enabled in a non-contiguous range of Perl

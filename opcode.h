@@ -2182,7 +2182,7 @@ EXTCONST U32 PL_opargs[] = {
 	0x00000204,	/* isa */
 	0x00000300,	/* cmpchain_and */
 	0x00000100,	/* cmpchain_dup */
-	0x00009b8c,	/* trim */
+	0x00009b9c,	/* trim */
 };
 #endif
 
@@ -2850,7 +2850,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
       12, /* isa */
        0, /* cmpchain_and */
        0, /* cmpchain_dup */
-       0, /* trim */
+      75, /* trim */
 
 };
 
@@ -2869,7 +2869,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
  */
 
 EXTCONST U16  PL_op_private_bitdefs[] = {
-    0x0003, /* scalar, prototype, refgen, srefgen, readline, regcmaybe, regcreset, regcomp, substcont, chop, schop, defined, undef, study, preinc, i_preinc, predec, i_predec, postinc, i_postinc, postdec, i_postdec, negate, i_negate, not, complement, ucfirst, lcfirst, uc, lc, quotemeta, aeach, avalues, each, pop, shift, grepstart, mapstart, mapwhile, range, and, or, dor, andassign, orassign, dorassign, argcheck, argdefelem, method, method_named, method_super, method_redir, method_redir_super, entergiven, leavegiven, enterwhen, leavewhen, untie, tied, dbmclose, getsockname, getpeername, lstat, stat, readlink, readdir, telldir, rewinddir, closedir, localtime, alarm, require, dofile, entertry, ghbyname, gnbyname, gpbyname, shostent, snetent, sprotoent, sservent, gpwnam, gpwuid, ggrnam, ggrgid, lock, once, fc, anonconst, cmpchain_and, cmpchain_dup, trim */
+    0x0003, /* scalar, prototype, refgen, srefgen, readline, regcmaybe, regcreset, regcomp, substcont, chop, schop, defined, undef, study, preinc, i_preinc, predec, i_predec, postinc, i_postinc, postdec, i_postdec, negate, i_negate, not, complement, ucfirst, lcfirst, uc, lc, quotemeta, aeach, avalues, each, pop, shift, grepstart, mapstart, mapwhile, range, and, or, dor, andassign, orassign, dorassign, argcheck, argdefelem, method, method_named, method_super, method_redir, method_redir_super, entergiven, leavegiven, enterwhen, leavewhen, untie, tied, dbmclose, getsockname, getpeername, lstat, stat, readlink, readdir, telldir, rewinddir, closedir, localtime, alarm, require, dofile, entertry, ghbyname, gnbyname, gpbyname, shostent, snetent, sprotoent, sservent, gpwnam, gpwuid, ggrnam, ggrgid, lock, once, fc, anonconst, cmpchain_and, cmpchain_dup */
     0x2fdc, 0x41b9, /* pushmark */
     0x00bd, /* wantarray, runcv */
     0x0438, 0x1a50, 0x426c, 0x3d28, 0x3505, /* const */
@@ -2890,7 +2890,7 @@ EXTCONST U16  PL_op_private_bitdefs[] = {
     0x117c, 0x21b8, 0x09b4, 0x3fec, 0x2548, 0x4884, 0x07c1, /* trans, transr */
     0x0fbc, 0x04d8, 0x0067, /* sassign */
     0x0c78, 0x0b74, 0x0a70, 0x30cc, 0x05a8, 0x0067, /* aassign */
-    0x4610, 0x0003, /* chomp, schomp, ncomplement, scomplement, sin, cos, exp, log, sqrt, int, hex, oct, abs, ord, chr, chroot, rmdir */
+    0x4610, 0x0003, /* chomp, schomp, ncomplement, scomplement, sin, cos, exp, log, sqrt, int, hex, oct, abs, ord, chr, chroot, rmdir, trim */
     0x05b4, 0x30cc, 0x0003, /* pos */
     0x4610, 0x0067, /* pow, multiply, i_multiply, divide, i_divide, modulo, i_modulo, add, i_add, subtract, i_subtract, left_shift, right_shift, nbit_and, nbit_xor, nbit_or */
     0x1538, 0x0067, /* repeat */
@@ -3347,7 +3347,7 @@ EXTCONST U8 PL_op_private_valid[] = {
     /* ISA        */ (OPpARG2_MASK),
     /* CMPCHAIN_AND */ (OPpARG1_MASK),
     /* CMPCHAIN_DUP */ (OPpARG1_MASK),
-    /* TRIM       */ (OPpARG1_MASK),
+    /* TRIM       */ (OPpARG1_MASK|OPpTARGET_MY),
 
 };
 

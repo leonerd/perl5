@@ -64,3 +64,5 @@ sub trim_regexp_compare {
 
 	return $s;
 }
+
+# vim: tabstop=4 shiftwidth=4 expandtab autoindent softtabstop=4

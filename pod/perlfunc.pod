@@ -9262,7 +9262,7 @@ L<C<yE<sol>E<sol>E<sol>>|/yE<sol>E<sol>E<sol>>.  See
 L<perlop/"Quote-Like Operators">.
 
 =item trim EXPR
-X<trim> X<remove_whitespace> (Perl 7+)
+X<trim> X<remove_whitespace>
 
 =item trim
 

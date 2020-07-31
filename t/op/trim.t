@@ -43,16 +43,16 @@ no warnings 'experimental::trim';
 # Tests against special variable types and scopes
 {
     my  $str1 = "   Hello world!\t";
-    is(trim($str1), "Hello world!", "trim on a my \$var");
+    is(trim($str1), "Hello world!", "Trim on a my \$var");
     our $str2 = "\t\nHello world!\t  ";
-    is(trim($str2), "Hello world!", "trim on an our \$var");
+    is(trim($str2), "Hello world!", "Trim on an our \$var");
 }
 
 # Test on a magical fetching variable
 {
     my $str3 = "   Hello world!\t";
     $str3 =~ m/(.+Hello)/;
-    is(trim($1), "Hello", "trim on a magical variable");
+    is(trim($1), "Hello", "Trim on a magical variable");
 }
 
 # Inplace edit

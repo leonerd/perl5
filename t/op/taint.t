@@ -18,7 +18,7 @@ use strict;
 use warnings;
 use Config;
 
-plan tests => 1054;
+plan tests => 1056;
 
 $| = 1;
 
@@ -2978,5 +2978,14 @@ END
 
     alarm(0);
 }
+
+# Trim taint tests
+{
+	my $str = "    Hello world    ";
+
+    is_tainted(CORE::trim($str . $TAINT), 'taint trim tainted string');
+	isnt_tainted(CORE::trim($str),        'taint trim non-tainted string');
+}
+
 __END__
 # Keep the previous test last

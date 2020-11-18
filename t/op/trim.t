@@ -28,8 +28,8 @@ plan tests => 18;
     my $warn = '';
     local $SIG{__WARN__} = sub { $warn .= join "", @_; };
 
-    is(trim(undef), ""                                               , 'Trim undef');
-    like($warn    , qr/^Use of uninitialized value in string trim at/, 'Trim undef triggers warning');
+    is(trim(undef), ""                                        , 'Trim undef');
+    like($warn    , qr/^Use of uninitialized value in trim at/, 'Trim undef triggers warning');
 }
 
 # Fancier trim tests against a regexp and unicode

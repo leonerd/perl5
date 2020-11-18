@@ -2981,10 +2981,10 @@ END
 
 # Trim taint tests
 {
-	my $str = "    Hello world    ";
+    my $str = "    Hello world    ";
 
     is_tainted(CORE::trim($str . $TAINT), 'taint trim tainted string');
-	isnt_tainted(CORE::trim($str),        'taint trim non-tainted string');
+    isnt_tainted(CORE::trim($str),        'taint trim non-tainted string');
 }
 
 __END__

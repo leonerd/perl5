@@ -12,6 +12,8 @@ use warnings;
 use feature 'trim';
 no warnings 'experimental::trim';
 
+plan tests => 18;
+
 # Vanilla trim tests
 {
     is(trim("    Hello world!   ")      , "Hello world!"  , 'Trim spaces');

@@ -14,6 +14,8 @@ BEGIN {
 
 use B;
 
+use experimental 'trim';
+
 my %unsupported = map +($_=>1), qw (
  __DATA__ __END__ AUTOLOAD BEGIN UNITCHECK CORE DESTROY END INIT CHECK and
   cmp default do dump else elsif eq eval for foreach

@@ -953,7 +953,7 @@ EXTCONST char* const PL_op_desc[] = {
 	"derived class test",
 	"comparison chaining",
 	"comparand shuffling",
-	"string trim",
+	"trim",
 	"freed op",
 };
 #endif

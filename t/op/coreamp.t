@@ -1039,6 +1039,8 @@ like &mytimes, qr/^[\d.]+\z/, '&times in scalar context';
 like join('-',&mytimes), qr/^[\d.]+-[\d.]+-[\d.]+-[\d.]+\z/,
    '&times in list context';
 
+test_proto 'trim', ' abc ', 'abc';
+
 test_proto 'uc', 'aa', 'AA';
 test_proto 'ucfirst', 'aa', "Aa";
 

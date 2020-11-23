@@ -2981,6 +2981,7 @@ END
 
 # Trim taint tests
 {
+    no warnings 'experimental::trim';
     my $str = "    Hello world    ";
 
     is_tainted(CORE::trim($str . $TAINT), 'taint trim tainted string');

@@ -10100,6 +10100,27 @@ Perl_scan_word(pTHX_ char *s, char *dest, STRLEN destlen, int allow_package, STR
                          : (isGRAPH_L1(*s)                                  \
                             && LIKELY((U8) *(s) != LATIN1_TO_NATIVE(0xAD)))))
 
+#define permit_formatvar(c) S_permit_formatvar(aTHX_ c)
+STATIC bool
+S_permit_formatvar(pTHX_ char c)
+{
+    switch(c) {
+        case '%':
+        case '-':
+        case ':':
+        case '=':
+        case '~':
+            return FEATURE_FORMAT_VARS_IS_ENABLED;
+
+        /* Can't yet include '^' because we'll get hit by e.g. $^V */
+        case '^':
+
+        default:
+            return true;
+    }
+}
+
+
 STATIC char *
 S_scan_ident(pTHX_ char *s, char *dest, STRLEN destlen, I32 ck_uni)
 {
@@ -10166,7 +10187,8 @@ S_scan_ident(pTHX_ char *s, char *dest, STRLEN destlen, I32 ck_uni)
     if ((s <= PL_bufend - ((is_utf8)
                           ? UTF8SKIP(s)
                           : 1))
-        && VALID_LEN_ONE_IDENT(s, PL_bufend, is_utf8))
+        && VALID_LEN_ONE_IDENT(s, PL_bufend, is_utf8)
+        && permit_formatvar(*s))
     {
         if (is_utf8) {
             const STRLEN skip = UTF8SKIP(s);

@@ -20,6 +20,7 @@ our %feature = (
     evalbytes            => 'feature_evalbytes',
     signatures           => 'feature_signatures',
     current_sub          => 'feature___SUB__',
+    format_vars          => 'feature_format_vars',
     refaliasing          => 'feature_refaliasing',
     postderef_qq         => 'feature_postderef_qq',
     unicode_eval         => 'feature_unieval',
@@ -30,14 +31,14 @@ our %feature = (
 );
 
 our %feature_bundle = (
-    "5.10"    => [qw(bareword_filehandles indirect multidimensional say state switch)],
-    "5.11"    => [qw(bareword_filehandles indirect multidimensional say state switch unicode_strings)],
-    "5.15"    => [qw(bareword_filehandles current_sub evalbytes fc indirect multidimensional say state switch unicode_eval unicode_strings)],
-    "5.23"    => [qw(bareword_filehandles current_sub evalbytes fc indirect multidimensional postderef_qq say state switch unicode_eval unicode_strings)],
-    "5.27"    => [qw(bareword_filehandles bitwise current_sub evalbytes fc indirect multidimensional postderef_qq say state switch unicode_eval unicode_strings)],
-    "5.35"    => [qw(bitwise current_sub evalbytes fc postderef_qq say state unicode_eval unicode_strings)],
-    "all"     => [qw(bareword_filehandles bitwise current_sub declared_refs defer evalbytes fc indirect isa multidimensional postderef_qq refaliasing say signatures state switch try unicode_eval unicode_strings)],
-    "default" => [qw(bareword_filehandles indirect multidimensional)],
+    "5.10"    => [qw(bareword_filehandles format_vars indirect multidimensional say state switch)],
+    "5.11"    => [qw(bareword_filehandles format_vars indirect multidimensional say state switch unicode_strings)],
+    "5.15"    => [qw(bareword_filehandles current_sub evalbytes fc format_vars indirect multidimensional say state switch unicode_eval unicode_strings)],
+    "5.23"    => [qw(bareword_filehandles current_sub evalbytes fc format_vars indirect multidimensional postderef_qq say state switch unicode_eval unicode_strings)],
+    "5.27"    => [qw(bareword_filehandles bitwise current_sub evalbytes fc format_vars indirect multidimensional postderef_qq say state switch unicode_eval unicode_strings)],
+    "5.35"    => [qw(bitwise current_sub evalbytes fc format_vars postderef_qq say state unicode_eval unicode_strings)],
+    "all"     => [qw(bareword_filehandles bitwise current_sub declared_refs defer evalbytes fc format_vars indirect isa multidimensional postderef_qq refaliasing say signatures state switch try unicode_eval unicode_strings)],
+    "default" => [qw(bareword_filehandles format_vars indirect multidimensional)],
 );
 
 $feature_bundle{"5.12"} = $feature_bundle{"5.11"};
@@ -440,6 +441,19 @@ This feature enables the C<defer> block syntax, which allows a block of code
 to be deferred until when the flow of control leaves the block which contained
 it. For more details, see L<perlsyn/defer>.
 
+=head2 The 'format_vars' feature.
+
+This feature enables the punctuation variables that affect the operation of
+formats. It is enabled by default, but can be turned off to disallow the use
+of these variables.
+
+  $^A  $^L  $%  $-  $:  $=  $^  $~
+
+This is provided for the possible future expansion of the language, which may
+wish to use variable syntax including these characters, but currently cannot
+due to its collision with these little-used variables. By disabling this
+feature it permits these as a possible future expansion.
+
 =head1 FEATURE BUNDLES
 
 It's possible to load multiple features together, using
@@ -453,66 +467,66 @@ The following feature bundles are available:
   bundle    features included
   --------- -----------------
   :default  indirect multidimensional
-            bareword_filehandles
+            bareword_filehandles format_vars
 
-  :5.10     bareword_filehandles indirect
+  :5.10     bareword_filehandles format_vars indirect
             multidimensional say state switch
 
-  :5.12     bareword_filehandles indirect
+  :5.12     bareword_filehandles format_vars indirect
             multidimensional say state switch
             unicode_strings
 
-  :5.14     bareword_filehandles indirect
+  :5.14     bareword_filehandles format_vars indirect
             multidimensional say state switch
             unicode_strings
 
   :5.16     bareword_filehandles current_sub evalbytes
-            fc indirect multidimensional say state
-            switch unicode_eval unicode_strings
+            fc format_vars indirect multidimensional say
+            state switch unicode_eval unicode_strings
 
   :5.18     bareword_filehandles current_sub evalbytes
-            fc indirect multidimensional say state
-            switch unicode_eval unicode_strings
+            fc format_vars indirect multidimensional say
+            state switch unicode_eval unicode_strings
 
   :5.20     bareword_filehandles current_sub evalbytes
-            fc indirect multidimensional say state
-            switch unicode_eval unicode_strings
+            fc format_vars indirect multidimensional say
+            state switch unicode_eval unicode_strings
 
   :5.22     bareword_filehandles current_sub evalbytes
-            fc indirect multidimensional say state
-            switch unicode_eval unicode_strings
+            fc format_vars indirect multidimensional say
+            state switch unicode_eval unicode_strings
 
   :5.24     bareword_filehandles current_sub evalbytes
-            fc indirect multidimensional postderef_qq
-            say state switch unicode_eval
+            fc format_vars indirect multidimensional
+            postderef_qq say state switch unicode_eval
             unicode_strings
 
   :5.26     bareword_filehandles current_sub evalbytes
-            fc indirect multidimensional postderef_qq
-            say state switch unicode_eval
+            fc format_vars indirect multidimensional
+            postderef_qq say state switch unicode_eval
             unicode_strings
 
   :5.28     bareword_filehandles bitwise current_sub
-            evalbytes fc indirect multidimensional
-            postderef_qq say state switch unicode_eval
-            unicode_strings
+            evalbytes fc format_vars indirect
+            multidimensional postderef_qq say state
+            switch unicode_eval unicode_strings
 
   :5.30     bareword_filehandles bitwise current_sub
-            evalbytes fc indirect multidimensional
-            postderef_qq say state switch unicode_eval
-            unicode_strings
+            evalbytes fc format_vars indirect
+            multidimensional postderef_qq say state
+            switch unicode_eval unicode_strings
 
   :5.32     bareword_filehandles bitwise current_sub
-            evalbytes fc indirect multidimensional
-            postderef_qq say state switch unicode_eval
-            unicode_strings
+            evalbytes fc format_vars indirect
+            multidimensional postderef_qq say state
+            switch unicode_eval unicode_strings
 
   :5.34     bareword_filehandles bitwise current_sub
-            evalbytes fc indirect multidimensional
-            postderef_qq say state switch unicode_eval
-            unicode_strings
+            evalbytes fc format_vars indirect
+            multidimensional postderef_qq say state
+            switch unicode_eval unicode_strings
 
-  :5.36     bitwise current_sub evalbytes fc
+  :5.36     bitwise current_sub evalbytes fc format_vars
             postderef_qq say state unicode_eval
             unicode_strings
 

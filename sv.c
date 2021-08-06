@@ -6015,7 +6015,7 @@ Perl_sv_get_backrefs(SV *const sv)
     /* find slot to store array or singleton backref */
 
     if (SvTYPE(sv) == SVt_PVHV) {
-        if (SvOOK(sv)) {
+        if (HvHASAUX(sv)) {
             struct xpvhv_aux * const iter = HvAUX((HV *)sv);
             backrefs = (SV *)iter->xhv_backreferences;
         }
@@ -6122,7 +6122,7 @@ Perl_sv_del_backref(pTHX_ SV *const tsv, SV *const sv)
     PERL_ARGS_ASSERT_SV_DEL_BACKREF;
 
     if (SvTYPE(tsv) == SVt_PVHV) {
-        if (SvOOK(tsv))
+        if (HvHASAUX(tsv))
             svp = (SV**)Perl_hv_backreferences_p(aTHX_ MUTABLE_HV(tsv));
     }
     else if (SvIS_FREED(tsv) && PL_phase == PERL_PHASE_DESTRUCT) {
@@ -6916,7 +6916,7 @@ S_curse(pTHX_ SV * const sv, const bool check_refcnt) {
             CV* destructor = NULL;
             struct mro_meta *meta;
 
-            assert (SvOOK(stash));
+            assert (HvHASAUX(stash));
 
             DEBUG_o( Perl_deb(aTHX_ "Looking for DESTROY method for %s\n",
                          HvNAME(stash)) );
@@ -14381,7 +14381,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
                     XPVHV * const sxhv = (XPVHV*)SvANY(ssv);
                     char *darray;
                     Newx(darray, PERL_HV_ARRAY_ALLOC_BYTES(dxhv->xhv_max+1)
-                        + (SvOOK(ssv) ? sizeof(struct xpvhv_aux) : 0),
+                        + (HvHASAUX(ssv) ? sizeof(struct xpvhv_aux) : 0),
                         char);
                     HvARRAY(dsv) = (HE**)darray;
                     while (i <= sxhv->xhv_max) {
@@ -14390,11 +14390,11 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
                             ? he_dup(source, sharekeys, param) : 0;
                         ++i;
                     }
-                    if (SvOOK(ssv)) {
+                    if (HvHASAUX(ssv)) {
                         const struct xpvhv_aux * const saux = HvAUX(ssv);
                         struct xpvhv_aux * const daux = HvAUX(dsv);
                         /* This flag isn't copied.  */
-                        SvOOK_on(dsv);
+                        HvHASAUX_on(dsv);
 
                         if (saux->xhv_name_count) {
                             HEK ** const sname = saux->xhv_name_u.xhvnameu_names;

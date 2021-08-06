@@ -1191,6 +1191,7 @@ Perl_leave_scope(pTHX_ I32 base)
                             SVf_READONLY|SVf_PROTECT /*for SvREADONLY_off*/
                           | (SVs_GMG|SVs_SMG|SVs_RMG) /* SvMAGICAL() */
                           | SVf_OOK
+                          | SVphv_HASAUX
                           | SVf_THINKFIRST)))
                     {
                         /* if a my variable that was made readonly is
@@ -1201,10 +1202,12 @@ Perl_leave_scope(pTHX_ I32 base)
                         if (SvREADONLY(sv))
                             SvREADONLY_off(sv);
 
-                        if (SvOOK(sv)) { /* OOK or HvAUX */
-                            if (SvTYPE(sv) == SVt_PVHV)
+                        if (SvTYPE(sv) == SVt_PVHV) {
+                            if(HvHASAUX(sv))
                                 Perl_hv_kill_backrefs(aTHX_ MUTABLE_HV(sv));
-                            else
+                        }
+                        else {
+                            if (SvOOK(sv))
                                 sv_backoff(sv);
                         }
 

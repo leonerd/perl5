@@ -865,7 +865,7 @@ Perl_hv_common(pTHX_ HV *hv, SV *keysv, const char *key, STRLEN klen,
         *oentry = entry;
     }
 #ifdef PERL_HASH_RANDOMIZE_KEYS
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         /* Currently this makes various tests warn in annoying ways.
          * So Silenced for now. - Yves | bogus end of comment =>* /
         if (HvAUX(hv)->xhv_riter != -1) {
@@ -1375,10 +1375,10 @@ S_hv_delete_common(pTHX_ HV *hv, SV *keysv, const char *key, STRLEN klen,
             HvPLACEHOLDERS(hv)++;
         else {
             *oentry = HeNEXT(entry);
-            if (SvOOK(hv) && entry == HvAUX(hv)->xhv_eiter /* HvEITER(hv) */)
+            if (HvHASAUX(hv) && entry == HvAUX(hv)->xhv_eiter /* HvEITER(hv) */)
                 HvLAZYDEL_on(hv);
             else {
-                if (SvOOK(hv) && HvLAZYDEL(hv) &&
+                if (HvHASAUX(hv) && HvLAZYDEL(hv) &&
                     entry == HeNEXT(HvAUX(hv)->xhv_eiter))
                     HeNEXT(HvAUX(hv)->xhv_eiter) = HeNEXT(entry);
                 hv_free_ent(hv, entry);
@@ -1422,7 +1422,7 @@ S_hsplit(pTHX_ HV *hv, STRLEN const oldsize, STRLEN newsize)
 
     bool do_aux= (
         /* already have an HvAUX(hv) so we have to move it */
-        SvOOK(hv) ||
+        HvHASAUX(hv) ||
         /* no HvAUX() but array we are going to allocate is large enough
          * there is no point in saving the space for the iterator, and
          * speeds up later traversals. */
@@ -1461,7 +1461,7 @@ S_hsplit(pTHX_ HV *hv, STRLEN const oldsize, STRLEN newsize)
     if (do_aux) {
         struct xpvhv_aux *const dest
             = (struct xpvhv_aux*) &a[newsize * sizeof(HE*)];
-        if (SvOOK(hv)) {
+        if (HvHASAUX(hv)) {
             /* alread have an aux, copy the old one in place. */
             Move(&a[oldsize * sizeof(HE*)], dest, 1, struct xpvhv_aux);
             /* we reset the iterator's xhv_rand as well, so they get a totally new ordering */
@@ -1479,7 +1479,7 @@ S_hsplit(pTHX_ HV *hv, STRLEN const oldsize, STRLEN newsize)
             /* this is the "non realloc" part of the hv_auxinit() */
             (void)hv_auxinit_internal(dest);
             /* Turn on the OOK flag */
-            SvOOK_on(hv);
+            HvHASAUX_on(hv);
         }
     }
     /* now we can safely clear the second half */
@@ -1842,7 +1842,7 @@ Perl_hv_clear(pTHX_ HV *hv)
 
         HvHASKFLAGS_off(hv);
     }
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         if(HvENAME_get(hv))
             mro_isa_changed_in(hv);
         HvEITER_set(hv, NULL);
@@ -1903,7 +1903,7 @@ S_clear_placeholders(pTHX_ HV *hv, const U32 placeholders)
                 if (entry == HvEITER_get(hv))
                     HvLAZYDEL_on(hv);
                 else {
-                    if (SvOOK(hv) && HvLAZYDEL(hv) &&
+                    if (HvHASAUX(hv) && HvLAZYDEL(hv) &&
                         entry == HeNEXT(HvAUX(hv)->xhv_eiter))
                         HeNEXT(HvAUX(hv)->xhv_eiter) = HeNEXT(entry);
                     hv_free_ent(hv, entry);
@@ -1963,7 +1963,7 @@ Perl_hfree_next_entry(pTHX_ HV *hv, STRLEN *indexp)
 
     PERL_ARGS_ASSERT_HFREE_NEXT_ENTRY;
 
-    if (SvOOK(hv) && ((iter = HvAUX(hv)))) {
+    if (HvHASAUX(hv) && ((iter = HvAUX(hv)))) {
         if ((entry = iter->xhv_eiter)) {
             /* the iterator may get resurrected after each
              * destructor call, so check each time */
@@ -2065,7 +2065,7 @@ Perl_hv_undef_flags(pTHX_ HV *hv, U32 flags)
         orig_ix = PL_tmps_ix;
     }
     hv_free_entries(hv);
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
       struct mro_meta *meta;
       const char *name;
 
@@ -2107,9 +2107,9 @@ Perl_hv_undef_flags(pTHX_ HV *hv, U32 flags)
         HvAUX(hv)->xhv_mro_meta = NULL;
       }
       if (!HvAUX(hv)->xhv_name_u.xhvnameu_name && ! HvAUX(hv)->xhv_backreferences)
-        SvFLAGS(hv) &= ~SVf_OOK;
+        SvFLAGS(hv) &= ~SVphv_HASAUX;
     }
-    if (!SvOOK(hv)) {
+    if (!HvHASAUX(hv)) {
         Safefree(HvARRAY(hv));
         xhv->xhv_max = PERL_HASH_DEFAULT_HvMAX;        /* HvMAX(hv) = 7 (it's a normal hash) */
         HvARRAY(hv) = 0;
@@ -2236,7 +2236,7 @@ S_hv_auxinit(pTHX_ HV *hv) {
 
     PERL_ARGS_ASSERT_HV_AUXINIT;
 
-    if (!SvOOK(hv)) {
+    if (!HvHASAUX(hv)) {
         if (!HvARRAY(hv)) {
             Newxz(array, PERL_HV_ARRAY_ALLOC_BYTES(HvMAX(hv) + 1)
                 + sizeof(struct xpvhv_aux), char);
@@ -2246,7 +2246,7 @@ S_hv_auxinit(pTHX_ HV *hv) {
                   + sizeof(struct xpvhv_aux), char);
         }
         HvARRAY(hv) = (HE**)array;
-        SvOOK_on(hv);
+        HvHASAUX_on(hv);
         iter = HvAUX(hv);
 #ifdef PERL_HASH_RANDOMIZE_KEYS
         if (PL_HASH_RAND_BITS_ENABLED) {
@@ -2284,7 +2284,7 @@ Perl_hv_iterinit(pTHX_ HV *hv)
 {
     PERL_ARGS_ASSERT_HV_ITERINIT;
 
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         struct xpvhv_aux * iter = HvAUX(hv);
         HE * const entry = iter->xhv_eiter; /* HvEITER(hv) */
         if (entry && HvLAZYDEL(hv)) {	/* was deleted earlier? */
@@ -2311,7 +2311,7 @@ Perl_hv_riter_p(pTHX_ HV *hv) {
 
     PERL_ARGS_ASSERT_HV_RITER_P;
 
-    iter = SvOOK(hv) ? HvAUX(hv) : hv_auxinit(hv);
+    iter = HvHASAUX(hv) ? HvAUX(hv) : hv_auxinit(hv);
     return &(iter->xhv_riter);
 }
 
@@ -2321,7 +2321,7 @@ Perl_hv_eiter_p(pTHX_ HV *hv) {
 
     PERL_ARGS_ASSERT_HV_EITER_P;
 
-    iter = SvOOK(hv) ? HvAUX(hv) : hv_auxinit(hv);
+    iter = HvHASAUX(hv) ? HvAUX(hv) : hv_auxinit(hv);
     return &(iter->xhv_eiter);
 }
 
@@ -2331,7 +2331,7 @@ Perl_hv_riter_set(pTHX_ HV *hv, I32 riter) {
 
     PERL_ARGS_ASSERT_HV_RITER_SET;
 
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         iter = HvAUX(hv);
     } else {
         if (riter == -1)
@@ -2349,7 +2349,7 @@ Perl_hv_rand_set(pTHX_ HV *hv, U32 new_xhv_rand) {
     PERL_ARGS_ASSERT_HV_RAND_SET;
 
 #ifdef PERL_HASH_RANDOMIZE_KEYS
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         iter = HvAUX(hv);
     } else {
         iter = hv_auxinit(hv);
@@ -2366,7 +2366,7 @@ Perl_hv_eiter_set(pTHX_ HV *hv, HE *eiter) {
 
     PERL_ARGS_ASSERT_HV_EITER_SET;
 
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         iter = HvAUX(hv);
     } else {
         /* 0 is the default so don't go malloc()ing a new structure just to
@@ -2391,7 +2391,7 @@ Perl_hv_name_set(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
     if (len > I32_MAX)
         Perl_croak(aTHX_ "panic: hv name too long (%" UVuf ")", (UV) len);
 
-    if (SvOOK(hv)) {
+    if (HvHASAUX(hv)) {
         iter = HvAUX(hv);
         if (iter->xhv_name_u.xhvnameu_name) {
             if(iter->xhv_name_count) {
@@ -2489,7 +2489,7 @@ table.
 void
 Perl_hv_ename_add(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
 {
-    struct xpvhv_aux *aux = SvOOK(hv) ? HvAUX(hv) : hv_auxinit(hv);
+    struct xpvhv_aux *aux = HvHASAUX(hv) ? HvAUX(hv) : hv_auxinit(hv);
     U32 hash;
 
     PERL_ARGS_ASSERT_HV_ENAME_ADD;
@@ -2559,7 +2559,7 @@ Perl_hv_ename_delete(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
     if (len > I32_MAX)
         Perl_croak(aTHX_ "panic: hv name too long (%" UVuf ")", (UV) len);
 
-    if (!SvOOK(hv)) return;
+    if (!HvHASAUX(hv)) return;
 
     aux = HvAUX(hv);
     if (!aux->xhv_name_u.xhvnameu_name) return;
@@ -2620,7 +2620,7 @@ Perl_hv_backreferences_p(pTHX_ HV *hv) {
     PERL_ARGS_ASSERT_HV_BACKREFERENCES_P;
     /* See also Perl_sv_get_backrefs in sv.c where this logic is unrolled */
     {
-        struct xpvhv_aux * const iter = SvOOK(hv) ? HvAUX(hv) : hv_auxinit(hv);
+        struct xpvhv_aux * const iter = HvHASAUX(hv) ? HvAUX(hv) : hv_auxinit(hv);
         return &(iter->xhv_backreferences);
     }
 }
@@ -2631,7 +2631,7 @@ Perl_hv_kill_backrefs(pTHX_ HV *hv) {
 
     PERL_ARGS_ASSERT_HV_KILL_BACKREFS;
 
-    if (!SvOOK(hv))
+    if (!HvHASAUX(hv))
         return;
 
     av = HvAUX(hv)->xhv_backreferences;
@@ -2689,7 +2689,7 @@ Perl_hv_iternext_flags(pTHX_ HV *hv, I32 flags)
 
     xhv = (XPVHV*)SvANY(hv);
 
-    if (!SvOOK(hv)) {
+    if (!HvHASAUX(hv)) {
         /* Too many things (well, pp_each at least) merrily assume that you can
            call hv_iternext without calling hv_iterinit, so we'll have to deal
            with it.  */

@@ -1630,7 +1630,6 @@ const struct flag_to_name first_sv_flags_names[] = {
 };
 
 const struct flag_to_name second_sv_flags_names[] = {
-    {SVf_OOK, "OOK,"},
     {SVf_FAKE, "FAKE,"},
     {SVf_READONLY, "READONLY,"},
     {SVf_PROTECT, "PROTECT,"},
@@ -1661,6 +1660,7 @@ const struct flag_to_name cv_flags_names[] = {
 };
 
 const struct flag_to_name hv_flags_names[] = {
+    {SVphv_HASAUX, "HASAUX,"},
     {SVphv_SHAREKEYS, "SHAREKEYS,"},
     {SVphv_LAZYDEL, "LAZYDEL,"},
     {SVphv_HASKFLAGS, "HASKFLAGS,"},
@@ -1812,6 +1812,7 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
     case SVt_PVMG:
     default:
         if (SvIsUV(sv) && !(flags & SVf_ROK))	sv_catpvs(d, "IsUV,");
+        if (SvOOK(sv))                          sv_catpvs(d, "OOK,");
         break;
 
     case SVt_PVAV:
@@ -2000,7 +2001,7 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
         break;
     case SVt_PVHV: {
         U32 usedkeys;
-        if (SvOOK(sv)) {
+        if (HvHASAUX(sv)) {
             struct xpvhv_aux *const aux = HvAUX(sv);
             Perl_dump_indent(aTHX_ level, file, "  AUX_FLAGS = %" UVuf "\n",
                              (UV)aux->xhv_aux_flags);
@@ -2083,7 +2084,7 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
         }
         Perl_dump_indent(aTHX_ level, file, "  MAX = %" IVdf "\n",
                                (IV)HvMAX(sv));
-        if (SvOOK(sv)) {
+        if (HvHASAUX(sv)) {
             Perl_dump_indent(aTHX_ level, file, "  RITER = %" IVdf "\n",
                                    (IV)HvRITER_get(sv));
             Perl_dump_indent(aTHX_ level, file, "  EITER = 0x%" UVxf "\n",
@@ -2113,7 +2114,7 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
                                            HvNAMELEN(sv), HvNAMEUTF8(sv)));
         }
         }
-        if (SvOOK(sv)) {
+        if (HvHASAUX(sv)) {
             AV * const backrefs
                 = *Perl_hv_backreferences_p(aTHX_ MUTABLE_HV(sv));
             struct mro_meta * const meta = HvAUX(sv)->xhv_mro_meta;

@@ -782,7 +782,8 @@ do_test('ENAME on a stash',
   RV = $ADDR
   SV = PVHV\\($ADDR\\) at $ADDR
     REFCNT = 2
-    FLAGS = \\(OOK,SHAREKEYS\\)
+    FLAGS = \\(OOK,SHAREKEYS\\)                 # $] < 5.035003
+    FLAGS = \\(HASAUX,SHAREKEYS\\)              # $] >= 5.035003
     AUX_FLAGS = 0                               # $] > 5.019008
     ARRAY = $ADDR
     KEYS = 0
@@ -805,7 +806,8 @@ do_test('ENAMEs on a stash',
   RV = $ADDR
   SV = PVHV\\($ADDR\\) at $ADDR
     REFCNT = 3
-    FLAGS = \\(OOK,SHAREKEYS\\)
+    FLAGS = \\(OOK,SHAREKEYS\\)                 # $] < 5.035003
+    FLAGS = \\(HASAUX,SHAREKEYS\\)              # $] >= 5.035003
     AUX_FLAGS = 0                               # $] > 5.019008
     ARRAY = $ADDR
     KEYS = 0
@@ -829,10 +831,11 @@ do_test('ENAMEs on a stash with no NAME',
   RV = $ADDR
   SV = PVHV\\($ADDR\\) at $ADDR
     REFCNT = 3
-    FLAGS = \\(OOK,SHAREKEYS\\)			# $] < 5.017
-    FLAGS = \\(OOK,OVERLOAD,SHAREKEYS\\)	# $] >=5.017 && $]<5.021005
-    FLAGS = \\(OOK,SHAREKEYS,OVERLOAD\\)	# $] >=5.021005
-    AUX_FLAGS = 0                               # $] > 5.019008
+    FLAGS = \\(OOK,SHAREKEYS\\)			# $] <  5.017
+    FLAGS = \\(OOK,OVERLOAD,SHAREKEYS\\)	# $] >= 5.017    && $] < 5.021005
+    FLAGS = \\(OOK,SHAREKEYS,OVERLOAD\\)	# $] >= 5.021005 && $] < 5.035003
+    FLAGS = \\(HASAUX,SHAREKEYS,OVERLOAD\\)     # $] >= 5.035003
+    AUX_FLAGS = 0                               # $] >  5.019008
     ARRAY = $ADDR
     KEYS = 0
     FILL = 0
@@ -880,7 +883,8 @@ do_test('small hash after keys',
   RV = $ADDR
   SV = PVHV\\($ADDR\\) at $ADDR
     REFCNT = 2
-    FLAGS = \\($PADMY,OOK,SHAREKEYS\\)
+    FLAGS = \\($PADMY,OOK,SHAREKEYS\\)          # $] < 5.035003
+    FLAGS = \\($PADMY,HASAUX,SHAREKEYS\\)       # $] >= 5.035003
     AUX_FLAGS = 0                               # $] > 5.019008
     ARRAY = $ADDR  \\(0:[67],.*\\)
     hash quality = [0-9.]+%
@@ -910,7 +914,8 @@ do_test('small hash after keys and scalar',
   RV = $ADDR
   SV = PVHV\\($ADDR\\) at $ADDR
     REFCNT = 2
-    FLAGS = \\($PADMY,OOK,SHAREKEYS\\)
+    FLAGS = \\($PADMY,OOK,SHAREKEYS\\)          # $] < 5.035003
+    FLAGS = \\($PADMY,HASAUX,SHAREKEYS\\)       # $] >= 5.035003
     AUX_FLAGS = 0                               # $] > 5.019008
     ARRAY = $ADDR  \\(0:[67],.*\\)
     hash quality = [0-9.]+%

@@ -2647,7 +2647,7 @@ Perl_gv_check(pTHX_ HV *stash)
 
     PERL_ARGS_ASSERT_GV_CHECK;
 
-    if (!SvOOK(stash))
+    if (!HvHASAUX(stash))
         return;
 
     assert(HvARRAY(stash));
@@ -2666,7 +2666,7 @@ Perl_gv_check(pTHX_ HV *stash)
                 (gv = MUTABLE_GV(HeVAL(entry))) && isGV(gv) && (hv = GvHV(gv)))
             {
                 if (hv != PL_defstash && hv != stash
-                    && !(SvOOK(hv)
+                    && !(HvHASAUX(hv)
                         && (HvAUX(hv)->xhv_aux_flags & HvAUXf_SCAN_STASH))
                 )
                      gv_check(hv);              /* nested package */
@@ -2920,7 +2920,7 @@ Perl_Gv_AMupdate(pTHX_ HV *stash, bool destructing)
         filled = 1;
     }
 
-    assert(SvOOK(stash));
+    assert(HvHASAUX(stash));
     /* initially assume the worst */
     HvAUX(stash)->xhv_aux_flags &= ~HvAUXf_NO_DEREF;
 
@@ -3197,7 +3197,7 @@ Perl_amagic_deref_call(pTHX_ SV *ref, int method) {
         return ref;
     /* return quickly if none of the deref ops are overloaded */
     stash = SvSTASH(SvRV(ref));
-    assert(SvOOK(stash));
+    assert(HvHASAUX(stash));
     if (HvAUX(stash)->xhv_aux_flags & HvAUXf_NO_DEREF)
         return ref;
 

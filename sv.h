@@ -441,7 +441,8 @@ perform the upgrade if necessary.  See C<L</svtype>>.
  * no overload methods. Note that this used to be set on the object; but
  * is now only set on stashes.
  */
-#define SVf_AMAGIC	0x10000000  /* has magical overloaded methods */
+#define SVf_AMAGIC	0x10000000  /* now unused on scalars */
+#define SVphv_AMAGIC    SVf_AMAGIC  /* stash has magical overloaded methods */
 #define SVf_IsCOW	0x10000000  /* copy on write (shared hash key if
                                        SvLEN == 0) */
 
@@ -1018,9 +1019,9 @@ Remove any string offset.
                                  HvAMAGIC(SvSTASH(SvRV(sv))))
 
 /* To be used on the stashes themselves: */
-#define HvAMAGIC(hv)		(SvFLAGS(hv) & SVf_AMAGIC)
-#define HvAMAGIC_on(hv)		(SvFLAGS(hv) |= SVf_AMAGIC)
-#define HvAMAGIC_off(hv)	(SvFLAGS(hv) &=~ SVf_AMAGIC)
+#define HvAMAGIC(hv)		(SvFLAGS(hv) & SVphv_AMAGIC)
+#define HvAMAGIC_on(hv)		(SvFLAGS(hv) |= SVphv_AMAGIC)
+#define HvAMAGIC_off(hv)	(SvFLAGS(hv) &=~ SVphv_AMAGIC)
 
 
 /* "nog" means "doesn't have get magic" */

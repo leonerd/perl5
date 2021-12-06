@@ -6951,7 +6951,7 @@ PP(pp_argelem)
     SV *val;
     SV ** padentry;
     OP *o = PL_op;
-    AV *defav = GvAV(PL_defgv); /* @_ */
+    AV *argsav = MUTABLE_AV(PAD_SVl(0));
     IV ix = PTR2IV(cUNOP_AUXo->op_aux);
     IV argc;
 
@@ -6974,7 +6974,7 @@ PP(pp_argelem)
             assert(ix <= SSize_t_MAX);
 #endif
 
-            svp = av_fetch(defav, ix, FALSE);
+            svp = av_fetch(argsav, ix, FALSE);
             val = svp ? *svp : &PL_sv_undef;
         }
 
@@ -6992,7 +6992,7 @@ PP(pp_argelem)
     /* must be AV or HV */
 
     assert(!(o->op_flags & OPf_STACKED));
-    argc = ((IV)AvFILL(defav) + 1) - ix;
+    argc = ((IV)AvFILL(argsav) + 1) - ix;
 
     /* This is a copy of the relevant parts of pp_aassign().
      */
@@ -7007,10 +7007,10 @@ PP(pp_argelem)
              * elements. See similar code in pp_aassign.
              */
             for (i = 0; i < argc; i++) {
-                SV **svp = av_fetch(defav, ix + i, FALSE);
+                SV **svp = av_fetch(argsav, ix + i, FALSE);
                 SV *newsv = newSVsv_flags(svp ? *svp : &PL_sv_undef,
                                 (SV_DO_COW_SVSETSV|SV_NOSTEAL));
-                if (!av_store(defav, ix + i, newsv))
+                if (!av_store(argsav, ix + i, newsv))
                     SvREFCNT_dec_NN(newsv);
             }
             av_clear((AV*)targ);
@@ -7024,7 +7024,7 @@ PP(pp_argelem)
         i = 0;
         while (argc--) {
             SV *tmpsv;
-            SV **svp = av_fetch(defav, ix + i, FALSE);
+            SV **svp = av_fetch(argsav, ix + i, FALSE);
             SV *val = svp ? *svp : &PL_sv_undef;
             tmpsv = newSV(0);
             sv_setsv(tmpsv, val);
@@ -7041,12 +7041,12 @@ PP(pp_argelem)
         if (SvRMAGICAL(targ) || HvUSEDKEYS((HV*)targ)) {
             /* see "target should usually be empty" comment above */
             for (i = 0; i < argc; i++) {
-                SV **svp = av_fetch(defav, ix + i, FALSE);
+                SV **svp = av_fetch(argsav, ix + i, FALSE);
                 SV *newsv = newSV(0);
                 sv_setsv_flags(newsv,
                                 svp ? *svp : &PL_sv_undef,
                                 (SV_DO_COW_SVSETSV|SV_NOSTEAL));
-                if (!av_store(defav, ix + i, newsv))
+                if (!av_store(argsav, ix + i, newsv))
                     SvREFCNT_dec_NN(newsv);
             }
             hv_clear((HV*)targ);
@@ -7063,9 +7063,9 @@ PP(pp_argelem)
             SV *key;
             SV *val;
 
-            svp = av_fetch(defav, ix + i++, FALSE);
+            svp = av_fetch(argsav, ix + i++, FALSE);
             key = svp ? *svp : &PL_sv_undef;
-            svp = av_fetch(defav, ix + i++, FALSE);
+            svp = av_fetch(argsav, ix + i++, FALSE);
             val = svp ? *svp : &PL_sv_undef;
 
             argc -= 2;
@@ -7095,7 +7095,7 @@ PP(pp_argelem)
 PP(pp_argdefelem)
 {
     OP * const o = PL_op;
-    AV *defav = GvAV(PL_defgv); /* @_ */
+    AV *argsav = MUTABLE_AV(PAD_SVl(0));
     IV ix = (IV)o->op_targ;
 
     assert(ix >= 0);
@@ -7103,9 +7103,9 @@ PP(pp_argdefelem)
     assert(ix <= SSize_t_MAX);
 #endif
 
-    if (AvFILL(defav) >= ix) {
+    if (AvFILL(argsav) >= ix) {
         dSP;
-        SV **svp = av_fetch(defav, ix, FALSE);
+        SV **svp = av_fetch(argsav, ix, FALSE);
         SV  *val = svp ? *svp : &PL_sv_undef;
         XPUSHs(val);
         RETURN;
@@ -7147,12 +7147,12 @@ PP(pp_argcheck)
     UV   params        = aux->params;
     UV   opt_params    = aux->opt_params;
     char slurpy        = aux->slurpy;
-    AV  *defav         = GvAV(PL_defgv); /* @_ */
+    AV  *argsav        = MUTABLE_AV(PAD_SVl(0));
     UV   argc;
     bool too_few;
 
-    assert(!SvMAGICAL(defav));
-    argc = (UV)(AvFILLp(defav) + 1);
+    assert(!SvMAGICAL(argsav));
+    argc = (UV)(AvFILLp(argsav) + 1);
     too_few = (argc < (params - opt_params));
 
     if (UNLIKELY(too_few || (!slurpy && argc > params)))

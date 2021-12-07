@@ -276,6 +276,12 @@ Perl_av_fetch(pTHX_ AV *av, SSize_t key, I32 lval)
             LvTARG(sv) = sv; /* fake (SV**) */
             return &(LvTARG(sv));
         }
+        MAGIC *mg = mg_find((const SV *)av, PERL_MAGIC_sigsnail);
+        if(mg) {
+            /* This will just croak anyway but we'll give it the chance to
+             * generate its correct exception message */
+            Perl_magic_getsigsnail(aTHX_ (SV *)av, mg);
+        }
     }
 
     neg  = (key < 0);

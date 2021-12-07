@@ -13,6 +13,7 @@
  */
 
 #define PERL_MAGIC_sv             '\0' /* Special scalar variable */
+#define PERL_MAGIC_sigsnail       '\1' /* The @_ variable during a signatured sub */
 #define PERL_MAGIC_arylen         '#' /* Array length ($#ary) */
 #define PERL_MAGIC_rhash          '%' /* Extra data for restricted hashes */
 #define PERL_MAGIC_debugvar       '*' /* $DB::single, signal, trace vars */
@@ -87,6 +88,7 @@ enum {		/* pass one of these to get_vtbl */
     want_vtbl_regexp,
     want_vtbl_sig,
     want_vtbl_sigelem,
+    want_vtbl_sigsnail,
     want_vtbl_substr,
     want_vtbl_sv,
     want_vtbl_taint,
@@ -125,6 +127,7 @@ EXTCONST char * const PL_magic_vtable_names[magic_vtable_max] = {
     "regexp",
     "sig",
     "sigelem",
+    "sigsnail",
     "substr",
     "sv",
     "taint",
@@ -190,6 +193,7 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max] = {
 #else
   { 0, 0, 0, 0, 0, 0, 0, 0 },
 #endif
+  { Perl_magic_getsigsnail, Perl_magic_setsigsnail, Perl_magic_sizesigsnail, Perl_magic_clearsigsnail, 0, 0, 0, 0 },
   { Perl_magic_getsubstr, Perl_magic_setsubstr, 0, 0, 0, 0, 0, 0 },
   { Perl_magic_get, Perl_magic_set, 0, 0, 0, 0, 0, 0 },
   { Perl_magic_gettaint, Perl_magic_settaint, 0, 0, 0, 0, 0, 0 },
@@ -233,6 +237,7 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max];
 #define PL_vtbl_regexp PL_magic_vtables[want_vtbl_regexp]
 #define PL_vtbl_sig PL_magic_vtables[want_vtbl_sig]
 #define PL_vtbl_sigelem PL_magic_vtables[want_vtbl_sigelem]
+#define PL_vtbl_sigsnail PL_magic_vtables[want_vtbl_sigsnail]
 #define PL_vtbl_substr PL_magic_vtables[want_vtbl_substr]
 #define PL_vtbl_sv PL_magic_vtables[want_vtbl_sv]
 #define PL_vtbl_taint PL_magic_vtables[want_vtbl_taint]

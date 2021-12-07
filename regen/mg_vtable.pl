@@ -210,6 +210,8 @@ my %mg =
                    vtable => 'debugvar' },
      lvref => { char => '\\', vtable => 'lvref',
                   desc => "Lvalue reference constructor" },
+     sigsnail => { char => "\1", vtable => 'sigsnail',
+                   desc => "The \@_ variable during a signatured sub" },
 );
 
 
@@ -287,6 +289,7 @@ my %sig =
      'checkcall' => {copy => 'copycallchecker'},
      'debugvar' => { set => 'setdebugvar', get => 'getdebugvar' },
      'lvref' => {set => 'setlvref'},
+     'sigsnail' => {get => 'getsigsnail', set => 'setsigsnail', len => 'sizesigsnail', clear => 'clearsigsnail'},
 );
 
 

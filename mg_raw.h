@@ -8,6 +8,8 @@
 
     { '\0', "want_vtbl_sv | PERL_MAGIC_READONLY_ACCEPTABLE",
       "/* sv '\\0' Special scalar variable */" },
+    { '\1', "want_vtbl_sigsnail",
+      "/* sigsnail '\\1' The @_ variable during a signatured sub */" },
     { '#', "want_vtbl_arylen | PERL_MAGIC_VALUE_MAGIC",
       "/* arylen '#' Array length ($#ary) */" },
     { '%', "magic_vtable_max | PERL_MAGIC_VALUE_MAGIC",

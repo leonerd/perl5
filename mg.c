@@ -2797,6 +2797,38 @@ Perl_magic_setlvref(pTHX_ SV *sv, MAGIC *mg)
     return 0;
 }
 
+int
+Perl_magic_getsigsnail(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_ARGS_ASSERT_MAGIC_GETSIGSNAIL;
+
+    Perl_croak(aTHX_ "Access to the %s variable is forbidden", mg->mg_ptr);
+}
+
+int
+Perl_magic_setsigsnail(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_ARGS_ASSERT_MAGIC_SETSIGSNAIL;
+
+    Perl_croak(aTHX_ "Access to the %s variable is forbidden", mg->mg_ptr);
+}
+
+U32
+Perl_magic_sizesigsnail(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_ARGS_ASSERT_MAGIC_SIZESIGSNAIL;
+
+    Perl_croak(aTHX_ "Access to the %s variable is forbidden", mg->mg_ptr);
+}
+
+int
+Perl_magic_clearsigsnail(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_ARGS_ASSERT_MAGIC_CLEARSIGSNAIL;
+
+    Perl_croak(aTHX_ "Access to the %s variable is forbidden", mg->mg_ptr);
+}
+
 static void
 S_set_dollarzero(pTHX_ SV *sv)
     PERL_TSA_REQUIRES(PL_dollarzero_mutex)

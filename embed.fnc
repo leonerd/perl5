@@ -1293,6 +1293,7 @@ S	|void	|output_non_portable|const U8 shift
 EXpdT	|bool	|grok_atoUV	|NN const char* pv|NN UV* valptr|NULLOK const char** endptr
 : These are all indirectly referenced by globals.c. This is somewhat annoying.
 p	|int	|magic_clearenv	|NN SV* sv|NN MAGIC* mg
+p	|int	|magic_clearsigsnail|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_clear_all_env|NN SV* sv|NN MAGIC* mg
 dp	|int	|magic_clearhint|NN SV* sv|NN MAGIC* mg
 dp	|int	|magic_clearhints|NN SV* sv|NN MAGIC* mg
@@ -1307,6 +1308,7 @@ p	|int	|magic_get	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_getarylen|NN SV* sv|NN const MAGIC* mg
 p	|int	|magic_getdefelem|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_getdebugvar|NN SV* sv|NN MAGIC* mg
+p	|int	|magic_getsigsnail|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_getnkeys	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_getpack	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_getpos	|NN SV* sv|NN MAGIC* mg
@@ -1335,6 +1337,7 @@ p	|int	|magic_setdebugvar|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_setdefelem|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_setnonelem|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_setenv	|NN SV* sv|NN MAGIC* mg
+p	|int	|magic_setsigsnail|NN SV* sv|NN MAGIC* mg
 dp	|int	|magic_sethint	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_setisa	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_setlvref	|NN SV* sv|NN MAGIC* mg
@@ -1353,6 +1356,7 @@ p	|int	|magic_setvec	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_setutf8	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_freeutf8	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_set_all_env|NN SV* sv|NN MAGIC* mg
+p	|U32	|magic_sizesigsnail|NN SV* sv|NN MAGIC* mg
 p	|U32	|magic_sizepack	|NN SV* sv|NN MAGIC* mg
 p	|int	|magic_wipepack	|NN SV* sv|NN MAGIC* mg
 Fpod	|SV*	|magic_methcall	|NN SV *sv|NN const MAGIC *mg \

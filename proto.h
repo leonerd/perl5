@@ -1909,6 +1909,9 @@ PERL_CALLCONV int	Perl_magic_clearpack(pTHX_ SV* sv, MAGIC* mg);
 PERL_CALLCONV int	Perl_magic_clearsig(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_CLEARSIG	\
 	assert(sv); assert(mg)
+PERL_CALLCONV int	Perl_magic_clearsigsnail(pTHX_ SV* sv, MAGIC* mg);
+#define PERL_ARGS_ASSERT_MAGIC_CLEARSIGSNAIL	\
+	assert(sv); assert(mg)
 PERL_CALLCONV int	Perl_magic_copycallchecker(pTHX_ SV* sv, MAGIC *mg, SV *nsv, const char *name, I32 namlen);
 #define PERL_ARGS_ASSERT_MAGIC_COPYCALLCHECKER	\
 	assert(sv); assert(mg); assert(nsv)
@@ -1952,6 +1955,9 @@ PERL_CALLCONV int	Perl_magic_getpos(pTHX_ SV* sv, MAGIC* mg);
 	assert(sv); assert(mg)
 PERL_CALLCONV int	Perl_magic_getsig(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_GETSIG	\
+	assert(sv); assert(mg)
+PERL_CALLCONV int	Perl_magic_getsigsnail(pTHX_ SV* sv, MAGIC* mg);
+#define PERL_ARGS_ASSERT_MAGIC_GETSIGSNAIL	\
 	assert(sv); assert(mg)
 PERL_CALLCONV int	Perl_magic_getsubstr(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_GETSUBSTR	\
@@ -2037,6 +2043,9 @@ PERL_CALLCONV int	Perl_magic_setsig(pTHX_ SV* sv, MAGIC* mg);
 PERL_CALLCONV int	Perl_magic_setsigall(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_SETSIGALL	\
 	assert(sv); assert(mg)
+PERL_CALLCONV int	Perl_magic_setsigsnail(pTHX_ SV* sv, MAGIC* mg);
+#define PERL_ARGS_ASSERT_MAGIC_SETSIGSNAIL	\
+	assert(sv); assert(mg)
 PERL_CALLCONV int	Perl_magic_setsubstr(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_SETSUBSTR	\
 	assert(sv); assert(mg)
@@ -2054,6 +2063,9 @@ PERL_CALLCONV int	Perl_magic_setvec(pTHX_ SV* sv, MAGIC* mg);
 	assert(sv); assert(mg)
 PERL_CALLCONV U32	Perl_magic_sizepack(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_SIZEPACK	\
+	assert(sv); assert(mg)
+PERL_CALLCONV U32	Perl_magic_sizesigsnail(pTHX_ SV* sv, MAGIC* mg);
+#define PERL_ARGS_ASSERT_MAGIC_SIZESIGSNAIL	\
 	assert(sv); assert(mg)
 PERL_CALLCONV int	Perl_magic_wipepack(pTHX_ SV* sv, MAGIC* mg);
 #define PERL_ARGS_ASSERT_MAGIC_WIPEPACK	\

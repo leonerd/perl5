@@ -1377,6 +1377,8 @@ will be lost.
  (old-style char and macro)   MGVTBL         Type of magic
  --------------------------   ------         -------------
  \0 PERL_MAGIC_sv             vtbl_sv        Special scalar variable
+ \1 PERL_MAGIC_sigsnail       vtbl_sigsnail  The @_ variable during a
+                                             signatured sub
  #  PERL_MAGIC_arylen         vtbl_arylen    Array length ($#ary)
  %  PERL_MAGIC_rhash          (none)         Extra data for restricted
                                              hashes
@@ -1471,6 +1473,7 @@ will be lost.
 =for apidoc_item ||PERL_MAGIC_shared_scalar
 =for apidoc_item ||PERL_MAGIC_sig
 =for apidoc_item ||PERL_MAGIC_sigelem
+=for apidoc_item ||PERL_MAGIC_sigsnail
 =for apidoc_item ||PERL_MAGIC_substr
 =for apidoc_item ||PERL_MAGIC_sv
 =for apidoc_item ||PERL_MAGIC_symtab

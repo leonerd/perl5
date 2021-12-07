@@ -7,6 +7,7 @@
  */
 
 	{ PERL_MAGIC_sv,             "sv(\\0)" },
+	{ PERL_MAGIC_sigsnail,       "sigsnail(\\1)" },
 	{ PERL_MAGIC_arylen,         "arylen(#)" },
 	{ PERL_MAGIC_rhash,          "rhash(%)" },
 	{ PERL_MAGIC_debugvar,       "debugvar(*)" },

@@ -2818,7 +2818,8 @@ Perl_magic_sizesigsnail(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_ARGS_ASSERT_MAGIC_SIZESIGSNAIL;
 
-    Perl_croak(aTHX_ "Access to the %s variable is forbidden", mg->mg_ptr);
+    AV *argsav = MUTABLE_AV(PAD_SVl(0));
+    return AvFILL(argsav);
 }
 
 int

@@ -1455,6 +1455,14 @@ is scalar(t145()), undef;
     like $@, qr/^Access to the \@_ variable is forbidden at /;
 }
 
+# scalar(@_) should still be permitted
+{
+    is eval q/ sub t166 ($x) { return "one-arg" if @_; return "zero" } t166("x"); /, "one-arg",
+        'scalar(@_) is permitted in if condition';
+    is eval q/ sub t167 ($x) { return scalar(@_); } t167("x"); /, 1,
+        'scalar(@_) is permitted in return';
+}
+
 {
     my $w;
     local $SIG{__WARN__} = sub { $w .= "@_" };

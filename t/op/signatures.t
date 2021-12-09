@@ -1443,6 +1443,18 @@ is scalar(t145()), undef;
     }
 }
 
+# check for errors when attempting to use @_ inside signatured subs
+{
+    eval q/ sub t163 ($x) { return $_[0] } t163("x"); /;
+    like $@, qr/^Access to the \@_ variable is forbidden at /;
+
+    eval q/ sub t164 ($x) { $_[0] = "y" } t164("x"); /;
+    like $@, qr/^Access to the \@_ variable is forbidden at /;
+
+    eval q/ sub t165 ($x) { return join "", @_ } t165("x"); /;
+    like $@, qr/^Access to the \@_ variable is forbidden at /;
+}
+
 {
     my $w;
     local $SIG{__WARN__} = sub { $w .= "@_" };

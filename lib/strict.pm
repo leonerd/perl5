@@ -1,6 +1,6 @@
 package strict;
 
-$strict::VERSION = "1.12";
+$strict::VERSION = "1.13";
 
 my ( %bitmask, %explicit_bitmask );
 
@@ -43,6 +43,7 @@ sub bits {
     foreach my $s (@_) {
         if (exists $bitmask{$s}) {
             $^H |= $explicit_bitmask{$s};
+            ${^EXPLICIT_STRICT} |= $explicit_bitmask{$s};
 
             $bits |= $bitmask{$s};
         }
@@ -59,7 +60,14 @@ sub bits {
 
 sub import {
     shift;
-    $^H |= @_ ? &bits : all_bits | all_explicit_bits;
+
+    if (@_) {
+        $^H |= &bits;
+    }
+    else {
+        $^H |= all_bits | all_explicit_bits;
+        ${^EXPLICIT_STRICT} |= all_explicit_bits;
+    }
 }
 
 sub unimport {

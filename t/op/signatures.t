@@ -434,18 +434,8 @@ like $@, _create_flexible_mismatch_regexp('main::t128', 3, 2);
 is $a, 123;
 
 sub t130 { join(",", @_).";".scalar(@_) }
-{
-    no warnings 'experimental::args_array_with_signatures';
-    sub t131 ($a = 222, $b = goto &t130) { "$a/$b" }
-}
-is prototype(\&t131), undef;
-is eval("t131()"), ";0";
-is eval("t131(0)"), "0;1";
-is eval("t131(456)"), "456;1";
-is eval("t131(456, 789)"), "456/789";
-is eval("t131(456, 789, 987)"), undef;
-like $@, _create_flexible_mismatch_regexp('main::t131', 3, 2);
-is $a, 123;
+
+# t131 used to test tailcall by goto inside signatured subs but this is now forbidden
 
 eval "#line 8 foo\nsub t024 (\$a =) { }";
 is $@,
@@ -1383,20 +1373,7 @@ is scalar(t145()), undef;
     }
     is ref(t149()), "ARRAY", "t149: closure can make new lexical a ref";
 
-    # Quiet the 'use of @_ is experimental' warnings
-    no warnings 'experimental::args_array_with_signatures';
-
-    sub t150 ($a = do {@_ = qw(a b c); 1}, $b = 2) {
-        is $a, 1,   "t150: a: growing \@_";
-        is $b, "b", "t150: b: growing \@_";
-    }
-    t150();
-
-    sub t151 ($a = do {tie @_, 'Tie::StdArray'; @_ = qw(a b c); 1}, $b = 2) {
-        is $a, 1,   "t151: a: tied \@_";
-        is $b, "b", "t151: b: tied \@_";
-    }
-    t151();
+    # t150 and t151 used to modify @_; now forbidden
 
     sub t152 ($a = t152x(), @b) {
         sub t152x { @b = qw(a b c); 1 }
@@ -1422,31 +1399,7 @@ is scalar(t145()), undef;
     }
     is t155(), "1-", "t155: closure can make new lexical hash tied";
 
-    sub t156 ($a = do {@_ = qw(a b c); 1}, @b) {
-        is $a, 1,       "t156: a: growing \@_";
-        is "@b", "b c", "t156: b: growing \@_";
-    }
-    t156();
-
-    sub t157 ($a = do {@_ = qw(a b c); 1}, %b) {
-        is $a, 1,                     "t157: a: growing \@_";
-        is join(':', sort %b), "b:c", "t157: b: growing \@_";
-    }
-    t157();
-
-    sub t158 ($a = do {tie @_, 'Tie::StdArray'; @_ = qw(a b c); 1}, @b) {
-        is $a, 1,          "t158: a: tied \@_";
-        is "@b", "b c",    "t158: b: tied \@_";
-    }
-    t158();
-
-    sub t159 ($a = do {tie @_, 'Tie::StdArray'; @_ = qw(a b c); 1}, %b) {
-        is  $a, 1,                     "t159: a: tied \@_";
-        is  join(':', sort %b), "b:c", "t159: b: tied \@_";
-    }
-    t159();
-
-    # see if we can handle the equivalent of @a = ($a[1], $a[0])
+    # t156 to t159 used to modify @_; now forbidden
 
     sub t160 ($s, @a) {
         sub t160x {

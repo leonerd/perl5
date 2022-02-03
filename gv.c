@@ -2113,6 +2113,8 @@ S_gv_magicalize(pTHX_ GV *gv, HV *stash, const char *name, STRLEN len,
             case '\005':	/* $^ENCODING */
                 if (memEQs(name, len, "\005NCODING"))
                     goto magicalize;
+                if (memEQs(name, len, "\005XPLICIT_STRICT"))
+                    goto magicalize;
                 break;
             case '\007':	/* $^GLOBAL_PHASE */
                 if (memEQs(name, len, "\007LOBAL_PHASE"))

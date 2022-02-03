@@ -940,6 +940,8 @@ Perl_magic_get(pTHX_ SV *sv, MAGIC *mg)
          if (nextchar != '\0') {
             if (strEQ(remaining, "NCODING"))
                 sv_set_undef(sv);
+            if (strEQ(remaining, "XPLICIT_STRICT"))
+                sv_setiv(sv, PL_explicit_strict);
             break;
         }
 
@@ -2954,6 +2956,8 @@ Perl_magic_set(pTHX_ SV *sv, MAGIC *mg)
         }
         else if (strEQ(mg->mg_ptr + 1, "NCODING") && SvOK(sv))
             Perl_croak(aTHX_ "${^ENCODING} is no longer supported");
+        else if (strEQ(mg->mg_ptr + 1, "XPLICIT_STRICT"))
+            PL_explicit_strict = (U8)SvIV(sv);
         break;
     case '\006':	/* ^F */
         if (mg->mg_ptr[1] == '\0') {

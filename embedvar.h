@@ -132,6 +132,7 @@
 #define PL_exit_flags		(vTHX->Iexit_flags)
 #define PL_exitlist		(vTHX->Iexitlist)
 #define PL_exitlistlen		(vTHX->Iexitlistlen)
+#define PL_explicit_strict	(vTHX->Iexplicit_strict)
 #define PL_fdpid		(vTHX->Ifdpid)
 #define PL_filemode		(vTHX->Ifilemode)
 #define PL_firstgv		(vTHX->Ifirstgv)

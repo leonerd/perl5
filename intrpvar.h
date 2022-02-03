@@ -1029,6 +1029,8 @@ PERLVAR(I, wcrtomb_ps, mbstate_t)
 PERLVARA(I, mem_log, 1 + 1 + TYPE_DIGITS(UV) + 1 + 3 + 1, char);
 #endif
 
+PERLVAR(I, explicit_strict, U8)
+
 /* If you are adding a U8 or U16, check to see if there are 'Space' comments
  * above on where there are gaps which currently will be structure padding.  */
 

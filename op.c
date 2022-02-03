@@ -8929,11 +8929,11 @@ Perl_utilize(pTHX_ int aver, I32 floor, OP *version, OP *idop, OP *arg)
         /* If a version >= 5.11.0 is requested, strictures are on by default! */
         if (vcmp(use_version,
                  sv_2mortal(upg_version(newSVnv(5.011000), FALSE))) >= 0) {
-            if (!(PL_hints & HINT_EXPLICIT_STRICT_REFS))
+            if (!(PL_explicit_strict & EXPLICIT_STRICT_REFS))
                 PL_hints |= HINT_STRICT_REFS;
-            if (!(PL_hints & HINT_EXPLICIT_STRICT_SUBS))
+            if (!(PL_explicit_strict & EXPLICIT_STRICT_SUBS))
                 PL_hints |= HINT_STRICT_SUBS;
-            if (!(PL_hints & HINT_EXPLICIT_STRICT_VARS))
+            if (!(PL_explicit_strict & EXPLICIT_STRICT_VARS))
                 PL_hints |= HINT_STRICT_VARS;
 
             if (vcmp(use_version, sv_2mortal(upg_version(newSVpvs("5.035000"), FALSE))) >= 0)
@@ -8941,11 +8941,11 @@ Perl_utilize(pTHX_ int aver, I32 floor, OP *version, OP *idop, OP *arg)
         }
         /* otherwise they are off */
         else {
-            if (!(PL_hints & HINT_EXPLICIT_STRICT_REFS))
+            if (!(PL_explicit_strict & EXPLICIT_STRICT_REFS))
                 PL_hints &= ~HINT_STRICT_REFS;
-            if (!(PL_hints & HINT_EXPLICIT_STRICT_SUBS))
+            if (!(PL_explicit_strict & EXPLICIT_STRICT_SUBS))
                 PL_hints &= ~HINT_STRICT_SUBS;
-            if (!(PL_hints & HINT_EXPLICIT_STRICT_VARS))
+            if (!(PL_explicit_strict & EXPLICIT_STRICT_VARS))
                 PL_hints &= ~HINT_STRICT_VARS;
         }
     }

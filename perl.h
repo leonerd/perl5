@@ -5549,6 +5549,13 @@ typedef enum {
 #define HINTS_DEFAULT            0
 #endif
 
+/* Flags for PL_explicit_strict
+ * These used to be HINTS_... bits
+ */
+#define EXPLICIT_STRICT_REFS	0x20 /* strict.pm */
+#define EXPLICIT_STRICT_SUBS	0x40 /* strict.pm */
+#define EXPLICIT_STRICT_VARS	0x80 /* strict.pm */
+
 /* flags for PL_sawampersand */
 
 #define SAWAMPERSAND_LEFT       1   /* saw $` */

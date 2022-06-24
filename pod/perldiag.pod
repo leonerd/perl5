@@ -2489,11 +2489,10 @@ C<getpwnam> operator returned an invalid UIC.
 forget to check the return value of your socket() call?  See
 L<perlfunc/getsockopt>.
 
-=item given is experimental
+=item given is deprecated
 
-(S experimental::smartmatch) C<given> depends on smartmatch, which
-is experimental, so its behavior may change or even be removed
-in any future release of perl.  See the explanation under
+(S deprecated) C<given> depends on smartmatch, which is deprecated, so may
+be removed in a future release of perl.  See the explanation under
 L<perlsyn/Experimental Details on given and when>.
 
 =item Global symbol "%s" requires explicit package name (did you forget to
@@ -5829,14 +5828,11 @@ so there can't be any left to fill later parameters.
 overload it: Perl refuses to use the object's underlying structure
 for the smart match.
 
-=item Smartmatch is experimental
+=item Smartmatch is deprecated
 
-(S experimental::smartmatch) This warning is emitted if you
-use the smartmatch (C<~~>) operator.  This is currently an experimental
-feature, and its details are subject to change in future releases of
-Perl.  Particularly, its current behavior is noticed for being
-unnecessarily complex and unintuitive, and is very likely to be
-overhauled.
+(S deprecated) This warning is emitted if you use the smartmatch (C<~~>)
+operator.  Its current behavior is noticed for being unnecessarily
+complex and unintuitive, and is very likely to be removed.
 
 =item Sorry, hash keys must be smaller than 2**31 bytes
 
@@ -7763,13 +7759,11 @@ but in actual fact, you got
 
 So put in parentheses to say what you really mean.
 
-=item when is experimental
+=item when is deprecated
 
-(S experimental::smartmatch) C<when> depends on smartmatch, which is
-experimental.  Additionally, it has several special cases that may
-not be immediately obvious, and their behavior may change or
-even be removed in any future release of perl.  See the explanation
-under L<perlsyn/Experimental Details on given and when>.
+(S deprecated) C<when> depends on smartmatch, which is deprecated, so may
+be removed in a future release of perl.  See the explanation under
+L<perlsyn/Experimental Details on given and when>.
 
 =item Wide character in %s
 

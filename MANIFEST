@@ -5565,6 +5565,7 @@ t/cmd/mod.t			See if statement modifiers work
 t/cmd/subval.t			See if subroutine values work
 t/cmd/switch.t			See if switch optimizations work
 t/comp/bproto.t			See if builtins conform to their prototypes
+t/comp/class.t			See if class declarations compile correctly
 t/comp/cmdopt.t			See if command optimization works
 t/comp/colon.t			See if colons are parsed correctly
 t/comp/decl.t			See if declarations work
@@ -5707,6 +5708,7 @@ t/lib/warnings/9enabled		Tests warnings
 t/lib/warnings/9uninit		Tests "Use of uninitialized" warnings
 t/lib/warnings/av		Tests for av.c for warnings.t
 t/lib/warnings/builtin		Tests for builtin.c for warnings.t
+t/lib/warnings/class		Tests for class.c for warnings.t
 t/lib/warnings/doio		Tests for doio.c for warnings.t
 t/lib/warnings/gv		Tests for gv.c for warnings.t
 t/lib/warnings/hv		Tests for hv.c for warnings.t

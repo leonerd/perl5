@@ -21,6 +21,7 @@ END
 if ($] >= 5.010001) {
 	is (eval <<'END', 1, 'switch compiles') or diag $@;
 	use experimental 'switch';
+	no if $] >= 5.037002, warnings => 'deprecated';
 	sub bar { 1 };
 	given(1) {
 		when (\&bar) {
@@ -37,6 +38,7 @@ END
 if ($] >= 5.010001) {
 	is (eval <<'END', 1, 'smartmatch compiles') or diag $@;
 	use experimental 'smartmatch';
+	no if $] >= 5.037002, warnings => 'deprecated';
 	sub baz { 1 };
 	is(1 ~~ \&baz, 1, "is 1");
 	1;

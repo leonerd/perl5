@@ -142,9 +142,13 @@
 #define WARN_EXPERIMENTAL__EXTRA_PAIRED_DELIMITERS 77
 #define WARN_EXPERIMENTAL__FOR_LIST	 78
 #define WARN_SCALAR			 79
-#define WARNsize			 20
-#define WARN_ALLstring			 "\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125"
-#define WARN_NONEstring			 "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
+
+/* Warnings Categories added in Perl 5.037 */
+
+#define WARN_EXPERIMENTAL__CLASS	 80
+#define WARNsize			 21
+#define WARN_ALLstring			 "\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125\125"
+#define WARN_NONEstring			 "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
 
 #define isLEXWARN_on \
         cBOOL(PL_curcop && PL_curcop->cop_warnings != pWARN_STD)
@@ -331,6 +335,7 @@ category parameters passed.
 =for apidoc Amnh||WARN_EXPERIMENTAL__EXTRA_PAIRED_DELIMITERS
 =for apidoc Amnh||WARN_EXPERIMENTAL__FOR_LIST
 =for apidoc Amnh||WARN_SCALAR
+=for apidoc Amnh||WARN_EXPERIMENTAL__CLASS
 
 =cut
 */

@@ -2,6 +2,9 @@ class.c        experimental warnings from 'class' feature
 __END__
 use strict;
 use feature 'class';
-class C {}
+class C {
+  method m {}
+}
 EXPECT
 class is experimental at - line 3.
+method is experimental at - line 4.

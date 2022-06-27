@@ -8522,6 +8522,12 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
     case KEY_substr:
         LOP(OP_SUBSTR,XTERM);
 
+    case KEY_method:
+        /* For now we just treat 'method' identical to 'sub' plus a warning */
+        Perl_ck_warner_d(aTHX_
+            packWARN(WARN_EXPERIMENTAL__CLASS), "method is experimental");
+
+        /* FALLTHROUGH */
     case KEY_format:
     case KEY_sub:
         return yyl_sub(aTHX_ s, key);

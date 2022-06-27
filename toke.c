@@ -7824,6 +7824,16 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
     case KEY_chop:
         UNI(OP_CHOP);
 
+    case KEY_class:
+        /* For now we just treat 'class' identical to 'package' plus a warning */
+        Perl_ck_warner_d(aTHX_
+            packWARN(WARN_EXPERIMENTAL__CLASS), "class is experimental");
+
+        s = force_word(s,BAREWORD,FALSE,TRUE);
+        s = skipspace(s);
+        s = force_strict_version(s);
+        PREBLOCK(PACKAGE);
+
     case KEY_continue:
         /* We have to disambiguate the two senses of
           "continue". If the next token is a '{' then

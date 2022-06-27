@@ -3701,6 +3701,12 @@ See L<perlfunc/unpack>.
 (F) An attempt was made to specify an entry in an overloading table that
 doesn't resolve to a valid subroutine.  See L<overload>.
 
+=item method is experimental
+
+(S experimental::class) This warning is emitted if you use the C<method>
+keyword of C<use feature 'class'>.  This keyword is currently
+experimental and its behaviour may change in future releases of Perl.
+
 =item Method %s not permitted
 
 See L</500 Server error>.

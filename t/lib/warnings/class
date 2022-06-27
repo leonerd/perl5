@@ -1,0 +1,7 @@
+class.c        experimental warnings from 'class' feature
+__END__
+use strict;
+use feature 'class';
+class C {}
+EXPECT
+class is experimental at - line 3.

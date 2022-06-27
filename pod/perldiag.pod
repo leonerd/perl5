@@ -1700,6 +1700,12 @@ is better written as simply itself, perhaps preceded by a backslash
 for non-word characters.  Doing it the way you did is not portable
 between ASCII and EBCDIC platforms.
 
+=item class is experimental
+
+(S experimental::class) This warning is emitted if you use the C<class>
+keyword of C<use feature 'class'>.  This keyword is currently
+experimental and its behaviour may change in future releases of Perl.
+
 =item Cloning substitution context is unimplemented
 
 (F) Creating a new thread inside the C<s///> operator is not supported.

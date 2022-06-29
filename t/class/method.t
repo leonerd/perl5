@@ -21,4 +21,41 @@ no warnings 'experimental::class';
     is($obj->retself, $obj, '$self inside method');
 }
 
+# methods have signatures; signatures do not capture $self
+{
+    class Test2 {
+        method retfirst ( $x = 123 ) { return $x; }
+    }
+
+    my $obj = Test2->new;
+    is($obj->retfirst,      123, 'method signature params work');
+    is($obj->retfirst(456), 456, 'method signature params skip $self');
+}
+
+# methods can still capture regular package lexicals
+{
+    class Test3 {
+        my $count;
+        method inc { return $count++ }
+    }
+
+    my $obj1 = Test3->new;
+    $obj1->inc;
+
+    is($obj1->inc, 1, '$obj1->inc sees 1');
+
+    my $obj2 = Test3->new;
+    is($obj2->inc, 2, '$obj2->inc sees 2');
+}
+
+# $self is shifted from @_
+{
+    class Test4 {
+        method args { return @_ }
+    }
+
+    my $obj = Test4->new;
+    ok(eq_array([$obj->args("a", "b")], ["a", "b"]), '$self is shifted from @_');
+}
+
 done_testing;

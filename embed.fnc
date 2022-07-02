@@ -3771,4 +3771,7 @@ Amd	|void	|CopFILEGV_set	|NN COP * c|NN GV * gv
 
 Amd|const char *const|phase_name|enum perl_phase
 
+Cp	|void	|class_setup_stash	|NN HV *stash
+Cp	|void	|class_seal_stash	|NN HV *stash
+
 : ex: set ts=8 sts=4 sw=4 noet:

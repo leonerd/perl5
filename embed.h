@@ -105,6 +105,8 @@
 #define ck_warner		Perl_ck_warner
 #define ck_warner_d		Perl_ck_warner_d
 #endif
+#define class_seal_stash(a)	Perl_class_seal_stash(aTHX_ a)
+#define class_setup_stash(a)	Perl_class_setup_stash(aTHX_ a)
 #define clear_defarray(a,b)	Perl_clear_defarray(aTHX_ a,b)
 #define cop_fetch_label(a,b,c)	Perl_cop_fetch_label(aTHX_ a,b,c)
 #define cop_store_label(a,b,c,d)	Perl_cop_store_label(aTHX_ a,b,c,d)

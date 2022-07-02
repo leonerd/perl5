@@ -395,6 +395,10 @@ barestmt:	PLUGSTMT
 			  if ($version)
 			      package_version($version);
 			  $$ = NULL;
+			  if($package_or_class == CLASS) {
+			      class_setup_stash(PL_curstash);
+			      warn("TODO: arrange for class seal sometime");
+			  }
 			}
 	|	KW_USE_or_NO startsub
 			{ CvSPECIAL_on(PL_compcv); /* It's a BEGIN {} */ }
@@ -536,9 +540,13 @@ barestmt:	PLUGSTMT
 			  if ($version) {
 			      package_version($version);
 			  }
+			  if($package_or_class == CLASS)
+			      class_setup_stash(PL_curstash);
 			}
 		stmtseq PERLY_BRACE_CLOSE
 			{
+			  if($package_or_class == CLASS)
+			      class_seal_stash(PL_curstash);
 			  /* a block is a loop that happens once */
 			  $$ = newWHILEOP(0, 1, NULL,
 				  NULL, block_end($remember, $stmtseq), NULL, 0);

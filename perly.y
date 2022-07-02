@@ -395,6 +395,8 @@ barestmt:	PLUGSTMT
 			  if ($version)
 			      package_version($version);
 			  $$ = NULL;
+			  if($package_or_class == CLASS)
+			      class_setup_stash(PL_curstash);
 			}
 	|	KW_USE_or_NO startsub
 			{ CvSPECIAL_on(PL_compcv); /* It's a BEGIN {} */ }
@@ -536,6 +538,8 @@ barestmt:	PLUGSTMT
 			  if ($version) {
 			      package_version($version);
 			  }
+			  if($package_or_class == CLASS)
+			      class_setup_stash(PL_curstash);
 			}
 		stmtseq PERLY_BRACE_CLOSE
 			{

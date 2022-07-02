@@ -3773,5 +3773,7 @@ Amd|const char *const|phase_name|enum perl_phase
 
 Cp	|void	|class_setup_stash	|NN HV *stash
 Cp	|void	|class_seal_stash	|NN HV *stash
+Cp	|void	|class_prepare_method_parse	|NN CV *cv
+Cp	|OP *	|class_wrap_method_body		|NN OP *o
 
 : ex: set ts=8 sts=4 sw=4 noet:

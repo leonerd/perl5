@@ -78,6 +78,7 @@
 /* The 'sub' keyword is a bit special; four different tokens depending on
  *   named-vs-anon, and whether signatures are in effect */
 %token <ival> KW_SUB_named KW_SUB_named_sig KW_SUB_anon KW_SUB_anon_sig
+%token <ival> KW_METHOD_named KW_METHOD_anon
 
 /* Tokens emitted in other situations */
 %token <opval> BAREWORD METHCALL0 METHCALL THING PMFUNC PRIVATEREF QWLIST
@@ -96,7 +97,7 @@
 
 %type <ival> mintro
 
-%type <ival>  package_or_class
+%type <ival>  package_or_class sigsub_or_method_named
 %type <opval> stmtseq fullstmt labfullstmt barestmt block mblock else finally
 %type <opval> expr term subscripted scalar ary hsh arylen star amper sideff
 %type <opval> condition
@@ -240,6 +241,14 @@ package_or_class
 			{ $$ = KW_CLASS; }
 	;
 
+/* Either a signatured 'sub' or 'method' keyword */
+sigsub_or_method_named
+	:	KW_SUB_named_sig
+			{ $$ = KW_SUB_named_sig; }
+	|	KW_METHOD_named
+			{ $$ = KW_METHOD_named; }
+	;
+
 /* An ordinary block */
 block	:	PERLY_BRACE_OPEN remember stmtseq PERLY_BRACE_CLOSE
 			{ if (parser->copline > (line_t)$PERLY_BRACE_OPEN)
@@ -368,13 +377,14 @@ barestmt:	PLUGSTMT
 			  intro_my();
 			  parser->parsed_sub = 1;
 			}
-	|	KW_SUB_named_sig subname startsub
+	|	sigsub_or_method_named subname startsub
                     /* sub declaration or definition under 'use feature
                      * "signatures"'. (Note that a signature isn't
                      * allowed in a declaration)
                      */
 			{
                           init_named_cv(PL_compcv, $subname);
+			  /* Can now distinguish 'sub' from 'method' */
 			  parser->in_my = 0;
 			  parser->in_my_stash = NULL;
 			}
@@ -395,7 +405,7 @@ barestmt:	PLUGSTMT
 			  if ($version)
 			      package_version($version);
 			  $$ = NULL;
-			  if($package_or_class == CLASS) {
+			  if($package_or_class == KW_CLASS) {
 			      class_setup_stash(PL_curstash);
 			      warn("TODO: arrange for class seal sometime");
 			  }
@@ -540,12 +550,12 @@ barestmt:	PLUGSTMT
 			  if ($version) {
 			      package_version($version);
 			  }
-			  if($package_or_class == CLASS)
+			  if($package_or_class == KW_CLASS)
 			      class_setup_stash(PL_curstash);
 			}
 		stmtseq PERLY_BRACE_CLOSE
 			{
-			  if($package_or_class == CLASS)
+			  if($package_or_class == KW_CLASS)
 			      class_seal_stash(PL_curstash);
 			  /* a block is a loop that happens once */
 			  $$ = newWHILEOP(0, 1, NULL,

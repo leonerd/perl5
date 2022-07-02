@@ -443,6 +443,8 @@ static struct debug_tokens {
     DEBUG_TOKEN (IVAL,  KW_FORMAT),
     DEBUG_TOKEN (IVAL,  KW_IF),
     DEBUG_TOKEN (IVAL,  KW_LOCAL),
+    DEBUG_TOKEN (IVAL,  KW_METHOD_anon),
+    DEBUG_TOKEN (IVAL,  KW_METHOD_named),
     DEBUG_TOKEN (IVAL,  KW_MY),
     DEBUG_TOKEN (IVAL,  KW_PACKAGE),
     DEBUG_TOKEN (IVAL,  KW_REQUIRE),
@@ -5320,7 +5322,10 @@ yyl_sub(pTHX_ char *s, const int key)
     bool have_name, have_proto;
     STRLEN len;
     SV *format_name = NULL;
-    bool is_sigsub = FEATURE_SIGNATURES_IS_ENABLED;
+    bool is_method = (key == KEY_method);
+
+    /* method always implies signatures */
+    bool is_sigsub = is_method || FEATURE_SIGNATURES_IS_ENABLED;
 
     SSize_t off = s-SvPVX(PL_linestr);
     char *d;
@@ -5422,12 +5427,16 @@ yyl_sub(pTHX_ char *s, const int key)
             sv_setpvs(PL_subname, "__ANON__");
         else
             sv_setpvs(PL_subname, "__ANON__::__ANON__");
+        if (is_method)
+            TOKEN(KW_METHOD_anon);
         if (is_sigsub)
             TOKEN(KW_SUB_anon_sig);
         else
             TOKEN(KW_SUB_anon);
     }
     force_ident_maybe_lex('&');
+    if (is_method)
+        TOKEN(KW_METHOD_named);
     if (is_sigsub)
         TOKEN(KW_SUB_named_sig);
     else
@@ -8523,8 +8532,8 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
         /* For now we just treat 'method' identical to 'sub' plus a warning */
         Perl_ck_warner_d(aTHX_
             packWARN(WARN_EXPERIMENTAL__CLASS), "method is experimental");
+        return yyl_sub(aTHX_ s, KEY_method);
 
-        /* FALLTHROUGH */
     case KEY_format:
     case KEY_sub:
         return yyl_sub(aTHX_ s, key);

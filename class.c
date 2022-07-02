@@ -20,6 +20,15 @@ enum {
     PADIX_SELF = 1,
 };
 
+void
+Perl_croak_kw_unless_class(pTHX_ const char *kw)
+{
+    PERL_ARGS_ASSERT_CROAK_KW_UNLESS_CLASS;
+
+    if(!HvSTASH_IS_CLASS(PL_curstash))
+        Perl_croak(aTHX_ "Cannot '%s' outside of a 'class'", kw);
+}
+
 XS(injected_constructor);
 XS(injected_constructor)
 {
@@ -94,6 +103,7 @@ Perl_class_prepare_method_parse(pTHX_ CV *cv)
     PERL_ARGS_ASSERT_CLASS_PREPARE_METHOD_PARSE;
 
     assert(cv == PL_compcv);
+    assert(HvSTASH_IS_CLASS(PL_curstash));
 
     /* We expect this to be at the start of sub parsing, so there won't be
      * anything in the pad yet

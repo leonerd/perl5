@@ -67,6 +67,46 @@ Perl_class_seal_stash(pTHX_ HV *stash)
     /* TODO: anything? */
 }
 
+void
+Perl_class_prepare_method_parse(pTHX_ CV *cv)
+{
+    PERL_ARGS_ASSERT_CLASS_PREPARE_METHOD_PARSE;
+
+    assert(cv == PL_compcv);
+
+    /* We expect this to be at the start of sub parsing, so there won't be
+     * anything in the pad yet
+     */
+    assert(PL_comppad_name_fill == 0);
+
+    PADOFFSET padix;
+
+    padix = pad_add_name_pvs("$self", 0, NULL, NULL);
+    assert(padix == 1);
+
+    intro_my();
+}
+
+OP *
+Perl_class_wrap_method_body(pTHX_ OP *o)
+{
+    PERL_ARGS_ASSERT_CLASS_WRAP_METHOD_BODY;
+
+    /* Inject  my $self = shift;  at the start */
+
+    OP *padsvop = newOP(OP_PADSV, OPf_REF|OPf_MOD|OPf_SPECIAL);
+    padsvop->op_targ = 1;
+    padsvop->op_private |= OPpLVAL_INTRO;
+
+    OP *assignop = newBINOP(OP_SASSIGN, 0,
+        newOP(OP_SHIFT, OPf_SPECIAL),
+        padsvop);
+
+    op_sibling_splice(o, NULL, 0, assignop);
+
+    return o;
+}
+
 /*
  * ex: set ts=8 sts=4 sw=4 et:
  */

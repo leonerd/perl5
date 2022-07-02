@@ -384,16 +384,26 @@ barestmt:	PLUGSTMT
                      */
 			{
                           init_named_cv(PL_compcv, $subname);
-			  /* Can now distinguish 'sub' from 'method' */
+			  if($sigsub_or_method_named == KW_METHOD_named) {
+			      /* TODO: set some sort of flag on the CV? But see
+			       *   https://github.com/leonerd/perl5/discussions/7
+			       */
+			      class_prepare_method_parse(PL_compcv);
+			  }
 			  parser->in_my = 0;
 			  parser->in_my_stash = NULL;
 			}
                     subattrlist optsigsubbody
 			{
+			  OP *body = $optsigsubbody;
+
 			  SvREFCNT_inc_simple_void(PL_compcv);
+			  if($sigsub_or_method_named == KW_METHOD_named) {
+			      body = class_wrap_method_body(body);
+			  }
 			  $subname->op_type == OP_CONST
-			      ? newATTRSUB($startsub, $subname, NULL, $subattrlist, $optsigsubbody)
-			      : newMYSUB(  $startsub, $subname, NULL, $subattrlist, $optsigsubbody)
+			      ? newATTRSUB($startsub, $subname, NULL, $subattrlist, body)
+			      : newMYSUB(  $startsub, $subname, NULL, $subattrlist, body)
 			  ;
 			  $$ = NULL;
 			  intro_my();

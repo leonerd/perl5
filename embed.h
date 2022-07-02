@@ -115,6 +115,7 @@
 #ifndef MULTIPLICITY
 #define croak			Perl_croak
 #endif
+#define croak_kw_unless_class(a)	Perl_croak_kw_unless_class(aTHX_ a)
 #define croak_memory_wrap	Perl_croak_memory_wrap
 #define croak_no_modify		Perl_croak_no_modify
 #define croak_sv(a)		Perl_croak_sv(aTHX_ a)

@@ -22,4 +22,14 @@ no warnings 'experimental::class';
     is($obj->hello, "hello, world", '$obj->hello');
 }
 
+# Classes are still regular packages
+{
+    class Test2 {
+        my $ok = "OK";
+        sub NotAMethod { return $ok }
+    }
+
+    is(Test2::NotAMethod(), "OK", 'Class can contain regular subs');
+}
+
 done_testing;

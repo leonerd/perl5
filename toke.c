@@ -439,6 +439,7 @@ static struct debug_tokens {
     DEBUG_TOKEN (IVAL,  KW_DO),
     DEBUG_TOKEN (IVAL,  KW_ELSE),
     DEBUG_TOKEN (IVAL,  KW_ELSIF),
+    DEBUG_TOKEN (IVAL,  KW_FIELD),
     DEBUG_TOKEN (IVAL,  KW_GIVEN),
     DEBUG_TOKEN (IVAL,  KW_FOR),
     DEBUG_TOKEN (IVAL,  KW_FORMAT),
@@ -8006,6 +8007,16 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
 
     case KEY_endgrent:
         FUN0(OP_EGRENT);
+
+    case KEY_field:
+        /* TODO: maybe this should use the same parser/grammar structures as
+         * `my`, but it's also rather messy because of the `our` conflation
+         */
+        Perl_ck_warner_d(aTHX_
+            packWARN(WARN_EXPERIMENTAL__CLASS), "field is experimental");
+
+        PL_parser->in_my = KEY_field;
+        OPERATOR(KW_FIELD);
 
     case KEY_finally:
         Perl_ck_warner_d(aTHX_

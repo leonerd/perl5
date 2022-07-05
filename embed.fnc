@@ -3772,6 +3772,7 @@ Amd	|void	|CopFILEGV_set	|NN COP * c|NN GV * gv
 Amd|const char *const|phase_name|enum perl_phase
 
 Cp	|void	|class_add_ADJUST	|NN CV *cv
+Cp	|void	|class_alloc_pad_field	|NN PADNAME *pn
 Cp	|void	|class_prepare_method_parse	|NN CV *cv
 Cp	|void	|class_setup_stash	|NN HV *stash
 Cp	|void	|class_seal_stash	|NN HV *stash

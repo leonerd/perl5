@@ -595,4 +595,4 @@ ceil		ceil			ck_null		fsT1
 floor		floor			ck_null		fsT1
 is_tainted	is_tainted		ck_null		fs1
 
-methstart	method start		ck_null		0
+methstart	method start		ck_null		+

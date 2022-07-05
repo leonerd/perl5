@@ -70,4 +70,48 @@ no warnings 'experimental::class';
     Test3->new->setup->test;
 }
 
+# fields can be captured by anon subs
+{
+    class Test4 {
+        field $count;
+
+        method make_incrsub {
+            return sub { $count++ };
+        }
+
+        method count { return $count }
+    }
+
+    my $obj = Test4->new;
+    my $incr = $obj->make_incrsub;
+
+    $incr->();
+    $incr->();
+    $incr->();
+
+    is($obj->count, 3, '$obj->count after invoking closure x 3');
+}
+
+# fields can be captured by anon methods
+{
+    class Test5 {
+        field $count;
+
+        method make_incrmeth {
+            return method { $count++ };
+        }
+
+        method count { return $count }
+    }
+
+    my $obj = Test5->new;
+    my $incr = $obj->make_incrmeth;
+
+    $obj->$incr;
+    $obj->$incr;
+    $obj->$incr;
+
+    is($obj->count, 3, '$obj->count after invoking method-closure x 3');
+}
+
 done_testing;

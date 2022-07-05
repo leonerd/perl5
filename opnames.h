@@ -429,10 +429,11 @@ typedef enum opcode {
 	OP_CEIL		 = 412,
 	OP_FLOOR	 = 413,
 	OP_IS_TAINTED	 = 414,
+	OP_METHSTART	 = 415,
 	OP_max		
 } opcode;
 
-#define MAXO 415
+#define MAXO 416
 #define OP_FREED MAXO
 
 /* the OP_IS_* macros are optimized to a simple range check because

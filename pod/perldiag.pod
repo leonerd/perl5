@@ -704,6 +704,12 @@ be directly assigned to.
 (S io) You tried to apply an encoding that did not exist to a filehandle,
 either with open() or binmode().
 
+=item Cannot invoke method on a non-instance
+
+(F) You tried to directly call a C<method> subroutine of a class by passing
+in a value that is not an instance of that class.  This is not permitted, as
+the method would not then have access to its instance fields.
+
 =item Cannot open %s as a dirhandle: it is already open as a filehandle
 
 (F) You tried to use opendir() to associate a dirhandle to a symbol (glob

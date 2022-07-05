@@ -101,8 +101,13 @@ XS(injected_constructor)
 PP(pp_methstart)
 {
     SV *self = av_shift(GvAV(PL_defgv));
+    SV *rv = NULL;
 
-    /* TODO: much sanity checking on self */
+    if(!SvROK(self) ||
+        !SvOBJECT((rv = SvRV(self))) ||
+        SvTYPE(rv) != SVt_PVAV)  /* TODO: SVt_INSTANCE */
+        /* TODO: check it's in an appropriate class */
+        Perl_croak(aTHX_ "Cannot invoke method on a non-instance");
 
     save_clearsv(&PAD_SVl(PADIX_SELF));
     sv_setsv(PAD_SVl(PADIX_SELF), self);

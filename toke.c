@@ -5424,6 +5424,7 @@ yyl_sub(pTHX_ char *s, const int key)
         PL_lex_stuff = NULL;
         force_next(THING);
     }
+
     if (!have_name) {
         if (PL_curstash)
             sv_setpvs(PL_subname, "__ANON__");
@@ -5431,7 +5432,7 @@ yyl_sub(pTHX_ char *s, const int key)
             sv_setpvs(PL_subname, "__ANON__::__ANON__");
         if (is_method)
             TOKEN(KW_METHOD_anon);
-        if (is_sigsub)
+        else if (is_sigsub)
             TOKEN(KW_SUB_anon_sig);
         else
             TOKEN(KW_SUB_anon);
@@ -5439,7 +5440,7 @@ yyl_sub(pTHX_ char *s, const int key)
     force_ident_maybe_lex('&');
     if (is_method)
         TOKEN(KW_METHOD_named);
-    if (is_sigsub)
+    else if (is_sigsub)
         TOKEN(KW_SUB_named_sig);
     else
         TOKEN(KW_SUB_named);

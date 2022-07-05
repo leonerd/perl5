@@ -58,4 +58,20 @@ no warnings 'experimental::class';
     ok(eq_array([$obj->args("a", "b")], ["a", "b"]), '$self is shifted from @_');
 }
 
+# anon methods
+{
+    class Test5 {
+        method anonmeth {
+            return method {
+                return "Result";
+            }
+        }
+    }
+
+    my $obj = Test5->new;
+    my $mref = $obj->anonmeth;
+
+    is($obj->$mref, "Result", 'anon method can be invoked');
+}
+
 done_testing;

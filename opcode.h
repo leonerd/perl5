@@ -2262,7 +2262,7 @@ EXTCONST U32 PL_opargs[] = {
 	0x0000011e,	/* ceil */
 	0x0000011e,	/* floor */
 	0x00000106,	/* is_tainted */
-	0x00000000,	/* methstart */
+	0x00000f00,	/* methstart */
 };
 #endif
 
@@ -2945,7 +2945,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
       75, /* ceil */
       75, /* floor */
        0, /* is_tainted */
-      -1, /* methstart */
+       0, /* methstart */
 
 };
 
@@ -2964,7 +2964,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
  */
 
 EXTCONST U16  PL_op_private_bitdefs[] = {
-    0x0003, /* scalar, prototype, refgen, srefgen, readline, regcmaybe, regcreset, regcomp, substcont, chop, schop, defined, undef, study, preinc, i_preinc, predec, i_predec, postinc, i_postinc, postdec, i_postdec, negate, i_negate, not, ucfirst, lcfirst, uc, lc, quotemeta, aeach, avalues, each, pop, shift, grepstart, mapstart, mapwhile, range, and, or, dor, andassign, orassign, dorassign, argcheck, argdefelem, method, method_named, method_super, method_redir, method_redir_super, entergiven, leavegiven, enterwhen, leavewhen, untie, tied, dbmclose, getsockname, getpeername, lstat, stat, readlink, readdir, telldir, rewinddir, closedir, localtime, alarm, require, dofile, entertry, ghbyname, gnbyname, gpbyname, shostent, snetent, sprotoent, sservent, gpwnam, gpwuid, ggrnam, ggrgid, lock, once, fc, anonconst, cmpchain_and, cmpchain_dup, entertrycatch, catch, is_bool, is_weak, weaken, unweaken, is_tainted */
+    0x0003, /* scalar, prototype, refgen, srefgen, readline, regcmaybe, regcreset, regcomp, substcont, chop, schop, defined, undef, study, preinc, i_preinc, predec, i_predec, postinc, i_postinc, postdec, i_postdec, negate, i_negate, not, ucfirst, lcfirst, uc, lc, quotemeta, aeach, avalues, each, pop, shift, grepstart, mapstart, mapwhile, range, and, or, dor, andassign, orassign, dorassign, argcheck, argdefelem, method, method_named, method_super, method_redir, method_redir_super, entergiven, leavegiven, enterwhen, leavewhen, untie, tied, dbmclose, getsockname, getpeername, lstat, stat, readlink, readdir, telldir, rewinddir, closedir, localtime, alarm, require, dofile, entertry, ghbyname, gnbyname, gpbyname, shostent, snetent, sprotoent, sservent, gpwnam, gpwuid, ggrnam, ggrgid, lock, once, fc, anonconst, cmpchain_and, cmpchain_dup, entertrycatch, catch, is_bool, is_weak, weaken, unweaken, is_tainted, methstart */
     0x30dc, 0x41d9, /* pushmark */
     0x00bd, /* wantarray, runcv */
     0x0438, 0x1a50, 0x428c, 0x3e28, 0x3605, /* const */
@@ -3460,7 +3460,7 @@ EXTCONST U8 PL_op_private_valid[] = {
     /* CEIL       */ (OPpARG1_MASK|OPpTARGET_MY),
     /* FLOOR      */ (OPpARG1_MASK|OPpTARGET_MY),
     /* IS_TAINTED */ (OPpARG1_MASK),
-    /* METHSTART  */ (0),
+    /* METHSTART  */ (OPpARG1_MASK),
 
 };
 

@@ -562,6 +562,10 @@ S_pad_alloc_name(pTHX_ PADNAME *name, U32 flags, HV *typestash,
     else if (flags & padadd_STATE) {
         PadnameFLAGS(name) |= PADNAMEf_STATE;
     }
+    if (flags & padadd_FIELD) {
+        assert(HvSTASH_IS_CLASS(PL_curstash));
+        class_alloc_pad_field(name);
+    }
 
     padnamelist_store(PL_comppad_name, offset, name);
     if (PadnameLEN(name) > 1)
@@ -599,7 +603,7 @@ Perl_pad_add_name_pvn(pTHX_ const char *namepv, STRLEN namelen,
 
     PERL_ARGS_ASSERT_PAD_ADD_NAME_PVN;
 
-    if (flags & ~(padadd_OUR|padadd_STATE|padadd_NO_DUP_CHECK))
+    if (flags & ~(padadd_OUR|padadd_STATE|padadd_NO_DUP_CHECK|padadd_FIELD))
         Perl_croak(aTHX_ "panic: pad_add_name_pvn illegal flag bits 0x%" UVxf,
                    (UV)flags);
 
@@ -2772,6 +2776,10 @@ Perl_newPADNAMEouter(PADNAME *outer)
        another entry.  The original pad name owns the buffer.  */
     PadnameREFCNT(PADNAME_FROM_PV(PadnamePV(outer)))++;
     PadnameFLAGS(pn) = PADNAMEf_OUTER;
+    if(PadnameIsFIELD(outer)) {
+        PadnameFIELDINFO(pn) = PadnameFIELDINFO(outer);
+        PadnameFLAGS(pn) |= PADNAMEf_FIELD;
+    }
     PadnameLEN(pn) = PadnameLEN(outer);
     return pn;
 }

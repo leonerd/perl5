@@ -74,4 +74,24 @@ no warnings 'experimental::class';
     is($obj->$mref, "Result", 'anon method can be invoked');
 }
 
+# method calls are not permitted on non-instances
+{
+    class Test6 {
+        method m { }
+    }
+
+    my $re = qr/^Cannot invoke method on a non-instance at /;
+
+    ok(!eval { Test6::m(); 1 }, 'Call to method as a 0-arg sub is not permitted');
+    like($@, $re, 'Exception from 0-arg sub call');
+
+    ok(!eval { Test6::m(123); 1 }, 'Call to method as a 1-arg sub is not permitted');
+    like($@, $re, 'Exception from 1-arg sub call');
+
+    ok(!eval { Test6::m([]); 1 }, 'Call to method as a ref-arg sub is not permitted');
+    like($@, $re, 'Exception from ref-arg sub call');
+
+    # TODO: also test  bless [], "Test6"  once we have SVt_INSTANCE
+}
+
 done_testing;

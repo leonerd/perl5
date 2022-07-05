@@ -91,6 +91,7 @@
 %token <ival> DOLSHARP HASHBRACK NOAMP
 %token <ival> COLONATTR FORMLBRACK FORMRBRACK
 %token <ival> SUBLEXSTART SUBLEXEND
+%token <ival> PHASER
 
 %type <ival> grammar remember mremember
 %type <ival>  startsub startanonsub startformsub
@@ -409,6 +410,33 @@ barestmt:	PLUGSTMT
 			  $$ = NULL;
 			  intro_my();
 			  parser->parsed_sub = 1;
+			}
+	|	PHASER startsub
+			{
+			  switch($PHASER) {
+			      case KEY_ADJUST:
+			         croak_kw_unless_class("ADJUST");
+			         class_prepare_method_parse(PL_compcv);
+			         break;
+			      default:
+			         NOT_REACHED;
+			  }
+			}
+		    optsubbody
+			{
+			  OP *body = $optsubbody;
+			  SvREFCNT_inc_simple_void(PL_compcv);
+
+			  CV *cv;
+
+			  switch($PHASER) {
+			      case KEY_ADJUST:
+			          body = class_wrap_method_body(body);
+			          cv = newATTRSUB($startsub, NULL, NULL, NULL, body);
+			          class_add_ADJUST(cv);
+			          break;
+			  }
+			  $$ = NULL;
 			}
 	|	package_or_class BAREWORD[version] BAREWORD[package] PERLY_SEMICOLON
 			{

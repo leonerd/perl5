@@ -36,4 +36,17 @@ no warnings 'experimental::class';
     is($self_in_ADJUST, $obj, '$self is set correctly inside ADJUST blocks');
 }
 
+# $params to ADJUST
+{
+    my $params_in_ADJUST;
+
+    class Test3 {
+        ADJUST { $params_in_ADJUST = shift; }
+    }
+
+    my $obj = Test3->new;
+    is(ref $params_in_ADJUST, "HASH", 'ADJUST block passed a HASHref');
+    is(scalar keys %$params_in_ADJUST, 0, 'HASHref had no keys');
+}
+
 done_testing;

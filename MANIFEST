@@ -5559,6 +5559,7 @@ t/bigmem/regexp.t		Test regular expressions with large strings
 t/bigmem/subst.t		Test s/// with large strings
 t/bigmem/vec.t			Check vec() handles large offsets
 t/charset_tools.pl		To aid in portable testing across platforms with different character sets
+t/class/construct.t		See if class constructors work
 t/class/class.t			See if class declarations work
 t/class/field.t			See if class field declarations work
 t/class/method.t		See if class method declarations work

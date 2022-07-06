@@ -117,6 +117,21 @@ XS(injected_constructor)
         }
     }
 
+    if(params && hv_iterinit(params) > 0) {
+        /* TODO: consider sorting these into a canonical order, but that's awkward */
+        HE *he = hv_iternext(params);
+
+        SV *paramnames = newSVsv(HeSVKEY_force(he));
+        SAVEFREESV(paramnames);
+
+        while((he = hv_iternext(params)))
+            Perl_sv_catpvf(aTHX_ paramnames, ", %" SVf, SVfARG(HeSVKEY_force(he)));
+
+        /* TODO: include class name */
+        Perl_croak(aTHX_ "Unrecognised parameters for constructor: %" SVf,
+                SVfARG(paramnames));
+    }
+
     EXTEND(SP, 1);
     ST(0) = self;
     XSRETURN(1);

@@ -39,6 +39,30 @@ XS(injected_constructor)
 
     struct xpvhv_aux *aux = HvAUX(stash);
 
+    if((items - 1) % 2)
+        /* TODO put the class name in here */
+        Perl_warn(aTHX_ "Odd number of arguments passed to constructor");
+
+    HV *params = NULL;
+    if(aux->xhv_class_adjust_blocks) {
+        params = newHV();
+        SAVEFREESV((SV *)params);
+
+        for(I32 i = 1; i < items; i += 2) {
+            SV *name = ST(i);
+            SV *val  = (i+1 < items) ? ST(i+1) : &PL_sv_undef;
+
+            /* TODO: think about sanity-checking name for being 
+             *   defined
+             *   not ref (but overloaded objects?? boo)
+             *   not duplicate
+             * But then,  %params = @_;  wouldn't do that
+             */
+
+            hv_store_ent(params, name, SvREFCNT_inc(val), 0);
+        }
+    }
+
     AV *fields = newAV();
     SV *self = sv_2mortal(newRV_noinc((SV *)fields));
     sv_bless(self, stash);
@@ -83,6 +107,7 @@ XS(injected_constructor)
 
             PUSHMARK(SP);
             PUSHs(self);  /* I don't believe this needs to be an sv_mortalcopy() */
+            mPUSHs(newRV_inc((SV *)params));
             PUTBACK;
 
             call_sv((SV *)cvp[i], G_VOID);

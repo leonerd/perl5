@@ -12,6 +12,7 @@ our %feature = (
     isa                     => 'feature_isa',
     say                     => 'feature_say',
     try                     => 'feature_try',
+    class                   => 'feature_class',
     defer                   => 'feature_defer',
     state                   => 'feature_state',
     switch                  => 'feature_switch',
@@ -38,7 +39,7 @@ our %feature_bundle = (
     "5.27"    => [qw(bareword_filehandles bitwise current_sub evalbytes fc indirect multidimensional postderef_qq say state switch unicode_eval unicode_strings)],
     "5.35"    => [qw(bareword_filehandles bitwise current_sub evalbytes fc isa postderef_qq say signatures state unicode_eval unicode_strings)],
     "5.37"    => [qw(bitwise current_sub evalbytes fc isa postderef_qq say signatures state unicode_eval unicode_strings)],
-    "all"     => [qw(bareword_filehandles bitwise current_sub declared_refs defer evalbytes extra_paired_delimiters fc indirect isa multidimensional postderef_qq refaliasing say signatures state switch try unicode_eval unicode_strings)],
+    "all"     => [qw(bareword_filehandles bitwise class current_sub declared_refs defer evalbytes extra_paired_delimiters fc indirect isa multidimensional postderef_qq refaliasing say signatures state switch try unicode_eval unicode_strings)],
     "default" => [qw(bareword_filehandles indirect multidimensional)],
 );
 
@@ -866,6 +867,17 @@ The complete list of accepted paired delimiters as of Unicode 14.0 is:
  🢩  🢨    U+1F8A9, U+1F8A8 RIGHT/LEFTWARDS BACK-TILTED SHADOWED WHITE ARROW
  🢫  🢪    U+1F8AB, U+1F8AA RIGHT/LEFTWARDS FRONT-TILTED SHADOWED WHITE
                           ARROW
+
+=head2 The 'class' feature
+
+B<WARNING>: This feature is still experimental and the implementation may
+change or be removed in future versions of Perl.  For this reason, Perl will
+warn when you use the feature, unless you have explicitly disabled the warning:
+
+    no warnings "experimental::class";
+
+This feature enables the C<class> block syntax and other associated keywords
+which implement the "new" object system, previously codenamed "Corinna".
 
 =head1 FEATURE BUNDLES
 

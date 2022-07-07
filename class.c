@@ -137,6 +137,12 @@ XS(injected_constructor)
     XSRETURN(1);
 }
 
+/* OP_METHSTART is an UNOP_AUX whose AUX list contains
+ *   [0].uv = count of fieldbinding pairs
+ *   [1].uv = maximum fieldidx found in the binding list
+ *   [...] = pairs of (padix, fieldix) to bind in .uv fields
+ */
+
 /* TODO: People would probably expect to find this in pp.c  ;) */
 PP(pp_methstart)
 {
@@ -158,11 +164,15 @@ PP(pp_methstart)
         AV *fields = MUTABLE_AV(SvRV(self));
         SV **fieldp = AvARRAY(fields);
 
-        for(Size_t i = 0; i < aux[0].uv; i++) {
-            PADOFFSET padix   = aux[i*2+1].uv;
-            U32       fieldix = aux[i*2+2].uv;
+        U32 fieldcount = (aux++)->uv;
+        U32 max_fieldix = (aux++)->uv;
 
-            assert(av_count(fields) > fieldix);
+        assert(av_count(fields) > max_fieldix);
+
+        for(Size_t i = 0; i < fieldcount; i++) {
+            PADOFFSET padix   = (aux++)->uv;
+            U32       fieldix = (aux++)->uv;
+
             assert(fieldp[fieldix]);
 
             /* TODO: There isn't a convenient SAVE macro for doing both these
@@ -257,6 +267,7 @@ Perl_class_wrap_method_body(pTHX_ OP *o)
     PADNAMELIST *pnl = PadlistNAMES(CvPADLIST(PL_compcv));
 
     AV *fieldmap = newAV();
+    UV max_fieldix = 0;
     SAVEFREESV((SV *)fieldmap);
 
     /* padix 0 == @_; padix 1 == $self. Start at 2 */
@@ -265,18 +276,26 @@ Perl_class_wrap_method_body(pTHX_ OP *o)
         if(!pn || !PadnameIsFIELD(pn))
             continue;
 
+        U32 fieldix = PadnameFIELDINFO(pn)->fieldix;
+        if(fieldix > max_fieldix)
+            max_fieldix = fieldix;
+
         av_push(fieldmap, newSVuv(padix));
-        av_push(fieldmap, newSVuv(PadnameFIELDINFO(pn)->fieldix));
+        av_push(fieldmap, newSVuv(fieldix));
     }
 
     UNOP_AUX_item *aux = NULL;
 
     if(av_count(fieldmap)) {
-        Newx(aux, 1 + av_count(fieldmap), UNOP_AUX_item);
+        Newx(aux, 2 + av_count(fieldmap), UNOP_AUX_item);
 
-        aux[0].uv = av_count(fieldmap) / 2;
+        UNOP_AUX_item *ap = aux;
+
+        (ap++)->uv = av_count(fieldmap) / 2;
+        (ap++)->uv = max_fieldix;
+
         for(Size_t i = 0; i < av_count(fieldmap); i++)
-            aux[i+1].uv = SvUV(AvARRAY(fieldmap)[i]);
+            (ap++)->uv = SvUV(AvARRAY(fieldmap)[i]);
     }
 
     /* If this is an empty method body then o will be an OP_STUB and not a

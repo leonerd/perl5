@@ -40,8 +40,8 @@ XS(injected_constructor)
     struct xpvhv_aux *aux = HvAUX(stash);
 
     if((items - 1) % 2)
-        /* TODO put the class name in here */
-        Perl_warn(aTHX_ "Odd number of arguments passed to constructor");
+        Perl_warn(aTHX_ "Odd number of arguments passed to %" HEKf " constructor",
+                HEKfARG(HvNAME_HEK(stash)));
 
     HV *params = NULL;
     if(aux->xhv_class_adjust_blocks) {
@@ -127,9 +127,8 @@ XS(injected_constructor)
         while((he = hv_iternext(params)))
             Perl_sv_catpvf(aTHX_ paramnames, ", %" SVf, SVfARG(HeSVKEY_force(he)));
 
-        /* TODO: include class name */
-        Perl_croak(aTHX_ "Unrecognised parameters for constructor: %" SVf,
-                SVfARG(paramnames));
+        Perl_croak(aTHX_ "Unrecognised parameters for %" HEKf " constructor: %" SVf,
+                HEKfARG(HvNAME_HEK(stash)), SVfARG(paramnames));
     }
 
     EXTEND(SP, 1);

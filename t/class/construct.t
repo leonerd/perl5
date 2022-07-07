@@ -22,7 +22,7 @@ no warnings 'experimental::class';
     is($obj->x, 123, 'Value of $x set by ADJUST');
 
     ok(!eval { Test1->new(y => 456); 1 }, 'Unrecognised parameter fails');
-    like($@, qr/^Unrecognised parameters for constructor: y at /,
+    like($@, qr/^Unrecognised parameters for Test1 constructor: y at /,
         'Exception thrown by constructor for unrecogniser parameter');
 }
 

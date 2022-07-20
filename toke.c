@@ -432,6 +432,7 @@ static struct debug_tokens {
     DEBUG_TOKEN (OPNUM, FUNC1),
     DEBUG_TOKEN (NONE,  HASHBRACK),
     DEBUG_TOKEN (IVAL,  KW_CATCH),
+    DEBUG_TOKEN (IVAL,  KW_CLASS),
     DEBUG_TOKEN (IVAL,  KW_CONTINUE),
     DEBUG_TOKEN (IVAL,  KW_DEFAULT),
     DEBUG_TOKEN (IVAL,  KW_DO),
@@ -7825,14 +7826,13 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
         UNI(OP_CHOP);
 
     case KEY_class:
-        /* For now we just treat 'class' identical to 'package' plus a warning */
         Perl_ck_warner_d(aTHX_
             packWARN(WARN_EXPERIMENTAL__CLASS), "class is experimental");
 
         s = force_word(s,BAREWORD,FALSE,TRUE);
         s = skipspace(s);
         s = force_strict_version(s);
-        PREBLOCK(PACKAGE);
+        PREBLOCK(KW_CLASS);
 
     case KEY_continue:
         /* We have to disambiguate the two senses of

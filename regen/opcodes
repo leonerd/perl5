@@ -11,7 +11,7 @@
 # The classes are:
 # baseop      - 0            unop     - 1            binop      - 2
 # logop       - |            listop   - @            pmop       - /
-# padop/svop  - $            padop    - # (unused)   loop       - {
+# padop/svop  - $            loop     - {
 # baseop/unop - %            loopexop - }            filestatop - -
 # pvop/svop   - "            cop      - ;            methop     - .
 # unop_aux    - +

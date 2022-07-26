@@ -1081,7 +1081,7 @@ my %opclass = (
     '@',  4,		# listop
     '/',  5,		# pmop
     '$',  6,		# svop_or_padop
-    '#',  7,		# padop
+    # '#' was 7 = padop
     '"',  8,		# pvop_or_svop
     '{',  9,		# loop
     ';',  10,		# cop

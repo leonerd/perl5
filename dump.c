@@ -3091,9 +3091,6 @@ Perl_op_class(pTHX_ const OP *o)
     case OA_SVOP:
         return OPclass_SVOP;
 
-    case OA_PADOP:
-        return OPclass_PADOP;
-
     case OA_PVOP_OR_SVOP:
         /*
          * Character translations (tr///) are usually a PVOP, keeping a 

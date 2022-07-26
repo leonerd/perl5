@@ -588,7 +588,7 @@ typedef enum {
 #define OA_LISTOP (4 << OCSHIFT)
 #define OA_PMOP (5 << OCSHIFT)
 #define OA_SVOP (6 << OCSHIFT)
-#define OA_PADOP (7 << OCSHIFT)
+/* OA_PADOP was (7 << OCSHIFT) */
 #define OA_PVOP_OR_SVOP (8 << OCSHIFT)
 #define OA_LOOP (9 << OCSHIFT)
 #define OA_COP (10 << OCSHIFT)

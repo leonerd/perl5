@@ -14832,14 +14832,28 @@ Perl_core_prototype(pTHX_ SV *sv, const char *name, const int code,
 }
 
 OP *
-Perl_coresub_op(pTHX_ SV * const coreargssv, const int code,
-                      const int opnum)
+Perl_coresub_op(pTHX_ const int code, const int opnum, const char *name, STRLEN namelen)
 {
-    OP * const argop = (opnum == OP_SELECT && code) ? NULL :
-                                        newSVOP(OP_COREARGS,0,coreargssv);
-    OP *o;
-
     PERL_ARGS_ASSERT_CORESUB_OP;
+
+    UNOP_AUX_item *aux;
+    if(opnum) {
+        Newx(aux, 1, UNOP_AUX_item);
+        aux[0].iv = opnum;
+    }
+    else {
+        assert(name);
+
+        Newx(aux, 2, UNOP_AUX_item);
+        aux[0].iv = opnum;
+        aux[1].pv = savepvn(name, namelen);
+    }
+    OP * const argop = (opnum == OP_SELECT && code) ? NULL :
+        newUNOP_AUX(OP_COREARGS, 0, NULL, aux);
+    if(argop)
+        argop->op_private = 0;
+
+    OP *o;
 
     switch(opnum) {
     case 0:
@@ -14864,9 +14878,8 @@ Perl_coresub_op(pTHX_ SV * const coreargssv, const int code,
                                   newAVREF(newGVOP(OP_GV, 0, PL_defgv)),
                                   newSVOP(OP_CONST, 0, newSVuv(1))
                                  ),
-                         coresub_op(newSVuv((UV)OP_SSELECT), 0,
-                                    OP_SSELECT),
-                         coresub_op(coreargssv, 0, OP_SELECT)
+                         coresub_op(0, OP_SSELECT, NULL, 0),
+                         coresub_op(0, OP_SELECT, name, namelen)
                    );
         /* FALLTHROUGH */
     default:

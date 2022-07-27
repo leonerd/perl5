@@ -198,7 +198,7 @@ use strict;
 
     # find which ops use 0,1,2,3 or 4 bits of op_private for arg count info
 
-    $args0{$_} = 1 for qw(entersub avhvswitch
+    $args0{$_} = 1 for qw(entersub coreargs avhvswitch
                        rv2hv);                  # UNOPs that usurp bit 0
 
     # Historically, bit ops used bit 0 to indicate 'use integer' in scope;

@@ -693,12 +693,7 @@ S_maybe_add_coresub(pTHX_ HV * const stash, GV *gv,
         if ((cv = newATTRSUB_x(
                    oldsavestack_ix, (OP *)gv,
                    NULL,NULL,
-                   coresub_op(
-                     opnum
-                       ? newSVuv((UV)opnum)
-                       : newSVpvn(name,len),
-                     code, opnum
-                   ),
+                   coresub_op(code, opnum, name, len),
                    TRUE
                )) != NULL) {
             assert(GvCV(gv) == orig_cv);

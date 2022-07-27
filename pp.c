@@ -6546,7 +6546,8 @@ S_maybe_unwind_defav(pTHX)
 PP(pp_coreargs)
 {
     dSP;
-    int opnum = SvIOK(cSVOP_sv) ? (int)SvUV(cSVOP_sv) : 0;
+    UNOP_AUX_item *items = cUNOP_AUX->op_aux;
+    int opnum = items[0].iv;
     int defgv = PL_opargs[opnum] & OA_DEFGV ||opnum==OP_GLOB, whicharg = 0;
     AV * const at_ = GvAV(PL_defgv);
     SV **svp = at_ ? AvARRAY(at_) : NULL;
@@ -6572,7 +6573,7 @@ PP(pp_coreargs)
         /* diag_listed_as: Too many arguments for %s */
         Perl_croak(aTHX_
           "%s arguments for %s", err,
-           opnum ? PL_op_desc[opnum] : SvPV_nolen_const(cSVOP_sv)
+           opnum ? PL_op_desc[opnum] : items[1].pv
         );
 
     /* Reset the stack pointer.  Without this, we end up returning our own

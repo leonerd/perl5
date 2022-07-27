@@ -848,10 +848,9 @@ PERL_CALLCONV SV *	Perl_core_prototype(pTHX_ SV *sv, const char *name, const int
 #define PERL_ARGS_ASSERT_CORE_PROTOTYPE	\
 	assert(name)
 
-PERL_CALLCONV OP *	Perl_coresub_op(pTHX_ SV *const coreargssv, const int code, const int opnum)
+PERL_CALLCONV OP *	Perl_coresub_op(pTHX_ const int code, const int opnum, const char *name, STRLEN namelen)
 			__attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_CORESUB_OP	\
-	assert(coreargssv)
+#define PERL_ARGS_ASSERT_CORESUB_OP
 
 PERL_CALLCONV void	Perl_create_eval_scope(pTHX_ OP *retop, U32 flags)
 			__attribute__visibility__("hidden");

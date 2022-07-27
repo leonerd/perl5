@@ -743,8 +743,7 @@ AdfTp	|void	|sv_setpvf_mg_nocontext|NN SV *const sv|NN const char *const pat|...
 pd	|SV *	|core_prototype	|NULLOK SV *sv|NN const char *name \
 				|const int code|NULLOK int * const opnum
 : Used in gv.c
-p	|OP *	|coresub_op	|NN SV *const coreargssv|const int code \
-				|const int opnum
+p	|OP *	|coresub_op	|const int code|const int opnum|NULLOK const char *name|STRLEN namelen
 : Used in sv.c
 ExXp	|void	|cv_ckproto_len_flags	|NN const CV* cv|NULLOK const GV* gv\
 				|NULLOK const char* p|const STRLEN len \

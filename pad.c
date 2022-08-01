@@ -1267,6 +1267,18 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
     if (offset == NOT_IN_PAD)
         return NOT_IN_PAD;
 
+    if (PadnameIsFIELD(*out_name)) {
+        /* field capture is permitted if CV itself is a method, or any outside
+         * scope is */
+        for(const CV *upcv = cv; upcv; upcv = CvOUTSIDE(upcv))
+            if(CvIsMETHOD(upcv))
+                goto found_method;
+
+        Perl_croak(aTHX_ "Field %" SVf " is not accessible outside a method",
+                SVfARG(PadnameSV(*out_name)));
+found_method: ;
+    }
+
     /* found in an outer CV. Add appropriate fake entry to this pad */
 
     /* don't add new fake entries (via eval) to CVs that we have already

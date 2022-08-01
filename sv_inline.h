@@ -125,7 +125,7 @@ struct body_details {
     U8 body_size;      /* Size to allocate  */
     U8 copy;           /* Size of structure to copy (may be shorter)  */
     U8 offset;         /* Size of unalloced ghost fields to first alloced field*/
-    PERL_BITFIELD8 type : 4;        /* We have space for a sanity check. */
+    PERL_BITFIELD8 type : 5;        /* We have space for a sanity check. */
     PERL_BITFIELD8 cant_upgrade : 1;/* Cannot upgrade this type */
     PERL_BITFIELD8 zero_nv : 1;     /* zero the NV when upgrading from this */
     PERL_BITFIELD8 arena : 1;       /* Allocated from an arena */
@@ -280,6 +280,13 @@ static const struct body_details bodies_by_type[] = {
       0,
       SVt_PVIO, TRUE, NONV, HASARENA,
       FIT_ARENA(24, sizeof(ALIGNED_TYPE_NAME(XPVIO))) },
+
+    /* SVt_PVOBJ - for now just claim it to be a PVAV */
+    { sizeof(ALIGNED_TYPE_NAME(XPVAV)),
+      copy_length(XPVAV, xav_alloc),
+      0,
+      SVt_PVOBJ, TRUE, NONV, HASARENA,
+      FIT_ARENA(0, sizeof(ALIGNED_TYPE_NAME(XPVAV))) },
 };
 
 #define new_body_allocated(sv_type)            \
@@ -390,6 +397,7 @@ Perl_newSV_type(pTHX_ const svtype type)
         break;
     case SVt_PVHV:
     case SVt_PVAV:
+    case SVt_PVOBJ:
         assert(type_details->body_size);
 
 #ifndef PURIFY
@@ -409,7 +417,7 @@ Perl_newSV_type(pTHX_ const svtype type)
         SvSTASH_set(sv, NULL);
         SvMAGIC_set(sv, NULL);
 
-        if (type == SVt_PVAV) {
+        if (type == SVt_PVAV || type == SVt_PVOBJ) {
             AvFILLp(sv) = -1;
             AvMAX(sv) = -1;
             AvALLOC(sv) = NULL;

@@ -1041,6 +1041,7 @@ Perl_sv_upgrade(pTHX_ SV *const sv, svtype new_type)
         return;
     case SVt_PVHV:
     case SVt_PVAV:
+    case SVt_PVOBJ:
         assert(new_type_details->body_size);
 
 #ifndef PURIFY
@@ -1056,7 +1057,7 @@ Perl_sv_upgrade(pTHX_ SV *const sv, svtype new_type)
         new_body = new_NOARENAZ(new_type_details);
 #endif
         SvANY(sv) = new_body;
-        if (new_type == SVt_PVAV) {
+        if (new_type == SVt_PVAV || new_type == SVt_PVOBJ) {
             *((XPVAV*) SvANY(sv)) = (XPVAV) {
                 .xmg_stash = NULL, .xmg_u = {.xmg_magic = NULL},
                 .xav_fill = -1, .xav_max = -1, .xav_alloc = 0
@@ -6740,6 +6741,7 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
             assert(!HvARRAY((HV*)sv));
             break;
         case SVt_PVAV:
+        case SVt_PVOBJ:
             {
                 AV* av = MUTABLE_AV(sv);
                 if (PL_comppad == av) {
@@ -6931,7 +6933,7 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
             }
             else if (!iter_sv) {
                 break;
-            } else if (SvTYPE(iter_sv) == SVt_PVAV) {
+            } else if (SvTYPE(iter_sv) == SVt_PVAV || SvTYPE(iter_sv) == SVt_PVOBJ) {
                 AV *const av = (AV*)iter_sv;
                 if (AvFILLp(av) > -1) {
                     sv = AvARRAY(av)[AvFILLp(av)--];
@@ -10435,6 +10437,7 @@ Perl_sv_reftype(pTHX_ const SV *const sv, const int ob)
         case SVt_PVIO:		return "IO";
         case SVt_INVLIST:	return "INVLIST";
         case SVt_REGEXP:	return "REGEXP";
+        case SVt_PVOBJ:         return "OBJECT";
         default:		return "UNKNOWN";
         }
     }

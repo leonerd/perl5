@@ -45,7 +45,8 @@ static const char* const svtypenames[SVt_LAST] = {
     "PVHV",
     "PVCV",
     "PVFM",
-    "PVIO"
+    "PVIO",
+    "INSTANCE",
 };
 
 
@@ -65,7 +66,8 @@ static const char* const svshorttypenames[SVt_LAST] = {
     "HV",
     "CV",
     "FM",
-    "IO"
+    "IO",
+    "INSTANCE",
 };
 
 struct flag_to_name {

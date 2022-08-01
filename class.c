@@ -248,6 +248,9 @@ Perl_class_prepare_method_parse(pTHX_ CV *cv)
     assert(padix == PADIX_SELF);
 
     intro_my();
+
+    CvNOWARN_AMBIGUOUS_on(cv);
+    CvIsMETHOD_on(cv);
 }
 
 OP *

@@ -149,6 +149,7 @@ ALIGNED_TYPE(XPVHV_WITH_AUX);
 ALIGNED_TYPE(XPVCV);
 ALIGNED_TYPE(XPVFM);
 ALIGNED_TYPE(XPVIO);
+ALIGNED_TYPE(XPVOBJ);
 
 #define HADNV FALSE
 #define NONV TRUE
@@ -281,12 +282,11 @@ static const struct body_details bodies_by_type[] = {
       SVt_PVIO, TRUE, NONV, HASARENA,
       FIT_ARENA(24, sizeof(ALIGNED_TYPE_NAME(XPVIO))) },
 
-    /* SVt_PVOBJ - for now just claim it to be a PVAV */
-    { sizeof(ALIGNED_TYPE_NAME(XPVAV)),
-      copy_length(XPVAV, xav_alloc),
+    { sizeof(ALIGNED_TYPE_NAME(XPVOBJ)),
+      copy_length(XPVOBJ, xobject_fields),
       0,
       SVt_PVOBJ, TRUE, NONV, HASARENA,
-      FIT_ARENA(0, sizeof(ALIGNED_TYPE_NAME(XPVAV))) },
+      FIT_ARENA(0, sizeof(ALIGNED_TYPE_NAME(XPVOBJ))) },
 };
 
 #define new_body_allocated(sv_type)            \
@@ -417,13 +417,15 @@ Perl_newSV_type(pTHX_ const svtype type)
         SvSTASH_set(sv, NULL);
         SvMAGIC_set(sv, NULL);
 
-        if (type == SVt_PVAV || type == SVt_PVOBJ) {
+        switch(type) {
+        case SVt_PVAV:
             AvFILLp(sv) = -1;
             AvMAX(sv) = -1;
             AvALLOC(sv) = NULL;
 
             AvREAL_only(sv);
-        } else {
+            break;
+        case SVt_PVHV:
             HvTOTALKEYS(sv) = 0;
             /* start with PERL_HASH_DEFAULT_HvMAX+1 buckets: */
             HvMAX(sv) = PERL_HASH_DEFAULT_HvMAX;
@@ -435,6 +437,13 @@ Perl_newSV_type(pTHX_ const svtype type)
 #endif
             /* start with PERL_HASH_DEFAULT_HvMAX+1 buckets: */
             HvMAX(sv) = PERL_HASH_DEFAULT_HvMAX;
+            break;
+        case SVt_PVOBJ:
+            ObjectMAXFIELD(sv) = -1;
+            ObjectFIELDS(sv) = NULL;
+            break;
+        default:
+            NOT_REACHED;
         }
 
         sv->sv_u.svu_array = NULL; /* or svu_hash  */

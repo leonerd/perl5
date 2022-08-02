@@ -35,9 +35,10 @@ Perl_newSVobject(pTHX_ Size_t fieldcount)
 {
     SV *sv = newSV_type(SVt_PVOBJ);
 
-    Newx(AvARRAY((AV *)sv), fieldcount, SV *);
-    AvMAX((AV *)sv)  = fieldcount - 1;
-    AvFILLp((AV *)sv) = -1;
+    Newx(ObjectFIELDS(sv), fieldcount, SV *);
+    ObjectMAXFIELD(sv) = fieldcount - 1;
+
+    Zero(ObjectFIELDS(sv), fieldcount, SV *);
 
     return sv;
 }
@@ -80,7 +81,7 @@ XS(injected_constructor)
     SV *self = sv_2mortal(newRV_noinc(instance));
     sv_bless(self, stash);
 
-    SV **fields = AvARRAY(instance);
+    SV **fields = ObjectFIELDS(instance);
 
     /* create fields */
     for(PADOFFSET fieldix = 0; fieldix < aux->xhv_class_next_fieldix; fieldix++) {
@@ -107,7 +108,6 @@ XS(injected_constructor)
         }
 
         fields[fieldix] = val;
-        AvFILLp((AV *)instance)++;
     }
 
     if(aux->xhv_class_adjust_blocks) {
@@ -177,12 +177,12 @@ PP(pp_methstart)
     if(aux) {
         assert(SvTYPE(SvRV(self)) == SVt_PVOBJ);
         SV *instance = SvRV(self);
-        SV **fieldp = AvARRAY((AV *)instance);
+        SV **fieldp = ObjectFIELDS(instance);
 
         U32 fieldcount = (aux++)->uv;
         U32 max_fieldix = (aux++)->uv;
 
-        assert(AvFILL(instance)+1 > max_fieldix);
+        assert(ObjectMAXFIELD(instance)+1 > max_fieldix);
 
         for(Size_t i = 0; i < fieldcount; i++) {
             PADOFFSET padix   = (aux++)->uv;

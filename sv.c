@@ -1057,14 +1057,16 @@ Perl_sv_upgrade(pTHX_ SV *const sv, svtype new_type)
         new_body = new_NOARENAZ(new_type_details);
 #endif
         SvANY(sv) = new_body;
-        if (new_type == SVt_PVAV || new_type == SVt_PVOBJ) {
+        switch(new_type) {
+        case SVt_PVAV:
             *((XPVAV*) SvANY(sv)) = (XPVAV) {
                 .xmg_stash = NULL, .xmg_u = {.xmg_magic = NULL},
                 .xav_fill = -1, .xav_max = -1, .xav_alloc = 0
                 };
 
             AvREAL_only(sv);
-        } else {
+            break;
+        case SVt_PVHV:
             *((XPVHV*) SvANY(sv)) = (XPVHV) {
                 .xmg_stash = NULL, .xmg_u = {.xmg_magic = NULL},
                 .xhv_keys = 0,
@@ -1077,6 +1079,16 @@ Perl_sv_upgrade(pTHX_ SV *const sv, svtype new_type)
 #ifndef NODEFAULT_SHAREKEYS
             HvSHAREKEYS_on(sv);         /* key-sharing on by default */
 #endif
+            break;
+        case SVt_PVOBJ:
+            *((XPVOBJ*) SvANY(sv)) = (XPVOBJ) {
+                .xmg_stash = NULL, .xmg_u = {.xmg_magic = NULL},
+                .xobject_maxfield = -1,
+                .xobject_fields = NULL,
+            };
+            break;
+        default:
+            NOT_REACHED;
         }
 
         /* SVt_NULL isn't the only thing upgraded to AV or HV.
@@ -6741,7 +6753,6 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
             assert(!HvARRAY((HV*)sv));
             break;
         case SVt_PVAV:
-        case SVt_PVOBJ:
             {
                 AV* av = MUTABLE_AV(sv);
                 if (PL_comppad == av) {
@@ -6759,6 +6770,16 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
                 Safefree(AvALLOC(av));
             }
 
+            break;
+        case SVt_PVOBJ:
+            if(ObjectMAXFIELD(sv) > -1) {
+                next_sv = ObjectFIELDS(sv)[ObjectMAXFIELD(sv)--];
+                /* save old iter_sv in top-most field, and pray that it
+                 * doesn't get wiped in the meantime */
+                ObjectFIELDS(sv)[(ObjectITERSVAT(sv) = ObjectMAXFIELD(sv) + 1)] = iter_sv;
+                iter_sv = sv;
+                goto get_next_sv;
+            }
             break;
         case SVt_PVLV:
             if (LvTYPE(sv) == 'T') { /* for tie: return HE to pool */
@@ -6933,7 +6954,7 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
             }
             else if (!iter_sv) {
                 break;
-            } else if (SvTYPE(iter_sv) == SVt_PVAV || SvTYPE(iter_sv) == SVt_PVOBJ) {
+            } else if (SvTYPE(iter_sv) == SVt_PVAV) {
                 AV *const av = (AV*)iter_sv;
                 if (AvFILLp(av) > -1) {
                     sv = AvARRAY(av)[AvFILLp(av)--];
@@ -6944,6 +6965,17 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
                     /* restore previous value, squirrelled away */
                     iter_sv = AvARRAY(av)[AvMAX(av)];
                     Safefree(AvALLOC(av));
+                    goto free_body;
+                }
+            } else if (SvTYPE(iter_sv) == SVt_PVOBJ) {
+                if (ObjectMAXFIELD(iter_sv) > -1) {
+                    sv = ObjectFIELDS(iter_sv)[ObjectMAXFIELD(iter_sv)--];
+                }
+                else { /* no more fields in the current SV to free */
+                    sv = iter_sv;
+                    type = SvTYPE(sv);
+                    iter_sv = ObjectFIELDS(sv)[ObjectITERSVAT(sv)];
+                    Safefree(ObjectFIELDS(sv));
                     goto free_body;
                 }
             } else if (SvTYPE(iter_sv) == SVt_PVHV) {

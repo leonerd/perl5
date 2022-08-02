@@ -5562,6 +5562,7 @@ t/bigmem/vec.t			Check vec() handles large offsets
 t/charset_tools.pl		To aid in portable testing across platforms with different character sets
 t/class/class.t			See if class declarations work
 t/class/construct.t		See if class constructors work
+t/class/destruct.t		See if class destruction works
 t/class/field.t			See if class field declarations work
 t/class/method.t		See if class method declarations work
 t/class/phasers.t		See if class phaser blocks work

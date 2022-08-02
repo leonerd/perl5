@@ -62,7 +62,7 @@ push @B::EXPORT_OK, (qw(minus_c ppname save_BEGINs
 @B::CV::ISA = 'B::PVMG';
 @B::IO::ISA = 'B::PVMG';
 @B::FM::ISA = 'B::CV';
-@B::INSTANCE::ISA = 'B::PVMG';
+@B::OBJ::ISA = 'B::PVMG';
 
 @B::OP::ISA = 'B::OBJECT';
 @B::UNOP::ISA = 'B::OP';

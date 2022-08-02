@@ -8,6 +8,7 @@ BEGIN {
 }
 
 use v5.36;
+use warnings;
 use feature 'class';
 no warnings 'experimental::class';
 
@@ -42,12 +43,11 @@ no warnings 'experimental::class';
 
 # Classes accept full package names
 {
-    # I've duplicated the method name, but no warning is issued.
     class Test2::Foo {
         method hello { return "This" }
         method hello { return "That" }
     }
-    is Test2::Foo->new->hello, 'That', 'Mutliple methods should take the last method definition';
+    is Test2::Foo->new->hello, 'That', 'Multiple methods should take the last method definition';
 }
 # Classes accepts full package names
 {

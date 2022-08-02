@@ -3277,6 +3277,7 @@ typedef struct xpvcv XPVCV;
 typedef struct xpvbm XPVBM;
 typedef struct xpvfm XPVFM;
 typedef struct xpvio XPVIO;
+typedef struct xobject XPVOBJ;
 typedef struct mgvtbl MGVTBL;
 typedef union any ANY;
 typedef struct ptr_tbl_ent PTR_TBL_ENT_t;

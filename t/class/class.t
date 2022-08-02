@@ -43,6 +43,13 @@ no warnings 'experimental::class';
 
 # Classes accept full package names
 {
+    # this warns about a subroutine name.
+    #     Subroutine hello redefined at t/class/class.t line 49.
+    # I think it should warn about a method name. This will cause confusion
+    # when we can disambiguate between methods and subs (and use both int the
+    # same class)
+    #
+    # No yet sure how to test this. Will think about it.
     class Test2::Foo {
         method hello { return "This" }
         method hello { return "That" }

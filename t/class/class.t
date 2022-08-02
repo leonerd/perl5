@@ -32,4 +32,37 @@ no warnings 'experimental::class';
     is(Test2::NotAMethod(), "OK", 'Class can contain regular subs');
 }
 
+# Classes accept full package names
+{
+    class Test1::Foo {
+        method hello { return "This" }
+    }
+    is Test1::Foo->new->hello, 'This', 'We can support proper package names';
+}
+
+# Classes accept full package names
+{
+    # I've duplicated the method name, but no warning is issued.
+    class Test2::Foo {
+        method hello { return "This" }
+        method hello { return "That" }
+    }
+    is Test2::Foo->new->hello, 'That', 'Mutliple methods should take the last method definition';
+}
+# Classes accepts full package names
+{
+    eval <<'END';
+    class class {
+        method hello { return "This" }
+    }
+END
+    # I don't know what the error should be, but we don't get one
+    ok $@, 'We should have some error from using class as the package name';
+
+    # The following 'is' test, when uncommented, gives the following weird error message:
+    #    Invalid version format (negative version number) at t/class/class.t line 53, near "( class"
+    #    syntax error at t/class/class.t line 53, near "( class"
+
+    # is( class->new->hello, 'This', 'We can support proper package names' );
+}
 done_testing;

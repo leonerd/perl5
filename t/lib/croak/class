@@ -23,7 +23,12 @@ XXX::m([])
 EXPECT
 Cannot invoke method on a non-instance at - line 5.
 ########
-# TODO: also test  bless [], "Test6"  once we have SVt_INSTANCE
+no warnings 'experimental::class';
+use feature 'class';
+class XXX { method m { } }
+(bless [], "XXX")->m()
+EXPECT
+Cannot invoke method on a non-instance at - line 4.
 ########
 no warnings 'experimental::class';
 use feature 'class';

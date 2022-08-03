@@ -8,8 +8,11 @@ BEGIN {
 }
 
 use v5.36;
+use warnings;
 use feature 'class';
 no warnings 'experimental::class';
+no warnings 'experimental::builtin';
+use builtin qw(reftype blessed);
 
 {
     class Test1 {
@@ -20,6 +23,10 @@ no warnings 'experimental::class';
 
     my $obj = Test1->new(x => 123);
     is($obj->x, 123, 'Value of $x set by ADJUST');
+
+    is(ref $obj, "Test1", 'ref of $obj');
+    is(blessed $obj, "Test1", 'blessed of $obj');
+    is(reftype $obj, "OBJECT", 'reftype of $obj');
 
     ok(!eval { Test1->new(y => 456); 1 }, 'Unrecognised parameter fails');
     like($@, qr/^Unrecognised parameters for Test1 constructor: y at /,

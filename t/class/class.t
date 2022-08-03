@@ -72,4 +72,5 @@ END
 
     # is( class->new->hello, 'This', 'We can support proper package names' );
 }
+
 done_testing;

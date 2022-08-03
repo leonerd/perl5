@@ -74,4 +74,34 @@ no warnings 'experimental::class';
     is($obj->$mref, "Result", 'anon method can be invoked');
 }
 
+{
+    class Test6 {
+        field $x;
+        ADJUST { $x = 0 }
+        method inc_x { return ++$x }
+        method get_x { $x }
+    }
+
+    my $obj = Test6->new;
+    is( $obj->get_x, 0, 'Value of $x set by ADJUST' );
+
+    is $obj->inc_x, 1, 'We can increment our value of $x';
+    is $obj->inc_x, 2, '... and its value should persist between calls';
+    is $obj->get_x, 2, '... no matter what method we access it from';
+}
+
+{
+    class Delegate {
+        method doit { return "tiod" }
+    }
+
+    class Test7 {
+        field $delegate;
+
+        ADJUST { $delegate = Delegate->new }
+        method class { $delegate }
+    }
+    is Test7->new->class->doit, "tiod", "class can be used as a method name without difficulty (but should it be?)";
+}
+
 done_testing;

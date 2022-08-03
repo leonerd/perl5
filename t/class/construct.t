@@ -8,9 +8,9 @@ BEGIN {
 }
 
 use v5.36;
+use warnings;
 use feature 'class';
 no warnings 'experimental::class';
-
 no warnings 'experimental::builtin';
 use builtin qw(reftype blessed);
 

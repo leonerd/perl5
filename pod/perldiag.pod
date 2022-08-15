@@ -783,6 +783,11 @@ not permitted.
 (F) Similar to above, but involving a C<finally> block at the end of a
 C<try>/C<catch> construction rather than a C<defer> block.
 
+=item Can't bless an object reference
+
+(F) You attempted to call C<bless> on a value that already refers to a real
+object instance.
+
 =item Can't bless non-reference value
 
 (F) Only hard references may be blessed.  This is how Perl "enforces"

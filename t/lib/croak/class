@@ -32,6 +32,13 @@ Attempt to bless into a class at - line 4.
 ########
 no warnings 'experimental::class';
 use feature 'class';
+class XXX {}
+bless(XXX->new, "main");
+EXPECT
+Can't bless an object reference at - line 4.
+########
+no warnings 'experimental::class';
+use feature 'class';
 class XXX { field $x; sub f { print $x } }
 EXPECT
 Field $x is not accessible outside a method at - line 3.

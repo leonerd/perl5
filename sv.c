@@ -10723,6 +10723,8 @@ Perl_sv_bless(pTHX_ SV *const sv, HV *const stash)
     if (SvFLAGS(tmpRef) & (SVs_OBJECT|SVf_READONLY|SVf_PROTECT)) {
         if (SvREADONLY(tmpRef))
             Perl_croak_no_modify();
+        if (SvTYPE(tmpRef) == SVt_PVOBJ)
+            Perl_croak(aTHX_ "Can't bless an object reference");
         if (SvOBJECT(tmpRef)) {
             oldstash = SvSTASH(tmpRef);
         }

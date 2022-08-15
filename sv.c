@@ -10716,6 +10716,9 @@ Perl_sv_bless(pTHX_ SV *const sv, HV *const stash)
     SvGETMAGIC(sv);
     if (!SvROK(sv))
         Perl_croak(aTHX_ "Can't bless non-reference value");
+    if (HvSTASH_IS_CLASS(stash))
+        Perl_croak(aTHX_ "Attempt to bless into a class");
+
     tmpRef = SvRV(sv);
     if (SvFLAGS(tmpRef) & (SVs_OBJECT|SVf_READONLY|SVf_PROTECT)) {
         if (SvREADONLY(tmpRef))

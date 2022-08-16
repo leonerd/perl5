@@ -386,9 +386,6 @@ barestmt:	PLUGSTMT
 			{
                           init_named_cv(PL_compcv, $subname);
 			  if($sigsub_or_method_named == KW_METHOD_named) {
-			      /* TODO: set some sort of flag on the CV? But see
-			       *   https://github.com/leonerd/perl5/discussions/7
-			       */
 			      croak_kw_unless_class("method");
 			      class_prepare_method_parse(PL_compcv);
 			  }

@@ -87,7 +87,7 @@ XS(injected_constructor)
 
     /* create fields */
     for(PADOFFSET fieldix = 0; fieldix < aux->xhv_class_next_fieldix; fieldix++) {
-        PADNAME *pn = (PADNAME *)AvARRAY(aux->xhv_class_fields)[fieldix];
+        PADNAME *pn = PadnamelistARRAY(aux->xhv_class_fields)[fieldix];
         assert(PadnameFIELDINFO(pn)->fieldix == fieldix);
 
         SV *val = NULL;
@@ -345,9 +345,10 @@ Perl_class_add_field(pTHX_ PADNAME *pn)
     PadnameFIELDINFO(pn)->fieldix = fieldix;
 
     if(!aux->xhv_class_fields)
-        aux->xhv_class_fields = newAV();
+        aux->xhv_class_fields = newPADNAMELIST(0);
 
-    av_push(aux->xhv_class_fields, (SV *)pn);
+    padnamelist_store(aux->xhv_class_fields, PadnamelistMAX(aux->xhv_class_fields)+1, pn);
+    PadnameREFCNT_inc(pn);
 }
 
 void

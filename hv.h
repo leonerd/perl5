@@ -134,9 +134,9 @@ struct xpvhv_aux {
     U32         xhv_aux_flags;      /* assorted extra flags */
 
     /* The following fields are only valid if we have the flag HvAUXf_IS_CLASS */
-    AV         *xhv_class_adjust_blocks;      /* CVs containing the ADJUST blocks */
-    AV         *xhv_class_fields;             /* PADNAMEs with PadnameIsFIELD() */
-    PADOFFSET   xhv_class_next_fieldix;
+    AV          *xhv_class_adjust_blocks;      /* CVs containing the ADJUST blocks */
+    PADNAMELIST *xhv_class_fields;             /* PADNAMEs with PadnameIsFIELD() */
+    PADOFFSET    xhv_class_next_fieldix;
 };
 
 #define HvAUXf_SCAN_STASH   0x1   /* stash is being scanned by gv_check */

@@ -32,4 +32,12 @@ no warnings 'experimental::class';
     is(Test2::NotAMethod(), "OK", 'Class can contain regular subs');
 }
 
+# Classes accept full package names
+{
+    class Test3::Foo {
+        method hello { return "This" }
+    }
+    is(Test3::Foo->new->hello, "This", 'Class supports fully-qualified package names');
+}
+
 done_testing;

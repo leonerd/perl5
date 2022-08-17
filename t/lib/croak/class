@@ -24,3 +24,9 @@ EXPECT
 Cannot invoke method on a non-instance at - line 5.
 ########
 # TODO: also test  bless [], "Test6"  once we have SVt_INSTANCE
+########
+no warnings 'experimental::class';
+use feature 'class';
+class XXX { field $x; sub f { print $x } }
+EXPECT
+Field $x is not accessible outside a method at - line 3.

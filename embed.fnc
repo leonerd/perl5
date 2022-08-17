@@ -3843,5 +3843,6 @@ Cp	|void	|class_setup_stash	|NN HV *stash
 Cp	|void	|class_seal_stash	|NN HV *stash
 Cp	|void	|class_prepare_method_parse	|NN CV *cv
 Cp	|OP *	|class_wrap_method_body		|NN OP *o
+Cp	|void	|croak_kw_unless_class	|NN const char *kw
 
 : ex: set ts=8 sts=4 sw=4 noet:

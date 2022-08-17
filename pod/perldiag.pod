@@ -712,6 +712,11 @@ or scalar) that already holds a dirhandle.  Since this idiom might render
 your code confusing, it was deprecated in Perl 5.10.  As of Perl 5.28, it
 is a fatal error.
 
+=item Cannot '%s' outside of a 'class'
+
+(F) You attempted to use one of the keywords that only makes sense inside
+a C<class> definition, at a location that is not inside such a class.
+
 =item Cannot pack %f with '%c'
 
 (F) You tried converting an infinity or not-a-number to an integer,

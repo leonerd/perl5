@@ -388,6 +388,7 @@ barestmt:	PLUGSTMT
 			      /* TODO: set some sort of flag on the CV? But see
 			       *   https://github.com/leonerd/perl5/discussions/7
 			       */
+			      croak_kw_unless_class("method");
 			      class_prepare_method_parse(PL_compcv);
 			  }
 			  parser->in_my = 0;

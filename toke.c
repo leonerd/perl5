@@ -226,6 +226,7 @@ static const char* const lex_state_names[] = {
 #define PRETERMBLOCK(retval) return (PL_expect = XTERMBLOCK,PL_bufptr = s, REPORT(retval))
 #define PREREF(retval) return (PL_expect = XREF,PL_bufptr = s, REPORT(retval))
 #define TERM(retval) return (CLINE, PL_expect = XOPERATOR, PL_bufptr = s, REPORT(retval))
+#define PHASERBLOCK(f) return (pl_yylval.ival=f, PL_expect = XBLOCK, PL_bufptr = s, REPORT((int)PHASER))
 #define POSTDEREF(f) return (PL_bufptr = s, S_postderef(aTHX_ REPORT(f),s[1]))
 #define LOOPX(f) return (PL_bufptr = force_word(s,BAREWORD,TRUE,FALSE), \
                          pl_yylval.ival=f, \
@@ -7799,6 +7800,16 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
         if (PL_expect == XSTATE)
             return yyl_sub(aTHX_ PL_bufptr, key);
         return yyl_just_a_word(aTHX_ s, len, orig_keyword, c);
+
+    case KEY_ADJUST:
+        Perl_ck_warner_d(aTHX_
+            packWARN(WARN_EXPERIMENTAL__CLASS), "ADJUST is experimental");
+
+        /* The way that KEY_CHECK et.al. are handled currently are nothing
+         * short of crazy. We won't copy that model for new phasers, but use
+         * this as an experiment to test if this will work
+         */
+        PHASERBLOCK(KEY_ADJUST);
 
     case KEY_abs:
         UNI(OP_ABS);

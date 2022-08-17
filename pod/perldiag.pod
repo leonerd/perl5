@@ -50,6 +50,12 @@ letter.
 to check the return value of your socket() call?  See
 L<perlfunc/accept>.
 
+=item ADJUST is experimental
+
+(S experimental::class) This warning is emitted if you use the C<ADJUST>
+keyword of C<use feature 'class'>.  This keyword is currently
+experimental and its behaviour may change in future releases of Perl.
+
 =item Aliasing via reference is experimental
 
 (S experimental::refaliasing) This warning is emitted if you use

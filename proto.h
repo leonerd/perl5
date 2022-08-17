@@ -810,6 +810,9 @@ PERL_CALLCONV bool	Perl_ckwarn_d(pTHX_ U32 w)
 			__attribute__pure__;
 #define PERL_ARGS_ASSERT_CKWARN_D
 
+PERL_CALLCONV void	Perl_class_add_ADJUST(pTHX_ CV *cv);
+#define PERL_ARGS_ASSERT_CLASS_ADD_ADJUST	\
+	assert(cv)
 PERL_CALLCONV void	Perl_class_prepare_method_parse(pTHX_ CV *cv);
 #define PERL_ARGS_ASSERT_CLASS_PREPARE_METHOD_PARSE	\
 	assert(cv)

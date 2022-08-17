@@ -35,9 +35,34 @@ XS(injected_constructor)
     dXSARGS;
 
     HV *stash = (HV *)XSANY.any_ptr;
+    assert(HvSTASH_IS_CLASS(stash));
+
+    struct xpvhv_aux *aux = HvAUX(stash);
 
     SV *self = sv_2mortal(newRV_noinc((SV *)newAV()));
     sv_bless(self, stash);
+
+    if(aux->xhv_class_adjust_blocks) {
+        CV **cvp = (CV **)AvARRAY(aux->xhv_class_adjust_blocks);
+        U32 nblocks = av_count(aux->xhv_class_adjust_blocks);
+
+        for(U32 i = 0; i < nblocks; i++) {
+            ENTER;
+            SAVETMPS;
+            SPAGAIN;
+
+            EXTEND(SP, 1);
+
+            PUSHMARK(SP);
+            PUSHs(self);  /* I don't believe this needs to be an sv_mortalcopy() */
+            PUTBACK;
+
+            call_sv((SV *)cvp[i], G_VOID);
+
+            FREETMPS;
+            LEAVE;
+        }
+    }
 
     EXTEND(SP, 1);
     ST(0) = self;
@@ -92,6 +117,7 @@ Perl_class_setup_stash(pTHX_ HV *stash)
      *   DOES method
      */
 
+    HvAUX(stash)->xhv_class_adjust_blocks = NULL;
     HvAUX(stash)->xhv_aux_flags |= HvAUXf_IS_CLASS;
 
     SAVEDESTRUCTOR_X(invoke_class_seal, stash);
@@ -139,6 +165,20 @@ Perl_class_wrap_method_body(pTHX_ OP *o)
     op_sibling_splice(o, NULL, 0, newOP(OP_METHSTART, 0));
 
     return o;
+}
+
+void
+Perl_class_add_ADJUST(pTHX_ CV *cv)
+{
+    PERL_ARGS_ASSERT_CLASS_ADD_ADJUST;
+
+    assert(HvSTASH_IS_CLASS(PL_curstash));
+    struct xpvhv_aux *aux = HvAUX(PL_curstash);
+
+    if(!aux->xhv_class_adjust_blocks)
+        aux->xhv_class_adjust_blocks = newAV();
+
+    av_push(aux->xhv_class_adjust_blocks, (SV *)cv);
 }
 
 /*

@@ -40,4 +40,34 @@ no warnings 'experimental::class';
     is(Test3::Foo->new->hello, "This", 'Class supports fully-qualified package names');
 }
 
+# Class {BLOCK} syntax parses like package
+{
+    my $result = "";
+    eval q{
+        $result .= "a(" . __PACKAGE__ . "/" . eval("__PACKAGE__") . ")\n";
+        class Test4 1.23 {
+            $result .= "b(" . __PACKAGE__ . "/" . eval("__PACKAGE__") . ")\n";
+        }
+        $result .= "c(" . __PACKAGE__ . "/" . eval("__PACKAGE__") . ")\n";
+    } or die $@;
+    is($result, "a(main/main)\nb(Test4/Test4)\nc(main/main)\n",
+        'class sets __PACKAGE__ correctly');
+    is($Test4::VERSION, 1.23, 'class NAME VERSION { BLOCK } sets $VERSION');
+}
+
+# Unit class syntax parses like package
+{
+    my $result = "";
+    eval q{
+        $result .= "a(" . __PACKAGE__ . "/" . eval("__PACKAGE__") . ")\n";
+        class Test5 4.56;
+        $result .= "b(" . __PACKAGE__ . "/" . eval("__PACKAGE__") . ")\n";
+        package main;
+        $result .= "c(" . __PACKAGE__ . "/" . eval("__PACKAGE__") . ")\n";
+    } or die $@;
+    is($result, "a(main/main)\nb(Test5/Test5)\nc(main/main)\n",
+        'class sets __PACKAGE__ correctly');
+    is($Test5::VERSION, 4.56, 'class NAME VERSION; sets $VERSION');
+}
+
 done_testing;

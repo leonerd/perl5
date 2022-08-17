@@ -358,6 +358,7 @@ Perl_class_add_field(pTHX_ PADNAME *pn)
     PadnameFLAGS(pn) |= PADNAMEf_FIELD;
 
     PadnameFIELDINFO(pn)->fieldix = fieldix;
+    PadnameFIELDINFO(pn)->fieldstash = (HV *)SvREFCNT_inc(PL_curstash);
 
     if(!aux->xhv_class_fields)
         aux->xhv_class_fields = newPADNAMELIST(0);

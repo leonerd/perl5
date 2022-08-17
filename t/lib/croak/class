@@ -51,3 +51,12 @@ use feature 'class';
 class XXX { field $x; sub f { print $x } }
 EXPECT
 Field $x is not accessible outside a method at - line 3.
+########
+no warnings 'experimental::class';
+use feature 'class';
+class XXX {
+  field $x;
+  class YYY { method m { print $x } }
+}
+EXPECT
+Field $x of 'XXX' is not accessible in a method of 'YYY' at - line 5.

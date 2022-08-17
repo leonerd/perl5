@@ -1272,6 +1272,13 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
         return NOT_IN_PAD;
 
     if (PadnameIsFIELD(*out_name)) {
+        HV *fieldstash = PadnameFIELDINFO(*out_name)->fieldstash;
+
+        /* fields are only visible to the class that declared them */
+        if(fieldstash != PL_curstash)
+            Perl_croak(aTHX_ "Field %" SVf " of '%" HEKf "' is not accessible in a method of '%" HEKf "'",
+                SVfARG(PadnameSV(*out_name)), HEKfARG(HvNAME_HEK(fieldstash)), HEKfARG(HvNAME_HEK(PL_curstash)));
+
         /* field capture is permitted if CV itself is a method, or any outside
          * scope is */
         for(const CV *upcv = cv; upcv; upcv = CvOUTSIDE(upcv))

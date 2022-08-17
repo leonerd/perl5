@@ -93,7 +93,8 @@ struct padname_with_str {
  * own substructure, stored in ->xpadn_fieldinfo.
  */
 struct padname_fieldinfo {
-    PADOFFSET fieldix;
+    PADOFFSET  fieldix;    /* index of this field within ObjectFIELDS() array */
+    HV        *fieldstash; /* original class package which added this field */
 };
 
 

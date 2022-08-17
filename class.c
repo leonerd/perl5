@@ -166,11 +166,26 @@ PP(pp_methstart)
     SV *self = av_shift(GvAV(PL_defgv));
     SV *rv = NULL;
 
+    /* pp_methstart happens before the first OP_NEXTSTATE of the method body,
+     * meaning PL_curcop still points at the callsite. This is useful for
+     * croak() messages. However, it means we have to find our current stash
+     * via a different technique.
+     */
+    CV *curcv;
+    if(LIKELY(CxTYPE(CX_CUR()) == CXt_SUB))
+        curcv = CX_CUR()->blk_sub.cv;
+    else
+        curcv = find_runcv(NULL);
+
     if(!SvROK(self) ||
         !SvOBJECT((rv = SvRV(self))) ||
         SvTYPE(rv) != SVt_PVOBJ)
-        /* TODO: check it's in an appropriate class */
         Perl_croak(aTHX_ "Cannot invoke method on a non-instance");
+
+    /* TODO: When we implement inheritence we'll have to do something fancier here */
+    if(CvSTASH(curcv) != SvSTASH(rv))
+        Perl_croak(aTHX_ "Cannot invoke a method of '%" HEKf "' on an instance of '%" HEKf "'",
+            HEKfARG(HvNAME_HEK(CvSTASH(curcv))), HEKfARG(HvNAME_HEK(SvSTASH(rv))));
 
     save_clearsv(&PAD_SVl(PADIX_SELF));
     sv_setsv(PAD_SVl(PADIX_SELF), self);

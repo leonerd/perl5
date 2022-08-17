@@ -718,6 +718,12 @@ be directly assigned to.
 (S io) You tried to apply an encoding that did not exist to a filehandle,
 either with open() or binmode().
 
+=item Cannot invoke a method of '%s' on an instance of '%s'
+
+(F) You tried to directly call a C<method> subroutine of one class by passing
+in a value that is an instance of a different class.  This is not permitted,
+as the method would not have access to the correct instance fields.
+
 =item Cannot invoke method on a non-instance
 
 (F) You tried to directly call a C<method> subroutine of a class by passing

@@ -59,6 +59,8 @@ Perl_class_setup_stash(pTHX_ HV *stash)
 {
     PERL_ARGS_ASSERT_CLASS_SETUP_STASH;
 
+    assert(HvHasAUX(stash));
+
     char *classname = HvNAME(stash);
     U32 nameflags = HvNAMEUTF8(stash) ? SVf_UTF8 : 0;
 
@@ -80,6 +82,8 @@ Perl_class_setup_stash(pTHX_ HV *stash)
     /* TODO:
      *   DOES method
      */
+
+    HvAUX(stash)->xhv_aux_flags |= HvAUXf_IS_CLASS;
 
     SAVEDESTRUCTOR_X(invoke_class_seal, stash);
 }

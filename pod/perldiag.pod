@@ -2421,6 +2421,12 @@ is not possible.
 keyword of C<use feature 'class'>.  This keyword is currently
 experimental and its behaviour may change in future releases of Perl.
 
+=item Field %s is not accessible outside a method
+
+(F) An attempt was made to access a field variable of a class from code
+that does not appear inside the body of a C<method> subroutine.  This is not
+permitted, as only methods will have access to the fields of an instance.
+
 =item Field too wide in 'u' format in pack
 
 (W pack) Each line in an uuencoded string starts with a length indicator

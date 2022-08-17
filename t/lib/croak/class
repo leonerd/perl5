@@ -23,6 +23,15 @@ XXX::m([])
 EXPECT
 Cannot invoke method on a non-instance at - line 5.
 ########
+# Method calls from a different class
+no warnings 'experimental::class';
+use feature 'class';
+class XXX { method m { } }
+class YYY {}
+YYY->new->XXX::m();
+EXPECT
+Cannot invoke a method of 'XXX' on an instance of 'YYY' at - line 6.
+########
 no warnings 'experimental::class';
 use feature 'class';
 class XXX {}

@@ -2006,8 +2006,7 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
 
     /* Dump general SV fields */
 
-    if ((type >= SVt_PVIV && type != SVt_PVAV && type != SVt_PVHV
-         && type != SVt_PVCV && type != SVt_PVFM && type != SVt_PVIO
+    if ((type >= SVt_PVIV && type <= SVt_PVLV
          && type != SVt_REGEXP && !isGV_with_GP(sv) && !SvVALID(sv))
         || (type == SVt_IV && !SvROK(sv))) {
         if (SvIsUV(sv)
@@ -2018,9 +2017,8 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
         (void)PerlIO_putc(file, '\n');
     }
 
-    if ((type >= SVt_PVNV && type != SVt_PVAV && type != SVt_PVHV
-                && type != SVt_PVCV && type != SVt_PVFM  && type != SVt_REGEXP
-                && type != SVt_PVIO && !isGV_with_GP(sv) && !SvVALID(sv))
+    if ((type >= SVt_PVNV && type <= SVt_PVLV
+         && type != SVt_REGEXP && !isGV_with_GP(sv) && !SvVALID(sv))
                || type == SVt_NV) {
         DECLARATION_FOR_LC_NUMERIC_MANIPULATION;
         STORE_LC_NUMERIC_SET_STANDARD();
@@ -2654,6 +2652,25 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
             Perl_dump_indent(aTHX_ level, file, "  SAVED_COPY = 0x%" UVxf "\n",
                                 PTR2UV(r->saved_copy));
 #endif
+        }
+        break;
+    case SVt_PVOBJ:
+        Perl_dump_indent(aTHX_ level, file, "  MAXFIELD = %" IVdf "\n",
+                (IV)ObjectMAXFIELD(sv));
+        Perl_dump_indent(aTHX_ level, file, "  FIELDS = 0x%" UVxf "\n",
+                PTR2UV(ObjectFIELDS(sv)));
+        if (nest < maxnest && ObjectFIELDS(sv)) {
+            SSize_t count;
+            SV **svp = ObjectFIELDS(sv);
+            for (count = 0;
+                 count <= ObjectMAXFIELD(sv) && count < maxnest;
+                 count++, svp++)
+            {
+                SV *const field = *svp;
+                Perl_dump_indent(aTHX_ level + 1, file, "Field No. %" IVdf "\n",
+                        (IV)count);
+                do_sv_dump(level+1, file, field, nest+1, maxnest, dumpops, pvlim);
+            }
         }
         break;
     }

@@ -810,12 +810,18 @@ PERL_CALLCONV bool	Perl_ckwarn_d(pTHX_ U32 w)
 			__attribute__pure__;
 #define PERL_ARGS_ASSERT_CKWARN_D
 
+PERL_CALLCONV void	Perl_class_prepare_method_parse(pTHX_ CV *cv);
+#define PERL_ARGS_ASSERT_CLASS_PREPARE_METHOD_PARSE	\
+	assert(cv)
 PERL_CALLCONV void	Perl_class_seal_stash(pTHX_ HV *stash);
 #define PERL_ARGS_ASSERT_CLASS_SEAL_STASH	\
 	assert(stash)
 PERL_CALLCONV void	Perl_class_setup_stash(pTHX_ HV *stash);
 #define PERL_ARGS_ASSERT_CLASS_SETUP_STASH	\
 	assert(stash)
+PERL_CALLCONV OP *	Perl_class_wrap_method_body(pTHX_ OP *o);
+#define PERL_ARGS_ASSERT_CLASS_WRAP_METHOD_BODY	\
+	assert(o)
 PERL_CALLCONV void	Perl_clear_defarray(pTHX_ AV* av, bool abandon);
 #define PERL_ARGS_ASSERT_CLEAR_DEFARRAY	\
 	assert(av)

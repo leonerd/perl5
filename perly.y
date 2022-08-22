@@ -64,7 +64,7 @@
 %token <ival> PERLY_STAR
 
 /* Tokens emitted by toke.c on simple keywords */
-%token <ival> KW_FORMAT KW_PACKAGE 
+%token <ival> KW_FORMAT KW_PACKAGE KW_CLASS
 %token <ival> KW_LOCAL KW_MY
 %token <ival> KW_IF KW_ELSE KW_ELSIF KW_UNLESS
 %token <ival> KW_FOR KW_UNTIL KW_WHILE KW_CONTINUE
@@ -96,6 +96,7 @@
 
 %type <ival> mintro
 
+%type <ival>  package_or_class
 %type <opval> stmtseq fullstmt labfullstmt barestmt block mblock else finally
 %type <opval> expr term subscripted scalar ary hsh arylen star amper sideff
 %type <opval> condition
@@ -229,6 +230,14 @@ grammar	:	GRAMPROG
 			  PL_eval_root = $subsigguts;
 			  $$ = 0;
 			}
+	;
+
+/* Either a 'package' or 'class' keyword */
+package_or_class
+	:	KW_PACKAGE
+			{ $$ = KW_PACKAGE; }
+	|	KW_CLASS
+			{ $$ = KW_CLASS; }
 	;
 
 /* An ordinary block */
@@ -380,7 +389,7 @@ barestmt:	PLUGSTMT
 			  intro_my();
 			  parser->parsed_sub = 1;
 			}
-	|	KW_PACKAGE BAREWORD[version] BAREWORD[package] PERLY_SEMICOLON
+	|	package_or_class BAREWORD[version] BAREWORD[package] PERLY_SEMICOLON
 			{
 			  package($package);
 			  if ($version)
@@ -521,7 +530,7 @@ barestmt:	PLUGSTMT
 			  $$ = newWHILEOP(0, 1, NULL,
 				  NULL, $block, $cont, 0);
 			}
-	|	KW_PACKAGE BAREWORD[version] BAREWORD[package] PERLY_BRACE_OPEN remember
+	|	package_or_class BAREWORD[version] BAREWORD[package] PERLY_BRACE_OPEN remember
 			{
 			  package($package);
 			  if ($version) {
@@ -535,6 +544,7 @@ barestmt:	PLUGSTMT
 				  NULL, block_end($remember, $stmtseq), NULL, 0);
 			  if (parser->copline > (line_t)$PERLY_BRACE_OPEN)
 			      parser->copline = (line_t)$PERLY_BRACE_OPEN;
+			  /* We can now use the value of $1 to determine package vs class */
 			}
 	|	sideff PERLY_SEMICOLON
 			{

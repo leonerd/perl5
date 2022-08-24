@@ -2660,13 +2660,17 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
         if (nest < maxnest && ObjectFIELDS(sv)) {
             SSize_t count;
             SV **svp = ObjectFIELDS(sv);
+            PADNAME **pname = PadnamelistARRAY(HvAUX(SvSTASH(sv))->xhv_class_fields);
             for (count = 0;
                  count <= ObjectMAXFIELD(sv) && count < maxnest;
                  count++, svp++)
             {
                 SV *const field = *svp;
-                Perl_dump_indent(aTHX_ level + 1, file, "Field No. %" IVdf "\n",
-                        (IV)count);
+                PADNAME *pn = pname[count];
+
+                Perl_dump_indent(aTHX_ level + 1, file, "Field No. %" IVdf " (%s)\n",
+                        (IV)count, PadnamePV(pn));
+
                 do_sv_dump(level+1, file, field, nest+1, maxnest, dumpops, pvlim);
             }
         }

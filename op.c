@@ -772,9 +772,15 @@ Perl_allocmy(pTHX_ const char *const name, const STRLEN len, const U32 flags)
 
     /* allocate a spare slot and store the name in that slot */
 
-    off = pad_add_name_pvn(name, len,
-                       (is_our ? padadd_OUR :
-                        PL_parser->in_my == KEY_state ? padadd_STATE : 0),
+    U32 addflags = 0;
+    if(is_our)
+        addflags |= padadd_OUR;
+    else if(PL_parser->in_my == KEY_state)
+        addflags |= padadd_STATE;
+    else if(PL_parser->in_my == KEY_field)
+        addflags |= padadd_FIELD;
+
+    off = pad_add_name_pvn(name, len, addflags,
                     PL_parser->in_my_stash,
                     (is_our
                         /* $_ is always in main::, even with our */

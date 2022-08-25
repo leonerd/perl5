@@ -65,7 +65,7 @@
 
 /* Tokens emitted by toke.c on simple keywords */
 %token <ival> KW_FORMAT KW_PACKAGE KW_CLASS
-%token <ival> KW_LOCAL KW_MY
+%token <ival> KW_LOCAL KW_MY KW_FIELD
 %token <ival> KW_IF KW_ELSE KW_ELSIF KW_UNLESS
 %token <ival> KW_FOR KW_UNTIL KW_WHILE KW_CONTINUE
 %token <ival> KW_GIVEN KW_WHEN KW_DEFAULT
@@ -109,7 +109,7 @@
 %type <opval> optlistexpr optexpr optrepl indirob listop methodname
 %type <opval> formname subname proto cont my_scalar my_var
 %type <opval> list_of_scalars my_list_of_scalars refgen_topic formblock
-%type <opval> subattrlist myattrlist myattrterm myterm
+%type <opval> subattrlist myattrlist myattrterm myterm fieldattrterm
 %type <opval> termbinop termunop anonymous termdo
 %type <opval> termrelop relopchain termeqop eqopchain
 %type <ival>  sigslurpsigil
@@ -1296,6 +1296,8 @@ term[product]	:	termbinop
 			{ $$ = newUNOP(OP_REFGEN, 0, $operand); }
 	|	myattrterm	%prec UNIOP
 			{ $$ = $myattrterm; }
+	|	fieldattrterm	%prec UNIOP
+			{ $$ = $fieldattrterm; }
 	|	KW_LOCAL term[operand]	%prec UNIOP
 			{ $$ = localize($operand,0); }
 	|	PERLY_PAREN_OPEN expr PERLY_PAREN_CLOSE
@@ -1449,6 +1451,17 @@ myattrterm
 			{ $$ = newUNOP(OP_REFGEN, 0, my_attrs($myterm,$myattrlist)); }
 	|	KW_MY REFGEN term[operand]
 			{ $$ = newUNOP(OP_REFGEN, 0, localize($operand,1)); }
+	;
+
+/* "field" declarations */
+fieldattrterm
+	:	KW_FIELD myterm
+			{
+			  parser->in_my = 0;
+
+			  /* TODO: inject fields into class */
+			  $$ = my_attrs($myterm, NULL);
+			}
 	;
 
 /* Things that can be "my"'d */

@@ -2398,6 +2398,12 @@ PDP-11 or something?
 (F) A tied array claimed to have a negative number of elements, which
 is not possible.
 
+=item field is experimental
+
+(S experimental::class) This warning is emitted if you use the C<field>
+keyword of C<use feature 'class'>.  This keyword is currently
+experimental and its behaviour may change in future releases of Perl.
+
 =item Field too wide in 'u' format in pack
 
 (W pack) Each line in an uuencoded string starts with a length indicator

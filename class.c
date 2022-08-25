@@ -39,8 +39,36 @@ XS(injected_constructor)
 
     struct xpvhv_aux *aux = HvAUX(stash);
 
-    SV *self = sv_2mortal(newRV_noinc((SV *)newAV()));
+    AV *fields = newAV();
+    SV *self = sv_2mortal(newRV_noinc((SV *)fields));
     sv_bless(self, stash);
+
+    /* create fields */
+    for(PADOFFSET fieldix = 0; fieldix < aux->xhv_class_next_fieldix; fieldix++) {
+        PADNAME *pn = (PADNAME *)AvARRAY(aux->xhv_class_fields)[fieldix];
+        assert(PadnameFIELDINFO(pn)->fieldix == fieldix);
+
+        SV *val = NULL;
+
+        switch(PadnamePV(pn)[0]) {
+            case '$':
+                val = newSV(0);
+                break;
+
+            case '@':
+                val = (SV *)newAV();
+                break;
+
+            case '%':
+                val = (SV *)newHV();
+                break;
+
+            default:
+                NOT_REACHED;
+        }
+
+        av_push(fields, val);
+    }
 
     if(aux->xhv_class_adjust_blocks) {
         CV **cvp = (CV **)AvARRAY(aux->xhv_class_adjust_blocks);
@@ -78,6 +106,27 @@ PP(pp_methstart)
 
     save_clearsv(&PAD_SVl(PADIX_SELF));
     sv_setsv(PAD_SVl(PADIX_SELF), self);
+
+    UNOP_AUX_item *aux = cUNOP_AUX->op_aux;
+    if(aux) {
+        assert(SvTYPE(SvRV(self)) == SVt_PVAV);
+        AV *fields = MUTABLE_AV(SvRV(self));
+        SV **fieldp = AvARRAY(fields);
+
+        for(Size_t i = 0; i < aux[0].uv; i++) {
+            PADOFFSET padix   = aux[i*2+1].uv;
+            U32       fieldix = aux[i*2+2].uv;
+
+            assert(av_count(fields) > fieldix);
+            assert(fieldp[fieldix]);
+
+            /* TODO: There isn't a convenient SAVE macro for doing both these
+             * steps in one go. Add one. */
+            SAVESPTR(PAD_SVl(padix));
+            SV *sv = PAD_SVl(padix) = SvREFCNT_inc(fieldp[fieldix]);
+            save_freesv(sv);
+        }
+    }
 
     return NORMAL;
 }
@@ -118,6 +167,9 @@ Perl_class_setup_stash(pTHX_ HV *stash)
      */
 
     HvAUX(stash)->xhv_class_adjust_blocks = NULL;
+    HvAUX(stash)->xhv_class_fields        = NULL;
+    HvAUX(stash)->xhv_class_next_fieldix  = 0;
+
     HvAUX(stash)->xhv_aux_flags |= HvAUXf_IS_CLASS;
 
     SAVEDESTRUCTOR_X(invoke_class_seal, stash);
@@ -157,14 +209,61 @@ Perl_class_wrap_method_body(pTHX_ OP *o)
 {
     PERL_ARGS_ASSERT_CLASS_WRAP_METHOD_BODY;
 
+    PADNAMELIST *pnl = PadlistNAMES(CvPADLIST(PL_compcv));
+
+    AV *fieldmap = newAV();
+    SAVEFREESV((SV *)fieldmap);
+
+    /* padix 0 == @_; padix 1 == $self. Start at 2 */
+    for(PADOFFSET padix = 2; padix <= PadnamelistMAX(pnl); padix++) {
+        PADNAME *pn = PadnamelistARRAY(pnl)[padix];
+        if(!pn || !PadnameIsFIELD(pn))
+            continue;
+
+        av_push(fieldmap, newSVuv(padix));
+        av_push(fieldmap, newSVuv(PadnameFIELDINFO(pn)->fieldix));
+    }
+
+    UNOP_AUX_item *aux = NULL;
+
+    if(av_count(fieldmap)) {
+        Newx(aux, 1 + av_count(fieldmap), UNOP_AUX_item);
+
+        aux[0].uv = av_count(fieldmap) / 2;
+        for(Size_t i = 0; i < av_count(fieldmap); i++)
+            aux[i+1].uv = SvUV(AvARRAY(fieldmap)[i]);
+    }
+
     /* If this is an empty method body then o will be an OP_STUB and not a
      * list. This will confuse op_sibling_splice() */
     if(o->op_type != OP_LINESEQ)
         o = newLISTOP(OP_LINESEQ, 0, o, NULL);
 
-    op_sibling_splice(o, NULL, 0, newOP(OP_METHSTART, 0));
+    op_sibling_splice(o, NULL, 0, newUNOP_AUX(OP_METHSTART, 0, NULL, aux));
 
     return o;
+}
+
+void
+Perl_class_add_field(pTHX_ PADNAME *pn)
+{
+    PERL_ARGS_ASSERT_CLASS_ADD_FIELD;
+
+    assert(HvSTASH_IS_CLASS(PL_curstash));
+    struct xpvhv_aux *aux = HvAUX(PL_curstash);
+
+    PADOFFSET fieldix = aux->xhv_class_next_fieldix;
+    aux->xhv_class_next_fieldix++;
+
+    Newx(PadnameFIELDINFO(pn), 1, struct padname_fieldinfo);
+    PadnameFLAGS(pn) |= PADNAMEf_FIELD;
+
+    PadnameFIELDINFO(pn)->fieldix = fieldix;
+
+    if(!aux->xhv_class_fields)
+        aux->xhv_class_fields = newAV();
+
+    av_push(aux->xhv_class_fields, (SV *)pn);
 }
 
 void

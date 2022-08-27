@@ -899,6 +899,7 @@ S_pad_check_dup(pTHX_ PADNAME *name, U32 flags, const HV *ourstash)
                 (   is_our                         ? "our"   :
                     PL_parser->in_my == KEY_my     ? "my"    :
                     PL_parser->in_my == KEY_sigvar ? "my"    :
+                    PL_parser->in_my == KEY_field  ? "field" :
                                                      "state" ),
                 *PadnamePV(pn) == '&' ? "subroutine" : "variable",
                 PNfARG(pn),

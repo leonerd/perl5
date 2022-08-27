@@ -114,4 +114,19 @@ no warnings 'experimental::class';
     is($obj->count, 3, '$obj->count after invoking method-closure x 3');
 }
 
+# fields of multiple unit classes are distinct
+{
+    class Test6::A;
+    field $x; ADJUST { $x = "A" }
+    method m { return "unit-$x" }
+
+    class Test6::B;
+    field $x; ADJUST { $x = "B" }
+    method m { return "unit-$x" }
+
+    package main;
+    ok(eq_array([Test6::A->new->m, Test6::B->new->m], ["unit-A", "unit-B"]),
+        'Fields of multiple unit classes remain distinct');
+}
+
 done_testing;

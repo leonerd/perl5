@@ -617,7 +617,7 @@ Perl_pad_add_name_pvn(pTHX_ const char *namepv, STRLEN namelen,
         ENTER;
         SAVEFREEPADNAME(name); /* in case of fatal warnings */
         /* check for duplicate declaration */
-        pad_check_dup(name, flags & padadd_OUR, ourstash);
+        pad_check_dup(name, flags & (padadd_OUR|padadd_FIELD), ourstash);
         PadnameREFCNT_inc(name);
         LEAVE;
     }
@@ -869,12 +869,13 @@ S_pad_check_dup(pTHX_ PADNAME *name, U32 flags, const HV *ourstash)
     PADNAME	**svp;
     PADOFFSET	top, off;
     const U32	is_our = flags & padadd_OUR;
+    bool        is_field = flags & padadd_FIELD;
 
     PERL_ARGS_ASSERT_PAD_CHECK_DUP;
 
     ASSERT_CURPAD_ACTIVE("pad_check_dup");
 
-    assert((flags & ~padadd_OUR) == 0);
+    assert((flags & ~(padadd_OUR|padadd_FIELD)) == 0);
 
     if (PadnamelistMAX(PL_comppad_name) < 0 || !ckWARN(WARN_SHADOW))
         return; /* nothing to check */
@@ -893,6 +894,9 @@ S_pad_check_dup(pTHX_ PADNAME *name, U32 flags, const HV *ourstash)
         {
             if (is_our && (PadnameIsOUR(pn)))
                 break; /* "our" masking "our" */
+            if (is_field && PadnameIsFIELD(pn) &&
+                    PadnameFIELDINFO(pn)->fieldstash != PL_curstash)
+                break; /* field of a different class */
             /* diag_listed_as: "%s" variable %s masks earlier declaration in same %s */
             Perl_warner(aTHX_ packWARN(WARN_SHADOW),
                 "\"%s\" %s %" PNf " masks earlier declaration in same %s",

@@ -265,6 +265,7 @@ L<C<last>|/last LABEL>, L<C<__LINE__>|/__LINE__>,
 L<C<next>|/next LABEL>, L<C<__PACKAGE__>|/__PACKAGE__>,
 L<C<redo>|/redo LABEL>, L<C<return>|/return EXPR>,
 L<C<sub>|/sub NAME BLOCK>, L<C<__SUB__>|/__SUB__>,
+L<C<method>|/method NAME BLOCK>,
 L<C<wantarray>|/wantarray>
 
 L<C<break>|/break> is available only if you enable the experimental
@@ -295,7 +296,8 @@ current scope.
 
 L<C<caller>|/caller EXPR>, L<C<import>|/import LIST>,
 L<C<local>|/local EXPR>, L<C<my>|/my VARLIST>, L<C<our>|/our VARLIST>,
-L<C<package>|/package NAMESPACE>, L<C<state>|/state VARLIST>,
+L<C<package>|/package NAMESPACE>, L<C<class>|/class NAMESPACE>, 
+L<C<field>|/field VARNAME>, L<C<state>|/state VARLIST>,
 L<C<use>|/use Module VERSION LIST>
 
 L<C<state>|/state VARLIST> is available only if the
@@ -345,7 +347,9 @@ X<object> X<class> X<package>
 
 L<C<bless>|/bless REF,CLASSNAME>, L<C<dbmclose>|/dbmclose HASH>,
 L<C<dbmopen>|/dbmopen HASH,DBNAME,MASK>,
-L<C<package>|/package NAMESPACE>, L<C<ref>|/ref EXPR>,
+L<C<package>|/package NAMESPACE>, L<C<class>|/class NAMESPACE>,
+L<C<field>|/field VARNAME>, L<C<method>|/method NAME BLOCK>,
+L<C<ref>|/ref EXPR>,
 L<C<tie>|/tie VARIABLE,CLASSNAME,LIST>, L<C<tied>|/tied VARIABLE>,
 L<C<untie>|/untie VARIABLE>, L<C<use>|/use Module VERSION LIST>
 
@@ -427,6 +431,7 @@ L<C<time>|/time>, L<C<times>|/times>
 =for Pod::Functions =!Non-functions
 
 C<and>,
+C<ADJUST>,
 C<AUTOLOAD>,
 C<BEGIN>,
 C<catch>,
@@ -1277,6 +1282,21 @@ L<C<chroot>|/chroot FILENAME>, otherwise the current working directory
 may be outside of the new root.
 
 Portability issues: L<perlport/chroot>.
+
+=item class NAMESPACE
+
+=item class NAMESPACE VERSION
+
+=item class NAMESPACE BLOCK
+
+=item class NAMESPACE VERSION BLOCK
+
+=for Pod::Functions declare a separate global namespace that is an object class
+
+Declares the BLOCK or the rest of the compilation unit as being in the given
+namespace, which implements an object class.  This behaves similarly to
+L<C<package>/package NAMESPACE>, except that the newly-created package behaves
+as a class.
 
 =item close FILEHANDLE
 X<close>
@@ -2748,6 +2768,15 @@ X<__FILE__>
 A special token that returns the name of the file in which it occurs.
 It can be altered by the mechanism described at
 L<perlsyn/"Plain Old Comments (Not!)">.
+
+=item field VARNAME
+X<field>
+
+=for Pod::Functions declare a field variable of the current class
+
+Declares a new field variable within the current class.  Methods and
+L<C<ADJUST>/BLOCK> blocks of the class will have access to this variable as
+if it was a lexical in scope at that point.
 
 =item fileno FILEHANDLE
 X<fileno>
@@ -4312,6 +4341,16 @@ or to force an anon hash constructor use C<+{>:
                                               # comma at end
 
 to get a list of anonymous hashes each with only one entry apiece.
+
+=item method NAME BLOCK
+X<method>
+
+=item method NAME : ATTRS BLOCK
+
+=for Pod::Functions declare a method of a class
+
+Creates a new named method in the scope of the class that it appears within.
+This is only valid inside a L<C<class>/class NAMESPACE> declaration.
 
 =item mkdir FILENAME,MODE
 X<mkdir> X<md> X<directory, create>
@@ -10568,6 +10607,14 @@ documented in L<perlsyn/"Try Catch Exception Handling">.
 
 This flow-control keyword related to the experimental C<defer> feature is
 documented in L<perlsyn/"defer blocks">.
+
+=back
+
+=over
+
+=item ADJUST
+
+This class-related phaser block is documented in L<perlclass>.
 
 =back
 

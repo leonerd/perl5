@@ -20,8 +20,8 @@ C->new(123);
 C->new(1,2);
 C->new(1,2,3);
 EXPECT
-Odd number of arguments passed to C constructor at - line 7.
-Odd number of arguments passed to C constructor at - line 9.
+Odd number of arguments passed to "C" constructor at - line 7.
+Odd number of arguments passed to "C" constructor at - line 9.
 ########
 # field shadowing warning
 use v5.36;

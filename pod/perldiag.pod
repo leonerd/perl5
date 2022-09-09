@@ -718,7 +718,7 @@ be directly assigned to.
 (S io) You tried to apply an encoding that did not exist to a filehandle,
 either with open() or binmode().
 
-=item Cannot invoke a method of '%s' on an instance of '%s'
+=item Cannot invoke a method of "%s" on an instance of "%s"
 
 (F) You tried to directly call a C<method> subroutine of one class by passing
 in a value that is an instance of a different class.  This is not permitted,
@@ -2445,7 +2445,7 @@ experimental and its behaviour may change in future releases of Perl.
 that does not appear inside the body of a C<method> subroutine.  This is not
 permitted, as only methods will have access to the fields of an instance.
 
-=item Field %s of '%s' is not accessible in a method of '%s'
+=item Field %s of "%s" is not accessible in a method of "%s"
 
 (F) An attempt was made to access a field variable of a class, from a
 method of another class nested inside the one that actually defined it.

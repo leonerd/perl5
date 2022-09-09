@@ -26,7 +26,7 @@ Perl_croak_kw_unless_class(pTHX_ const char *kw)
     PERL_ARGS_ASSERT_CROAK_KW_UNLESS_CLASS;
 
     if(!HvSTASH_IS_CLASS(PL_curstash))
-        Perl_croak(aTHX_ "Cannot '%s' outside of a 'class'", kw);
+        croak("Cannot '%s' outside of a 'class'", kw);
 }
 
 #define newSVobject(fieldcount)  Perl_newSVobject(aTHX_ fieldcount)
@@ -54,7 +54,7 @@ XS(injected_constructor)
     struct xpvhv_aux *aux = HvAUX(stash);
 
     if((items - 1) % 2)
-        Perl_warn(aTHX_ "Odd number of arguments passed to %" HEKf " constructor",
+        Perl_warn(aTHX_ "Odd number of arguments passed to %" HEKf_QUOTEDPREFIX " constructor",
                 HEKfARG(HvNAME_HEK(stash)));
 
     HV *params = NULL;
@@ -145,7 +145,7 @@ XS(injected_constructor)
         while((he = hv_iternext(params)))
             Perl_sv_catpvf(aTHX_ paramnames, ", %" SVf, SVfARG(HeSVKEY_force(he)));
 
-        Perl_croak(aTHX_ "Unrecognised parameters for %" HEKf " constructor: %" SVf,
+        croak("Unrecognised parameters for %" HEKf_QUOTEDPREFIX " constructor: %" SVf,
                 HEKfARG(HvNAME_HEK(stash)), SVfARG(paramnames));
     }
 
@@ -180,11 +180,11 @@ PP(pp_methstart)
     if(!SvROK(self) ||
         !SvOBJECT((rv = SvRV(self))) ||
         SvTYPE(rv) != SVt_PVOBJ)
-        Perl_croak(aTHX_ "Cannot invoke method on a non-instance");
+        croak("Cannot invoke method on a non-instance");
 
     /* TODO: When we implement inheritence we'll have to do something fancier here */
     if(CvSTASH(curcv) != SvSTASH(rv))
-        Perl_croak(aTHX_ "Cannot invoke a method of '%" HEKf "' on an instance of '%" HEKf "'",
+        croak("Cannot invoke a method of %" HEKf_QUOTEDPREFIX " on an instance of %" HEKf_QUOTEDPREFIX,
             HEKfARG(HvNAME_HEK(CvSTASH(curcv))), HEKfARG(HvNAME_HEK(SvSTASH(rv))));
 
     save_clearsv(&PAD_SVl(PADIX_SELF));

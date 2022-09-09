@@ -1281,7 +1281,7 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
 
         /* fields are only visible to the class that declared them */
         if(fieldstash != PL_curstash)
-            Perl_croak(aTHX_ "Field %" SVf " of '%" HEKf "' is not accessible in a method of '%" HEKf "'",
+            Perl_croak(aTHX_ "Field %" SVf " of %" HEKf_QUOTEDPREFIX " is not accessible in a method of %" HEKf_QUOTEDPREFIX,
                 SVfARG(PadnameSV(*out_name)), HEKfARG(HvNAME_HEK(fieldstash)), HEKfARG(HvNAME_HEK(PL_curstash)));
 
         /* field capture is permitted if CV itself is a method, or any outside

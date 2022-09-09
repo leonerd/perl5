@@ -36,7 +36,7 @@ use builtin qw(reftype blessed);
     like("$obj", qr/^Test1=OBJECT\(0x[[:xdigit:]]+\)$/, 'stringified object' );
 
     ok(!eval { Test1->new(y => 456); 1 }, 'Unrecognised parameter fails');
-    like($@, qr/^Unrecognised parameters for Test1 constructor: y at /,
+    like($@, qr/^Unrecognised parameters for \"Test1\" constructor: y at /,
         'Exception thrown by constructor for unrecogniser parameter');
 }
 

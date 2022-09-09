@@ -30,7 +30,7 @@ class XXX { method m { } }
 class YYY {}
 YYY->new->XXX::m();
 EXPECT
-Cannot invoke a method of 'XXX' on an instance of 'YYY' at - line 6.
+Cannot invoke a method of "XXX" on an instance of "YYY" at - line 6.
 ########
 no warnings 'experimental::class';
 use feature 'class';
@@ -59,4 +59,4 @@ class XXX {
   class YYY { method m { print $x } }
 }
 EXPECT
-Field $x of 'XXX' is not accessible in a method of 'YYY' at - line 5.
+Field $x of "XXX" is not accessible in a method of "YYY" at - line 5.

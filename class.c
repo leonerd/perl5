@@ -200,6 +200,7 @@ PP(pp_methstart)
         U32 max_fieldix = (aux++)->uv;
 
         assert(ObjectMAXFIELD(instance)+1 > max_fieldix);
+        PERL_UNUSED_VAR(max_fieldix);
 
         for(Size_t i = 0; i < fieldcount; i++) {
             PADOFFSET padix   = (aux++)->uv;
@@ -292,6 +293,7 @@ Perl_class_prepare_method_parse(pTHX_ CV *cv)
 
     padix = pad_add_name_pvs("$self", 0, NULL, NULL);
     assert(padix == PADIX_SELF);
+    PERL_UNUSED_VAR(padix);
 
     intro_my();
 

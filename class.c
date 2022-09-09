@@ -231,6 +231,11 @@ Perl_class_setup_stash(pTHX_ HV *stash)
 
     assert(HvHasAUX(stash));
 
+    if(HvSTASH_IS_CLASS(stash)) {
+        croak("Cannot reopen existing class %" HEKf_QUOTEDPREFIX,
+            HEKfARG(HvNAME_HEK(stash)));
+    }
+
     char *classname = HvNAME(stash);
     U32 nameflags = HvNAMEUTF8(stash) ? SVf_UTF8 : 0;
 

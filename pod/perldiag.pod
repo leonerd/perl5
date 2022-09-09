@@ -759,6 +759,11 @@ which makes no sense.
 (F) You tried printing an infinity or not-a-number as a character (%c),
 which makes no sense.  Maybe you meant '%s', or just stringifying it?
 
+=item Cannot reopen existing class "%s"
+
+(F) You tried to begin a C<class> definition for a class that already exists.
+A class may only have one definition block.
+
 =item Cannot set tied @DB::args
 
 (F) C<caller> tried to set C<@DB::args>, but found it tied.  Tying C<@DB::args>

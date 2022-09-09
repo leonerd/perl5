@@ -60,3 +60,10 @@ class XXX {
 }
 EXPECT
 Field $x of "XXX" is not accessible in a method of "YYY" at - line 5.
+########
+no warnings 'experimental::class';
+use feature 'class';
+class XXX {}
+class XXX {}
+EXPECT
+Cannot reopen existing class "XXX" at - line 4.

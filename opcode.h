@@ -566,6 +566,7 @@ EXTCONST char* const PL_op_name[] = {
 	"ceil",
 	"floor",
 	"is_tainted",
+	"methstart",
         "freed",
 };
 #endif
@@ -991,6 +992,7 @@ EXTCONST char* const PL_op_desc[] = {
 	"ceil",
 	"floor",
 	"is_tainted",
+	"method start",
         "freed op",
 };
 #endif
@@ -1419,6 +1421,7 @@ EXT Perl_ppaddr_t PL_ppaddr[] /* or perlvars.h */
 	Perl_pp_ceil,
 	Perl_pp_floor,
 	Perl_pp_is_tainted,
+	Perl_pp_methstart,
 }
 #endif
 ;
@@ -1843,6 +1846,7 @@ EXT Perl_check_t PL_check[] /* or perlvars.h */
 	Perl_ck_null,		/* ceil */
 	Perl_ck_null,		/* floor */
 	Perl_ck_null,		/* is_tainted */
+	Perl_ck_null,		/* methstart */
 }
 #endif
 ;
@@ -2268,6 +2272,7 @@ EXTCONST U32 PL_opargs[] = {
 	0x0000011e,	/* ceil */
 	0x0000011e,	/* floor */
 	0x00000106,	/* is_tainted */
+	0x00000000,	/* methstart */
 };
 #endif
 
@@ -2954,6 +2959,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
       78, /* ceil */
       78, /* floor */
        0, /* is_tainted */
+      -1, /* methstart */
 
 };
 
@@ -3471,6 +3477,7 @@ EXTCONST U8 PL_op_private_valid[] = {
     /* CEIL       */ (OPpARG1_MASK|OPpTARGET_MY),
     /* FLOOR      */ (OPpARG1_MASK|OPpTARGET_MY),
     /* IS_TAINTED */ (OPpARG1_MASK),
+    /* METHSTART  */ (0),
 
 };
 

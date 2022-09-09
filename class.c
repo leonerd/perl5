@@ -16,6 +16,10 @@
 
 #include "XSUB.h"
 
+enum {
+    PADIX_SELF = 1,
+};
+
 XS(injected_constructor);
 XS(injected_constructor)
 {
@@ -29,6 +33,19 @@ XS(injected_constructor)
     EXTEND(SP, 1);
     ST(0) = self;
     XSRETURN(1);
+}
+
+/* TODO: People would probably expect to find this in pp.c  ;) */
+PP(pp_methstart)
+{
+    SV *self = av_shift(GvAV(PL_defgv));
+
+    /* TODO: much sanity checking on self */
+
+    save_clearsv(&PAD_SVl(PADIX_SELF));
+    sv_setsv(PAD_SVl(PADIX_SELF), self);
+
+    return NORMAL;
 }
 
 static void
@@ -90,7 +107,7 @@ Perl_class_prepare_method_parse(pTHX_ CV *cv)
     PADOFFSET padix;
 
     padix = pad_add_name_pvs("$self", 0, NULL, NULL);
-    assert(padix == 1);
+    assert(padix == PADIX_SELF);
 
     intro_my();
 }
@@ -100,17 +117,12 @@ Perl_class_wrap_method_body(pTHX_ OP *o)
 {
     PERL_ARGS_ASSERT_CLASS_WRAP_METHOD_BODY;
 
-    /* Inject  my $self = shift;  at the start */
+    /* If this is an empty method body then o will be an OP_STUB and not a
+     * list. This will confuse op_sibling_splice() */
+    if(o->op_type != OP_LINESEQ)
+        o = newLISTOP(OP_LINESEQ, 0, o, NULL);
 
-    OP *padsvop = newOP(OP_PADSV, OPf_REF|OPf_MOD|OPf_SPECIAL);
-    padsvop->op_targ = 1;
-    padsvop->op_private |= OPpLVAL_INTRO;
-
-    OP *assignop = newBINOP(OP_SASSIGN, 0,
-        newOP(OP_SHIFT, OPf_SPECIAL),
-        padsvop);
-
-    op_sibling_splice(o, NULL, 0, assignop);
+    op_sibling_splice(o, NULL, 0, newOP(OP_METHSTART, 0));
 
     return o;
 }

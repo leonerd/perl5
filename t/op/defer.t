@@ -6,8 +6,9 @@ BEGIN {
     set_up_inc('../lib');
 }
 
-plan 30;
+plan 31;
 
+use v5.36;
 use feature 'defer';
 no warnings 'experimental::defer';
 
@@ -239,16 +240,19 @@ no warnings 'experimental::defer';
 
 {
     my $sub = sub {
-        defer { die "Oopsie 1\n"; }
-        die "Oopsie 2\n";
+        defer { die "Subsequent oopsie\n"; }
+        die "Main oopsie\n";
     };
 
-    my $e = defined eval { $sub->(); 1 } ? undef : $@;
+    my $warnings;
+    my $e = do {
+        local $SIG{__WARN__} = sub { $warnings .= join "", @_; };
+        defined eval { $sub->(); 1 } ? undef : $@;
+    };
 
-    # TODO: Currently the first exception gets lost without even a warning
-    #   We should consider what the behaviour ought to be here
-    # This test is happy for either exception to be seen, does not care which
-    like($e, qr/^Oopsie \d\n/, 'defer block can throw exception during exception unwind');
+    like($e, qr/^Main oopsie\n/, 'Exception thrown during exceptional unwind does not overwrite');
+    like($warnings, qr/\(in cleanup\) Subsequent oopsie\n/,
+        'Exception thrown within exceptional unwind is printed as warning');
 }
 
 {

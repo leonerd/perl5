@@ -5672,9 +5672,7 @@ static void
 _invoke_defer_block(pTHX_ U8 type, void *_arg)
 {
     OP *start = (OP *)_arg;
-#ifdef DEBUGGING
     I32 was_cxstack_ix = cxstack_ix;
-#endif
 
     cx_pushblock(type, G_VOID, PL_stack_sp, PL_savestack_ix);
     ENTER;
@@ -5683,7 +5681,41 @@ _invoke_defer_block(pTHX_ U8 type, void *_arg)
     SAVEOP();
     PL_op = start;
 
-    CALLRUNOPS(aTHX);
+    if(PL_throwing) {
+        /* defer while throwing needs to catch inner exceptions to turn them
+         * into warnings. See also
+         *   https://github.com/Perl/perl5/issues/20389
+         */
+        int ret;
+        dJMPENV;
+
+        JMPENV_PUSH(ret);
+
+        /* Pretend that an eval {} happened */
+        PERL_CONTEXT *cx = cx_pushblock(CXt_EVAL|CXp_EVALBLOCK, G_VOID, PL_stack_sp, PL_savestack_ix);
+        cx_pusheval(cx, /* retop = */ NULL, NULL);
+        PL_in_eval = EVAL_INEVAL|EVAL_KEEPERR;
+
+        switch (ret) {
+            case 0:
+                CALLRUNOPS(aTHX);
+                /* defer block didn't throw */
+                break;
+            case 3:
+                /* defer block did throw; its message was printed as a warning
+                 * because of EVAL_KEEPERR so we have nothing extra to do */
+                break;
+            default:
+                JMPENV_POP;
+                JMPENV_JUMP(ret);
+                NOT_REACHED;
+        }
+        JMPENV_POP;
+
+        dounwind(was_cxstack_ix + 1);
+    }
+    else
+        CALLRUNOPS(aTHX);
 
     FREETMPS;
     LEAVE;

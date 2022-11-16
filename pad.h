@@ -143,6 +143,7 @@ typedef enum {
 #define padadd_STALEOK		0x08	   /* allow stale lexical in active
                                             * sub, but only one level up */
 #define padadd_FIELD            0x10       /* set PADNAMEt_FIELD */
+#define padfind_FIELD_OK        0x20       /* pad_findlex is permitted to see fields */
 
 /* ASSERT_CURPAD_LEGAL and ASSERT_CURPAD_ACTIVE respectively determine
  * whether PL_comppad and PL_curpad are consistent and whether they have

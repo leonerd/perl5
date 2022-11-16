@@ -1104,10 +1104,11 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
     SV **new_capturep;
     const PADLIST * const padlist = CvPADLIST(cv);
     const bool staleok = cBOOL(flags & padadd_STALEOK);
+    const bool fieldok = cBOOL(flags & padfind_FIELD_OK);
 
     PERL_ARGS_ASSERT_PAD_FINDLEX;
 
-    flags &= ~ padadd_STALEOK; /* one-shot flag */
+    flags &= ~(padadd_STALEOK|padfind_FIELD_OK); /* one-shot flags */
     if (flags)
         Perl_croak(aTHX_ "panic: pad_findlex illegal flag bits 0x%" UVxf,
                    (UV)flags);
@@ -1145,6 +1146,10 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
             if (offset > 0) { /* not fake */
                 fake_offset = 0;
                 *out_name = name_p[offset]; /* return the name */
+
+                if (PadnameIsFIELD(*out_name) && !fieldok)
+                    Perl_croak(aTHX_ "Field %" SVf " is not accessible outside a method",
+                            SVfARG(PadnameSV(*out_name)));
 
                 /* set PAD_FAKELEX_MULTI if this lex can have multiple
                  * instances. For now, we just test !CvUNIQUE(cv), but
@@ -1269,8 +1274,13 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
     new_capturep = out_capture ? out_capture :
                 CvLATE(cv) ? NULL : &new_capture;
 
-    offset = pad_findlex(namepv, namelen,
-                flags | padadd_STALEOK*(new_capturep == &new_capture),
+    U32 recurse_flags = flags;
+    if(new_capturep == &new_capturep)
+        recurse_flags |= padadd_STALEOK;
+    if(CvIsMETHOD(cv))
+        recurse_flags |= padfind_FIELD_OK;
+
+    offset = pad_findlex(namepv, namelen, recurse_flags,
                 CvOUTSIDE(cv), CvOUTSIDE_SEQ(cv), 1,
                 new_capturep, out_name, out_flags);
     if (offset == NOT_IN_PAD)
@@ -1283,16 +1293,6 @@ S_pad_findlex(pTHX_ const char *namepv, STRLEN namelen, U32 flags, const CV* cv,
         if(fieldstash != PL_curstash)
             Perl_croak(aTHX_ "Field %" SVf " of %" HEKf_QUOTEDPREFIX " is not accessible in a method of %" HEKf_QUOTEDPREFIX,
                 SVfARG(PadnameSV(*out_name)), HEKfARG(HvNAME_HEK(fieldstash)), HEKfARG(HvNAME_HEK(PL_curstash)));
-
-        /* field capture is permitted if CV itself is a method, or any outside
-         * scope is */
-        for(const CV *upcv = cv; upcv; upcv = CvOUTSIDE(upcv))
-            if(CvIsMETHOD(upcv))
-                goto found_method;
-
-        Perl_croak(aTHX_ "Field %" SVf " is not accessible outside a method",
-                SVfARG(PadnameSV(*out_name)));
-found_method: ;
     }
 
     /* found in an outer CV. Add appropriate fake entry to this pad */

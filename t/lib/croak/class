@@ -48,6 +48,12 @@ Can't bless an object reference at - line 4.
 ########
 no warnings 'experimental::class';
 use feature 'class';
+class XXX { field $zz; $zz = 123; }
+EXPECT
+Field $zz is not accessible outside a method at - line 3.
+########
+no warnings 'experimental::class';
+use feature 'class';
 class XXX { field $x; sub f { print $x } }
 EXPECT
 Field $x is not accessible outside a method at - line 3.

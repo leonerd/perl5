@@ -9,9 +9,14 @@ perlclass - Perl class syntax reference
 
     class My::Example 1.234 {
         field $x;
-        ADJUST { $x = "Hello, world"; }
 
-        method print_message { say $x; }
+        ADJUST {
+            $x = "Hello, world";
+        }
+
+        method print_message {
+            say $x;
+        }
     }
 
     My::Example->new->print_message;
@@ -40,43 +45,58 @@ the scope of current package:
 
 =head2 class
 
-	class NAME BLOCK
+    class NAME BLOCK
 
-	class NAME VERSION BLOCK
+    class NAME VERSION BLOCK
 
 The C<class> keyword declares a new package which is intended to be a class.
 All other keywords from the C<class> feature should be used in scope of this
 declaration.
 
-There are following differences between C<package> and C<class> keywords:
+    class WithVersion 1.000 {
+        # class definition goes here
+    }
 
-=over
-
-=item * Creates a new scope for variables declared using the L<field> keyword
-
-=item * Classes automatically get a constructor named C<new>
-
-You don't have to (and should not) write one.
-
-=back
+C<class> and C<package> declarations are similar, but classes automatically get
+a constructor named C<new> - You don't have to (and should not) write one.
+Additionally, in the class BLOCK you are allowed to declare fields and methods.
 
 =head2 field
 
-	field VARIABLE_NAME;
+    field VARIABLE_NAME;
 
 Fields are variables which are visible in the scope of the class - more
 specifically within L<method> and L<ADJUST> blocks. Each class instance get
 their own storage of fields, independent of each other.
 
 A field behaves like a normal lexically scoped variable. It has a sigil and is
-private to the class unless an accessor method is created. The main difference
-is that different instances access different values in the same scope.
+private to the class (though creation of an accessor method will make it
+accessible from the outside). The main difference is that different instances
+access different values in the same scope.
+
+    class WithFields {
+        field $scalar;
+        field @array;
+        field %hash;
+
+        ADJUST {
+            $scalar = 42;
+            @array = qw(this is just an array);
+            %hash = (species => 'Marsian', planet => 'Mars');
+        }
+    }
 
 =head2 method
 
-	method METHOD_NAME SIGNATURE BLOCK
+    method METHOD_NAME SIGNATURE BLOCK
 
-Methods are subroutines intended to call in the context of class objects.
+    method METHOD_NAME BLOCK
+
+    method SIGNATURE BLOCK
+
+    method BLOCK
+
+Methods are subroutines intended to be called in the context of class objects.
 
 A variable named C<$self> populated with the current object instance will automatically be
 created in the lexical scope of C<method>.
@@ -84,15 +104,34 @@ created in the lexical scope of C<method>.
 Methods always act as if C<use feature 'signatures'> is in effect, but C<$self>
 will not appear in the arguments list as far as the signature is concerned.
 
-    class Class::WithSignatures {
+    class WithMethods {
+        field $greetings;
+
+        ADJUST {
+            $greetings = "Hello";
+        }
+
         method greet($name = "someone") {
-            say "Hello, $name";
+            say "$greetings, $name";
+        }
+    }
+
+Just like regular subroutines, methods I<can> be anonymous:
+
+    class AnonMethodFactory {
+
+        method get_anon_method {
+            return method {
+                return 'this is an anonymous method';
+            };
         }
     }
 
 =head1 ATTRIBUTES
 
-Specific aspects of the keywords defined above are declared using I<attributes>.
+Specific aspects of the keywords mentioned above are managed using
+I<attributes>. Attributes all start with a colon, and one or more of them can
+be appended after the item's name, separated by a space.
 
 =head2 Class attributes
 
@@ -101,9 +140,9 @@ Specific aspects of the keywords defined above are declared using I<attributes>.
 Classes may inherit from B<one> superclass, by using the C<:isa> class
 attribute.
 
-  class Example::Base { ... }
+    class Example::Base { ... }
 
-  class Example::Subclass :isa(Example::Base) { ... }
+    class Example::Subclass :isa(Example::Base) { ... }
 
 Inherited methods are visible and may be invoked. Fields are always lexical
 and therefore not visible by inheritence.
@@ -112,18 +151,18 @@ The C<:isa> attribute may request a minimum version of the base class; it is
 applied similar to C<use> - if the provided version is too low it will fail at
 compile time.
 
-  class Example::Subclass :isa(Example::Base 2.345) { ... }
+    class Example::Subclass :isa(Example::Base 2.345) { ... }
 
 The C<:isa> attribute will attempt to C<require> the named module if it is not
 already loaded.
 
 =head2 Field attributes
 
-TODO
+None yet.
 
 =head2 Method attributes
 
-TODO
+None yet.
 
 =head1 OBJECT LIFECYCLE
 
@@ -132,7 +171,7 @@ TODO
 Each object begins its life with a constructor call. The constructor is always
 named C<new> and is invoked like a method call on the class name:
 
-	my $object = My::Class->new(%arguments);
+    my $object = My::Class->new(%arguments);
 
 During the construction, class fields are compared to C<%arguments> hash and
 populated where possible.
@@ -140,21 +179,32 @@ populated where possible.
 =head2 Adjustment
 
 Object adjustment can be performed during the construction to run user-defined
-code. It is done with the help of C<ADJUST> blocks, which run during the
-construction time of each instance.
+code. It is done with the help of C<ADJUST> blocks, which are called in order
+of declaration.
 
-They are similar to C<BEGIN> blocks, which
-run during the compilation of a package. However, they also have access to
-C<$self> lexical (object instance).
+They are similar to C<BEGIN> blocks, which run during the compilation of a
+package. However, they also have access to C<$self> lexical (object instance)
+and all object fields created up to that point.
 
 =head2 Lifetime
 
-After the construction phase, object is ready to be used. Just like a normal
-reference, it will live as long as its reference count is greater than zero.
+After the construction phase, object is ready to be used.
+
+Using C<blessed> (C<Scalar::Util::blessed> or C<builtin::blessed>) on the
+object will return the name of the class, while C<reftype>
+(C<Scalar::Util::reftype> or C<builtin::reftype>) will return the string
+C<'OBJECT'>.
 
 =head2 Destruction
 
-TODO
+Just like with other references, when object reference count reaches zero it
+will automatically be destroyed.
+
+=head1 AUTHORS
+
+Paul Evans
+
+Bartosz Jarzyna
 
 =cut
 

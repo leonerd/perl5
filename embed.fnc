@@ -3895,6 +3895,7 @@ Cp	|void	|class_add_ADJUST	|NN CV *cv
 Cp	|void	|class_add_field	|NN PADNAME *pn
 Cp	|void	|class_prepare_method_parse	|NN CV *cv
 Cp	|void	|class_setup_stash	|NN HV *stash
+Cp	|void	|class_apply_attributes	|NN HV *stash|NULLOK OP *attrlist
 Cp	|void	|class_seal_stash	|NN HV *stash
 Cp	|OP *	|class_wrap_method_body		|NN OP *o
 Cp	|void	|croak_kw_unless_class	|NN const char *kw

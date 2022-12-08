@@ -978,7 +978,7 @@ subsigguts:
                             struct op_argcheck_aux *aux;
                             OP            *check;
 
-			    if (!FEATURE_SIGNATURES_IS_ENABLED)
+			    if (!FEATURE_SIGNATURES_IS_ENABLED && !CvIsMETHOD(PL_compcv))
 			        Perl_croak(aTHX_ "Experimental "
                                     "subroutine signatures not enabled");
 

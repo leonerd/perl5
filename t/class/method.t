@@ -23,6 +23,10 @@ no warnings 'experimental::class';
 
 # methods have signatures; signatures do not capture $self
 {
+    # Turn off the 'signatures' feature to prove that 'method' is always
+    # signatured even without it
+    no feature 'signatures';
+
     class Test2 {
         method retfirst ( $x = 123 ) { return $x; }
     }

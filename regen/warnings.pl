@@ -146,6 +146,8 @@ my $TREE = {
                                     [ 5.035, DEFAULT_ON],
                                 'experimental::extra_paired_delimiters' =>
                                     [ 5.035, DEFAULT_ON],
+                                'experimental::class' =>
+                                    [ 5.037, DEFAULT_ON ],
                         }],
 
         'missing'       => [ 5.021, DEFAULT_OFF],

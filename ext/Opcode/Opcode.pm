@@ -350,6 +350,8 @@ invert_opset function.
     leaveeval -- needed for Safe to operate, is safe
 		 without entereval
 
+    methstart
+
 =item :base_mem
 
 These memory related ops are not included in :base_core because they

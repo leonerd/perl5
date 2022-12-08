@@ -3891,4 +3891,12 @@ Amd	|void	|CopFILEGV_set	|NN COP * c|NN GV * gv
 
 Amd|const char *const|phase_name|enum perl_phase
 
+Cp	|void	|class_add_ADJUST	|NN CV *cv
+Cp	|void	|class_add_field	|NN PADNAME *pn
+Cp	|void	|class_prepare_method_parse	|NN CV *cv
+Cp	|void	|class_setup_stash	|NN HV *stash
+Cp	|void	|class_seal_stash	|NN HV *stash
+Cp	|OP *	|class_wrap_method_body		|NN OP *o
+Cp	|void	|croak_kw_unless_class	|NN const char *kw
+
 : ex: set ts=8 sts=4 sw=4 noet:

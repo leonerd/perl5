@@ -109,12 +109,19 @@
 #if !defined(MULTIPLICITY) || defined(PERL_CORE)
 #define ck_warner_d(a,...)	Perl_ck_warner_d(aTHX_ a,__VA_ARGS__)
 #endif
+#define class_add_ADJUST(a)	Perl_class_add_ADJUST(aTHX_ a)
+#define class_add_field(a)	Perl_class_add_field(aTHX_ a)
+#define class_prepare_method_parse(a)	Perl_class_prepare_method_parse(aTHX_ a)
+#define class_seal_stash(a)	Perl_class_seal_stash(aTHX_ a)
+#define class_setup_stash(a)	Perl_class_setup_stash(aTHX_ a)
+#define class_wrap_method_body(a)	Perl_class_wrap_method_body(aTHX_ a)
 #define clear_defarray(a,b)	Perl_clear_defarray(aTHX_ a,b)
 #define cop_fetch_label(a,b,c)	Perl_cop_fetch_label(aTHX_ a,b,c)
 #define cop_store_label(a,b,c,d)	Perl_cop_store_label(aTHX_ a,b,c,d)
 #if !defined(MULTIPLICITY) || defined(PERL_CORE)
 #define croak(...)		Perl_croak(aTHX_ __VA_ARGS__)
 #endif
+#define croak_kw_unless_class(a)	Perl_croak_kw_unless_class(aTHX_ a)
 #define croak_memory_wrap	Perl_croak_memory_wrap
 #define croak_no_modify		Perl_croak_no_modify
 #define croak_sv(a)		Perl_croak_sv(aTHX_ a)

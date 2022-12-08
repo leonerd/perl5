@@ -564,6 +564,7 @@ EXTCONST char* const PL_op_name[] INIT({
 	[OP_CEIL]               = "ceil",
 	[OP_FLOOR]              = "floor",
 	[OP_IS_TAINTED]         = "is_tainted",
+	[OP_METHSTART]          = "methstart",
     [OP_max] = "freed",
 });
 
@@ -986,6 +987,7 @@ EXTCONST char* const PL_op_desc[] INIT({
 	[OP_CEIL]               = "ceil",
 	[OP_FLOOR]              = "floor",
 	[OP_IS_TAINTED]         = "is_tainted",
+	[OP_METHSTART]          = "method start",
     [OP_max] = "freed op",
 });
 
@@ -1413,6 +1415,7 @@ INIT({
 	[OP_CEIL]               = Perl_pp_ceil,
 	[OP_FLOOR]              = Perl_pp_floor,
 	[OP_IS_TAINTED]         = Perl_pp_is_tainted,
+	[OP_METHSTART]          = Perl_pp_methstart,
 });
 
 EXT Perl_check_t PL_check[] /* or perlvars.h */
@@ -1835,6 +1838,7 @@ INIT({
 	[OP_CEIL]               = Perl_ck_null,
 	[OP_FLOOR]              = Perl_ck_null,
 	[OP_IS_TAINTED]         = Perl_ck_null,
+	[OP_METHSTART]          = Perl_ck_null,
 });
 
 EXTCONST U32 PL_opargs[] INIT({
@@ -2256,6 +2260,7 @@ EXTCONST U32 PL_opargs[] INIT({
 	[OP_CEIL]               = 0x0000011e,
 	[OP_FLOOR]              = 0x0000011e,
 	[OP_IS_TAINTED]         = 0x00000106,
+	[OP_METHSTART]          = 0x00000f00,
 });
 
 END_EXTERN_C
@@ -2948,6 +2953,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
 	[OP_CEIL]               =   78,
 	[OP_FLOOR]              =   78,
 	[OP_IS_TAINTED]         =    0,
+	[OP_METHSTART]          =    0,
 
 };
 
@@ -2966,7 +2972,7 @@ EXTCONST I16  PL_op_private_bitdef_ix[] = {
  */
 
 EXTCONST U16  PL_op_private_bitdefs[] = {
-    0x0003, /* scalar, prototype, refgen, srefgen, readline, regcmaybe, regcreset, regcomp, substcont, chop, schop, defined, study, preinc, i_preinc, predec, i_predec, postinc, i_postinc, postdec, i_postdec, negate, i_negate, not, ucfirst, lcfirst, uc, lc, quotemeta, aeach, avalues, each, pop, shift, grepstart, mapstart, mapwhile, range, and, or, dor, andassign, orassign, dorassign, argcheck, method, method_named, method_super, method_redir, method_redir_super, entergiven, leavegiven, enterwhen, leavewhen, untie, tied, dbmclose, getsockname, getpeername, lstat, stat, readlink, readdir, telldir, rewinddir, closedir, localtime, alarm, require, dofile, entertry, ghbyname, gnbyname, gpbyname, shostent, snetent, sprotoent, sservent, gpwnam, gpwuid, ggrnam, ggrgid, lock, once, fc, anonconst, cmpchain_and, cmpchain_dup, entertrycatch, catch, is_bool, is_weak, weaken, unweaken, is_tainted */
+    0x0003, /* scalar, prototype, refgen, srefgen, readline, regcmaybe, regcreset, regcomp, substcont, chop, schop, defined, study, preinc, i_preinc, predec, i_predec, postinc, i_postinc, postdec, i_postdec, negate, i_negate, not, ucfirst, lcfirst, uc, lc, quotemeta, aeach, avalues, each, pop, shift, grepstart, mapstart, mapwhile, range, and, or, dor, andassign, orassign, dorassign, argcheck, method, method_named, method_super, method_redir, method_redir_super, entergiven, leavegiven, enterwhen, leavewhen, untie, tied, dbmclose, getsockname, getpeername, lstat, stat, readlink, readdir, telldir, rewinddir, closedir, localtime, alarm, require, dofile, entertry, ghbyname, gnbyname, gpbyname, shostent, snetent, sprotoent, sservent, gpwnam, gpwuid, ggrnam, ggrgid, lock, once, fc, anonconst, cmpchain_and, cmpchain_dup, entertrycatch, catch, is_bool, is_weak, weaken, unweaken, is_tainted, methstart */
     0x353c, 0x4639, /* pushmark */
     0x00bd, /* wantarray, runcv */
     0x0558, 0x1b70, 0x46ec, 0x4288, 0x3a65, /* const */
@@ -3468,6 +3474,7 @@ EXTCONST U8 PL_op_private_valid[] = {
 	[OP_CEIL]               = (OPpARG1_MASK|OPpTARGET_MY),
 	[OP_FLOOR]              = (OPpARG1_MASK|OPpTARGET_MY),
 	[OP_IS_TAINTED]         = (OPpARG1_MASK),
+	[OP_METHSTART]          = (OPpARG1_MASK),
 
 };
 

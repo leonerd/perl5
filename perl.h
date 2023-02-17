@@ -6805,16 +6805,16 @@ EXTCONST U8 PL_c9_utf8_dfa_tab[];
 END_EXTERN_C
 
 struct am_table {
-  U8 flags;
-  U8 fallback;
-  U16 spare;
+  U8 api_ver;
+  U8 fallback; /* one of the AMGfail* values; technically 6 bits are spare */
+  U16 flags;
   U32 was_ok_sub;
   CV* table[NofAMmeth];
 };
 struct am_table_short {
-  U8 flags;
+  U8 api_ver;
   U8 fallback;
-  U16 spare;
+  U16 flags;
   U32 was_ok_sub;
 };
 typedef struct am_table AMT;

@@ -3152,6 +3152,7 @@ Perl_Gv_AMupdate(pTHX_ HV *stash, bool destructing)
   Zero(&amt,1,AMT);
   amt.was_ok_sub = newgen;
   amt.fallback = AMGfallNO;
+  amt.api_ver = 1;
   amt.flags = 0;
 
   {

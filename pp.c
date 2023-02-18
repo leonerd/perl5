@@ -2880,7 +2880,7 @@ PP(pp_atan2)
 PP(pp_sin)
 {
     dSP; dTARGET;
-    int amg_type = fallback_amg;
+    int amg_type = -1;
     const char *neg_report = NULL;
     const int op_type = PL_op->op_type;
 
@@ -2892,7 +2892,7 @@ PP(pp_sin)
     case OP_SQRT: amg_type = sqrt_amg; neg_report = "sqrt"; break;
     }
 
-    assert(amg_type != fallback_amg);
+    assert(amg_type != -1);
 
     tryAMAGICun_MG(amg_type, 0);
     {

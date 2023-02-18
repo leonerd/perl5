@@ -3190,6 +3190,15 @@ Perl_Gv_AMupdate(pTHX_ HV *stash, bool destructing)
         filled = 1;
     }
 
+    gv = gv_fetchmeth_pvn(stash, "(api", 4, -1, 0);
+    if(gv) {
+        int ver = SvIV(GvSV(gv));
+        if(ver < 1 || ver > AMGver_max)
+            croak("overload API version %d is not supported for package %" HEKf_QUOTEDPREFIX,
+                ver, HEKfARG(HvNAME_HEK(stash)));
+        amt.api_ver = ver;
+    }
+
     assert(HvHasAUX(stash));
     /* initially assume the worst */
     HvAUX(stash)->xhv_aux_flags &= ~HvAUXf_NO_DEREF;

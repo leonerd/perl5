@@ -6820,6 +6820,8 @@ struct am_table_short {
 typedef struct am_table AMT;
 typedef struct am_table_short AMTS;
 
+#define AMGver_max      1
+
 #define AMGfallNEVER	1
 #define AMGfallNO	2
 #define AMGfallYES	3

@@ -4830,6 +4830,11 @@ UTF-8.  See L<perlfunc/pack>.
 (W overload) The L<overload> pragma was passed an argument it did not
 recognize.  Did you mistype an operator?
 
+=item overload API version %d is not supported for package "%s"
+
+(F) You tried to set the API version in a C<use overload> pragma to a
+version number that is not supported by this perl version.
+
 =item Overloaded dereference did not return a reference
 
 (F) An object with an overloaded dereference operator was dereferenced,

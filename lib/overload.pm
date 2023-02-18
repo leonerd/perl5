@@ -20,7 +20,7 @@ our %ops = (
     filetest            => "-X",
     dereferencing       => '${} @{} %{} &{} *{}',
     matching            => '~~',
-    special             => 'nomethod fallback =',
+    special             => 'nomethod fallback = api',
 );
 
 my %ops_seen;
@@ -28,14 +28,19 @@ my %ops_seen;
 
 sub nil {}
 
+# These key names are stored as values, not code refs
+my %value_keys = map { $_ => 1 } qw( fallback api );
+
 sub OVERLOAD {
     my $package = shift;
     my %arg = @_;
     my $sub;
     *{$package . "::(("} = \&nil; # Make it findable via fetchmethod.
     for (keys %arg) {
-        if ($_ eq 'fallback') {
-            for my $sym (*{$package . "::()"}) {
+        if (exists $value_keys{$_}) {
+            my $name = $_;
+            $name = ")" if $name eq "fallback";
+            for my $sym (*{$package . "::($name"}) {
               *$sym = \&nil; # Make it findable via fetchmethod.
               $$sym = $arg{$_};
             }

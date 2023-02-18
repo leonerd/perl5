@@ -94,5 +94,6 @@ enum {
 
 #define NofAMmeth max_amg_code
 
+#define AMGf_JOIN_USES_CONCAT  0x0001
 
 /* ex: set ro: */

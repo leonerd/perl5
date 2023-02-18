@@ -29,7 +29,10 @@ my %ops_seen;
 sub nil {}
 
 # These key names are stored as values, not code refs
-my %value_keys = map { $_ => 1 } qw( fallback api );
+my %value_keys = map { $_ => 1 } qw(
+    fallback api
+    join_uses_concat
+);
 
 sub OVERLOAD {
     my $package = shift;

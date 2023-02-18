@@ -180,8 +180,9 @@ static const struct {
     STRLEN namelen;
     U16 val;
 } PL_AMG_flags[] = {
+    {"(join_uses_concat", 17, 0x0001},
 };
 
-#define NofAMflags 0
+#define NofAMflags 1
 
 /* ex: set ro: */

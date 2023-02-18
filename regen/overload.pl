@@ -31,6 +31,7 @@ while (<DATA>) {
 }
 
 my @flags = qw(
+    join_uses_concat
 );
 
 if(@flags > 16) {

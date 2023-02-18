@@ -3161,10 +3161,10 @@ Perl_Gv_AMupdate(pTHX_ HV *stash, bool destructing)
     bool deref_seen = 0;
 
 
-    /* Work with "fallback" key, which we assume to be first in PL_AMG_names */
+    /* Work with "fallback" key */
 
     /* Try to find via inheritance. */
-    GV *gv = gv_fetchmeth_pvn(stash, PL_AMG_names[0], 2, -1, 0);
+    GV *gv = gv_fetchmeth_pvn(stash, "()", 2, -1, 0);
     SV * const sv = gv ? GvSV(gv) : NULL;
     CV* cv;
 

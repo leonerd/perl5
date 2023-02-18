@@ -3096,7 +3096,7 @@ Perl_magic_freeovrld(pTHX_ SV *sv, MAGIC *mg)
 
     if (amtp && AMT_AMAGIC(amtp)) {
         int i;
-        for (i = 1; i < NofAMmeth; i++) {
+        for (i = 0; i < NofAMmeth; i++) {
             CV * const cv = amtp->table[i];
             if (cv) {
                 SvREFCNT_dec_NN(MUTABLE_SV(cv));
@@ -3194,7 +3194,7 @@ Perl_Gv_AMupdate(pTHX_ HV *stash, bool destructing)
     /* initially assume the worst */
     HvAUX(stash)->xhv_aux_flags &= ~HvAUXf_NO_DEREF;
 
-    for (i = 1; i < NofAMmeth; i++) {
+    for (i = 0; i < NofAMmeth; i++) {
         const char * const cooky = PL_AMG_names[i];
         /* Human-readable form, for debugging: */
         const char * const cp = AMG_id2name(i);

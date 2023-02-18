@@ -17,7 +17,6 @@
 #define AMG_id2namelen(id) (PL_AMG_namelens[id]-1)
 
 static const U8 PL_AMG_namelens[NofAMmeth] = {
-    2,
     4,
     4,
     4,
@@ -100,7 +99,6 @@ static const char * const PL_AMG_names[NofAMmeth] = {
      this convention is AMG_id2name (used for debugging output and
      'nomethod' only), the only other place which has it hardwired is
      overload.pm.  */
-    "()",		/* fallback   */
     "(${}",		/* to_sv      */
     "(@{}",		/* to_av      */
     "(%{}",		/* to_hv      */

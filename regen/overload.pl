@@ -122,9 +122,6 @@ foreach ($h, $c, $p) {
     read_only_bottom_close_and_rename($_);
 }
 __DATA__
-# Fallback should be the first
-fallback	()
-
 # These 5 are the most common in the fallback switch statement in amagic_call
 to_sv		(${}
 to_av		(@{}

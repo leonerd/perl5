@@ -14,7 +14,6 @@
 package overload::numbers;
 
 our @names = qw#
-    ()
     (${}
     (@{}
     (%{}
@@ -92,7 +91,6 @@ our @names = qw#
 #;
 
 our @enums = qw#
-    fallback
     to_sv
     to_av
     to_hv

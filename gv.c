@@ -3199,6 +3199,14 @@ Perl_Gv_AMupdate(pTHX_ HV *stash, bool destructing)
         amt.api_ver = ver;
     }
 
+    {
+        for(U8 i = 0; i < NofAMflags; i++) {
+            gv = gv_fetchmeth_pvn(stash, PL_AMG_flags[i].name, PL_AMG_flags[i].namelen, -1, 0);
+            if(gv && SvTRUE(GvSV(gv)))
+                amt.flags |= PL_AMG_flags[i].val;
+        }
+    }
+
     assert(HvHasAUX(stash));
     /* initially assume the worst */
     HvAUX(stash)->xhv_aux_flags &= ~HvAUXf_NO_DEREF;

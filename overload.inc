@@ -175,4 +175,13 @@ static const char * const PL_AMG_names[NofAMmeth] = {
     "(qr"
 };
 
+static const struct {
+    const char *name;
+    STRLEN namelen;
+    U16 val;
+} PL_AMG_flags[] = {
+};
+
+#define NofAMflags 0
+
 /* ex: set ro: */

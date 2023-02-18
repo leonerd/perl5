@@ -30,6 +30,14 @@ while (<DATA>) {
   push @names, $name;
 }
 
+my @flags = qw(
+);
+
+if(@flags > 16) {
+    # The flags field is a U16
+    die "Ran out of flags bits";
+}
+
 my ($c, $h) = map {
     open_new($_, '>',
              { by => 'regen/overload.pl', file => $_, style => '*',
@@ -79,6 +87,7 @@ print $h <<'EOF';
 };
 
 #define NofAMmeth max_amg_code
+
 EOF
 
 print $c <<'EOF';
@@ -116,7 +125,27 @@ for (0..$#names) {
 print $c <<"EOT";
     "$last"
 };
+
+static const struct {
+    const char *name;
+    STRLEN namelen;
+    U16 val;
+} PL_AMG_flags[] = {
 EOT
+
+{
+    my $flagval = 1;
+    foreach my $flagname ( @flags ) {
+        printf $h "#define AMGf_%s  0x%04X\n", uc $flagname, $flagval;
+        printf $c "    {\"(%s\", %d, 0x%04X},\n", $flagname, 1 + length $flagname, $flagval;
+
+        $flagval <<= 1;
+    }
+
+    print $c "};\n\n";
+
+    printf $c "#define NofAMflags %d\n", scalar @flags;
+}
 
 foreach ($h, $c, $p) {
     read_only_bottom_close_and_rename($_);

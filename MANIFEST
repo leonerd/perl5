@@ -3,6 +3,8 @@
 .metaconf-exclusions.txt		Symbols that should ignored when generating Configure
 Artistic				The "Artistic License"
 asan_ignore				Errors to skip under clang's Addresss Sanitizer
+attributes.c				Attribute handling code
+attributes.h				Attribute handling header
 AUTHORS					Contact info for contributors
 autodoc.pl				Creates pod/perlintern.pod and pod/perlapi.pod
 av.c					Array value code

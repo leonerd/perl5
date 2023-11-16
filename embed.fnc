@@ -639,6 +639,10 @@ ETXip	|void	|append_utf8_from_native_byte				\
 p	|SSize_t|apply		|I32 type				\
 				|NN SV **mark				\
 				|NN SV **sp
+Apx	|void	|apply_attributes					\
+				|enum AttributeSubject stype		\
+				|NN void *subject			\
+				|NULLOK OP *attrlist
 Apx	|void	|apply_attrs_string					\
 				|NN const char *stashpv 		\
 				|NN CV *cv				\
@@ -2653,6 +2657,11 @@ Cp	|I32	|regexec_flags	|NN REGEXP * const rx			\
 Cp	|void	|regfree_internal					\
 				|NN REGEXP * const rx
 Cp	|void	|reginitcolors
+Apx	|void	|register_attribute					\
+				|NN const char *name			\
+				|enum AttributeSubject stype		\
+				|U32 flags				\
+				|NN AttributeApplyFunction *apply
 EXp	|SV *	|reg_named_buff |NN REGEXP * const rx			\
 				|NULLOK SV * const key			\
 				|NULLOK SV * const value		\

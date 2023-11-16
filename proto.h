@@ -205,6 +205,11 @@ Perl_apply(pTHX_ I32 type, SV **mark, SV **sp)
         assert(mark); assert(sp)
 
 PERL_CALLCONV void
+Perl_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist);
+#define PERL_ARGS_ASSERT_APPLY_ATTRIBUTES       \
+        assert(subject)
+
+PERL_CALLCONV void
 Perl_apply_attrs_string(pTHX_ const char *stashpv, CV *cv, const char *attrstr, STRLEN len);
 #define PERL_ARGS_ASSERT_APPLY_ATTRS_STRING     \
         assert(stashpv); assert(cv); assert(attrstr)
@@ -3769,6 +3774,11 @@ Perl_regfree_internal(pTHX_ REGEXP * const rx);
 PERL_CALLCONV void
 Perl_reginitcolors(pTHX);
 #define PERL_ARGS_ASSERT_REGINITCOLORS
+
+PERL_CALLCONV void
+Perl_register_attribute(pTHX_ const char *name, enum AttributeSubject stype, U32 flags, AttributeApplyFunction *apply);
+#define PERL_ARGS_ASSERT_REGISTER_ATTRIBUTE     \
+        assert(name); assert(apply)
 
 PERL_CALLCONV void
 Perl_repeatcpy(char *to, const char *from, SSize_t len, IV count);

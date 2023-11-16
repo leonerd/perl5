@@ -129,6 +129,7 @@
 # define _utf8n_to_uvchr_msgs_helper            Perl__utf8n_to_uvchr_msgs_helper
 # define amagic_call(a,b,c,d)                   Perl_amagic_call(aTHX_ a,b,c,d)
 # define amagic_deref_call(a,b)                 Perl_amagic_deref_call(aTHX_ a,b)
+# define apply_attributes(a,b,c)                Perl_apply_attributes(aTHX_ a,b,c)
 # define apply_attrs_string(a,b,c,d)            Perl_apply_attrs_string(aTHX_ a,b,c,d)
 # define apply_builtin_cv_attributes(a,b)       Perl_apply_builtin_cv_attributes(aTHX_ a,b)
 # define atfork_lock                            Perl_atfork_lock
@@ -534,6 +535,7 @@
 # define regexec_flags(a,b,c,d,e,f,g,h)         Perl_regexec_flags(aTHX_ a,b,c,d,e,f,g,h)
 # define regfree_internal(a)                    Perl_regfree_internal(aTHX_ a)
 # define reginitcolors()                        Perl_reginitcolors(aTHX)
+# define register_attribute(a,b,c,d)            Perl_register_attribute(aTHX_ a,b,c,d)
 # define repeatcpy                              Perl_repeatcpy
 # define require_pv(a)                          Perl_require_pv(aTHX_ a)
 # define rninstr                                Perl_rninstr

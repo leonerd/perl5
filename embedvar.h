@@ -27,6 +27,7 @@
 # define PL_argvout_stack                       (vTHX->Iargvout_stack)
 # define PL_argvoutgv                           (vTHX->Iargvoutgv)
 # define PL_Assigned_invlist                    (vTHX->IAssigned_invlist)
+# define PL_attribute_definitions               (vTHX->Iattribute_definitions)
 # define PL_basetime                            (vTHX->Ibasetime)
 # define PL_beginav                             (vTHX->Ibeginav)
 # define PL_beginav_save                        (vTHX->Ibeginav_save)

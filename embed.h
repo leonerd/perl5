@@ -908,6 +908,7 @@
 #   define boot_core_PerlIO()                   Perl_boot_core_PerlIO(aTHX)
 #   define boot_core_UNIVERSAL()                Perl_boot_core_UNIVERSAL(aTHX)
 #   define boot_core_builtin()                  Perl_boot_core_builtin(aTHX)
+#   define boot_core_class()                    Perl_boot_core_class(aTHX)
 #   define boot_core_mro()                      Perl_boot_core_mro(aTHX)
 #   define build_infix_plugin(a,b,c)            Perl_build_infix_plugin(aTHX_ a,b,c)
 #   define cando(a,b,c)                         Perl_cando(aTHX_ a,b,c)

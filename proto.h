@@ -394,6 +394,11 @@ Perl_boot_core_builtin(pTHX)
 #define PERL_ARGS_ASSERT_BOOT_CORE_BUILTIN
 
 PERL_CALLCONV void
+Perl_boot_core_class(pTHX)
+        __attribute__visibility__("hidden");
+#define PERL_ARGS_ASSERT_BOOT_CORE_CLASS
+
+PERL_CALLCONV void
 Perl_boot_core_mro(pTHX)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_BOOT_CORE_MRO

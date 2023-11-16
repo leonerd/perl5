@@ -725,6 +725,7 @@ Adopx	|void	|blockhook_register					\
 : Used in perly.y
 ARdp	|int	|block_start	|int full
 p	|void	|boot_core_builtin
+p	|void	|boot_core_class
 : Only used in perl.c
 p	|void	|boot_core_mro
 : Used in perl.c

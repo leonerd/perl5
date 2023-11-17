@@ -219,6 +219,11 @@ Perl_apply_builtin_cv_attributes(pTHX_ CV *cv, OP *attrlist);
 #define PERL_ARGS_ASSERT_APPLY_BUILTIN_CV_ATTRIBUTES \
         assert(cv)
 
+PERL_CALLCONV OP *
+Perl_apply_known_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist);
+#define PERL_ARGS_ASSERT_APPLY_KNOWN_ATTRIBUTES \
+        assert(subject)
+
 PERL_CALLCONV void
 Perl_atfork_lock(void);
 #define PERL_ARGS_ASSERT_ATFORK_LOCK

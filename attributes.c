@@ -79,7 +79,7 @@ subjectnames[] = {
     [ATTRSUBJECT_FIELD]      = { "Field", "field" },
 };
 
-static void S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, OP *attr)
+static bool S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, OP *attr, bool reject_unknown)
 {
     assert(attr->op_type == OP_CONST);
     assert(stype && stype < MAX_ATTRSUBJECT);
@@ -101,35 +101,72 @@ static void S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, 
             croak("%s attribute %" SVf " does not take a value", subjectnames[stype].ucname, SVfARG(name));
 
         (*def->apply)(aTHX_ stype, subject, value);
-        return;
+        return true;
     }
 
-    croak("Unrecognized %s attribute %" SVf, subjectnames[stype].name, SVfARG(name));
+    if(reject_unknown)
+        croak("Unrecognized %s attribute %" SVf, subjectnames[stype].name, SVfARG(name));
+
+    return false;
+}
+
+static OP *S_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist, bool reject_unknown)
+{
+    if(!attrlist)
+        return NULL;
+    if(attrlist->op_type == OP_NULL) {
+        op_free(attrlist);
+        return NULL;
+    }
+
+    if(attrlist->op_type != OP_LIST) {
+        /* Not in fact a list but just a single attribute */
+        if(S_apply_attribute(aTHX_ stype, subject, attrlist, reject_unknown)) {
+            op_free(attrlist);
+            return NULL;
+        }
+
+        return attrlist;
+    }
+
+    OP *prev = cLISTOPx(attrlist)->op_first;
+    assert(prev->op_type == OP_PUSHMARK);
+    OP *o = OpSIBLING(prev);
+
+    OP *next;
+    for(; o; o = next) {
+        next = OpSIBLING(o);
+
+        if(S_apply_attribute(aTHX_ stype, subject, o, reject_unknown)) {
+            op_sibling_splice(attrlist, prev, 1, NULL);
+            op_free(o);
+        }
+        else {
+            prev = o;
+        }
+    }
+
+    if(OpHAS_SIBLING(cLISTOPx(attrlist)->op_first))
+        return attrlist;
+
+    /* The list is now entirely empty, we might as well discard it */
+    op_free(attrlist);
+    return NULL;
 }
 
 void Perl_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist)
 {
     PERL_ARGS_ASSERT_APPLY_ATTRIBUTES;
 
-    if(!attrlist)
-        return;
-    if(attrlist->op_type == OP_NULL) {
-        op_free(attrlist);
-        return;
-    }
+    /* ignore the return value as it'll always be NULL by now */
+    S_apply_attributes(aTHX_ stype, subject, attrlist, true);
+}
 
-    if(attrlist->op_type == OP_LIST) {
-        OP *o = cLISTOPx(attrlist)->op_first;
-        assert(o->op_type == OP_PUSHMARK);
-        o = OpSIBLING(o);
+OP *Perl_apply_known_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist)
+{
+    PERL_ARGS_ASSERT_APPLY_KNOWN_ATTRIBUTES;
 
-        for(; o; o = OpSIBLING(o))
-            S_apply_attribute(aTHX_ stype, subject, o);
-    }
-    else
-        S_apply_attribute(aTHX_ stype, subject, attrlist);
-
-    op_free(attrlist);
+    return S_apply_attributes(aTHX_ stype, subject, attrlist, false);
 }
 
 /*

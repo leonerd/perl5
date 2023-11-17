@@ -15,7 +15,8 @@
 #include "perl.h"
 
 #define split_attr_nameval(sv, namp, valp)  S_split_attr_nameval(aTHX_ sv, namp, valp)
-static void S_split_attr_nameval(pTHX_ SV *sv, SV **namp, SV **valp)
+STATIC void
+S_split_attr_nameval(pTHX_ SV *sv, SV **namp, SV **valp)
 {
     STRLEN svlen = SvCUR(sv);
     bool do_utf8 = SvUTF8(sv);
@@ -54,7 +55,8 @@ static void S_split_attr_nameval(pTHX_ SV *sv, SV **namp, SV **valp)
     }
 }
 
-void Perl_register_attribute(pTHX_ const char *name, enum AttributeSubject stype,
+void
+Perl_register_attribute(pTHX_ const char *name, enum AttributeSubject stype,
     U32 flags, AttributeApplyFunction *apply)
 {
     PERL_ARGS_ASSERT_REGISTER_ATTRIBUTE;
@@ -79,7 +81,8 @@ subjectnames[] = {
     [ATTRSUBJECT_FIELD]      = { "Field", "field" },
 };
 
-static bool S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, OP *attr, bool reject_unknown)
+STATIC bool
+S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, OP *attr, bool reject_unknown)
 {
     assert(attr->op_type == OP_CONST);
     assert(stype && stype < MAX_ATTRSUBJECT);
@@ -110,7 +113,8 @@ static bool S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, 
     return false;
 }
 
-static OP *S_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist, bool reject_unknown)
+STATIC OP *
+S_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist, bool reject_unknown)
 {
     if(!attrlist)
         return NULL;
@@ -154,7 +158,8 @@ static OP *S_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, 
     return NULL;
 }
 
-void Perl_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist)
+void
+Perl_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist)
 {
     PERL_ARGS_ASSERT_APPLY_ATTRIBUTES;
 
@@ -162,7 +167,8 @@ void Perl_apply_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP 
     S_apply_attributes(aTHX_ stype, subject, attrlist, true);
 }
 
-OP *Perl_apply_known_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist)
+OP *
+Perl_apply_known_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP *attrlist)
 {
     PERL_ARGS_ASSERT_APPLY_KNOWN_ATTRIBUTES;
 

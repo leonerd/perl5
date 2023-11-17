@@ -73,12 +73,12 @@ Perl_register_attribute(pTHX_ const char *name, enum AttributeSubject stype,
     PL_attribute_definitions = def;
 }
 
-static struct { const char *ucname; const char *name; }
+static const char *
 subjectnames[] = {
-    [ATTRSUBJECT_NONE]       = { NULL, NULL },
-    [ATTRSUBJECT_SUBROUTINE] = { "Subroutine", "subroutine" },
-    [ATTRSUBJECT_CLASS]      = { "Class", "class" },
-    [ATTRSUBJECT_FIELD]      = { "Field", "field" },
+    [ATTRSUBJECT_NONE]       = NULL,
+    [ATTRSUBJECT_SUBROUTINE] = "subroutine",
+    [ATTRSUBJECT_CLASS]      = "class",
+    [ATTRSUBJECT_FIELD]      = "field",
 };
 
 STATIC bool
@@ -99,16 +99,16 @@ S_apply_attribute(pTHX_ enum AttributeSubject stype, void *subject, OP *attr, bo
             continue;
 
         if(def->flags & ATTRf_MUST_VALUE && !(value && SvOK(value)))
-            croak("%s attribute %" SVf " requires a value", subjectnames[stype].ucname, SVfARG(name));
+            croak("Attribute %" SVf " on %s requires a value", SVfARG(name), subjectnames[stype]);
         if(def->flags & ATTRf_NO_VALUE && value && SvOK(value))
-            croak("%s attribute %" SVf " does not take a value", subjectnames[stype].ucname, SVfARG(name));
+            croak("Attribute %" SVf " on %s does not take a value", SVfARG(name), subjectnames[stype]);
 
         (*def->apply)(aTHX_ stype, subject, value);
         return true;
     }
 
     if(reject_unknown)
-        croak("Unrecognized %s attribute %" SVf, subjectnames[stype].name, SVfARG(name));
+        croak("Unrecognized attribute %" SVf " on %s", SVfARG(name), subjectnames[stype]);
 
     return false;
 }

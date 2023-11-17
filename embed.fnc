@@ -651,7 +651,7 @@ Apx	|void	|apply_attrs_string					\
 Adp	|OP *	|apply_builtin_cv_attributes				\
 				|NN CV *cv				\
 				|NULLOK OP *attrlist
-Apx	|OP *	|apply_known_attributes					\
+Apx	|OP *	|apply_known_attributes 				\
 				|enum AttributeSubject stype		\
 				|NN void *subject			\
 				|NULLOK OP *attrlist
@@ -728,6 +728,7 @@ Adopx	|void	|blockhook_register					\
 				|NN BHK *hk
 : Used in perly.y
 ARdp	|int	|block_start	|int full
+p	|void	|boot_core_attributes
 p	|void	|boot_core_builtin
 p	|void	|boot_core_class
 : Only used in perl.c

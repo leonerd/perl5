@@ -175,6 +175,51 @@ Perl_apply_known_attributes(pTHX_ enum AttributeSubject stype, void *subject, OP
     return S_apply_attributes(aTHX_ stype, subject, attrlist, false);
 }
 
+/* some core attributes */
+
+STATIC void
+apply_code_attribute_lvalue(pTHX_ enum AttributeSubject stype, void *subject, SV *value)
+{
+    PERL_UNUSED_ARG(stype);
+    PERL_UNUSED_ARG(value);
+    CV *cv = (CV *)subject;
+
+    CvLVALUE_on(cv);
+}
+
+STATIC void
+apply_code_attribute_method(pTHX_ enum AttributeSubject stype, void *subject, SV *value)
+{
+    PERL_UNUSED_ARG(stype);
+    PERL_UNUSED_ARG(value);
+    CV *cv = (CV *)subject;
+
+    CvNOWARN_AMBIGUOUS_on(cv);
+}
+
+STATIC void
+apply_code_attribute_const(pTHX_ enum AttributeSubject stype, void *subject, SV *value)
+{
+    PERL_UNUSED_ARG(stype);
+    PERL_UNUSED_ARG(value);
+    CV *cv = (CV *)subject;
+
+    Perl_ck_warner_d(aTHX_
+        packWARN(WARN_EXPERIMENTAL__CONST_ATTR),
+       ":const is experimental"
+    );
+    CvANONCONST_on(cv);
+    if (!CvANON(cv))
+        yyerror(":const is not permitted on named subroutines");
+}
+
+void Perl_boot_core_attributes(pTHX)
+{
+    register_attribute("lvalue", ATTRSUBJECT_SUBROUTINE, ATTRf_NO_VALUE, &apply_code_attribute_lvalue);
+    register_attribute("method", ATTRSUBJECT_SUBROUTINE, ATTRf_NO_VALUE, &apply_code_attribute_method);
+    register_attribute("const",  ATTRSUBJECT_SUBROUTINE, ATTRf_NO_VALUE, &apply_code_attribute_const);
+}
+
 /*
  * ex: set ts=8 sts=4 sw=4 et:
  */

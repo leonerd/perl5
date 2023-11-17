@@ -2508,6 +2508,7 @@ S_parse_body(pTHX_ char **env, XSINIT_t xsinit)
 
     boot_core_PerlIO();
     boot_core_UNIVERSAL();
+    boot_core_attributes();
     boot_core_builtin();
     boot_core_class();
     boot_core_mro();

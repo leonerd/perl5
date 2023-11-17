@@ -394,6 +394,11 @@ Perl_boot_core_UNIVERSAL(pTHX)
 #define PERL_ARGS_ASSERT_BOOT_CORE_UNIVERSAL
 
 PERL_CALLCONV void
+Perl_boot_core_attributes(pTHX)
+        __attribute__visibility__("hidden");
+#define PERL_ARGS_ASSERT_BOOT_CORE_ATTRIBUTES
+
+PERL_CALLCONV void
 Perl_boot_core_builtin(pTHX)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_BOOT_CORE_BUILTIN

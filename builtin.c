@@ -55,6 +55,14 @@ Perl_prepare_export_lexical(pTHX)
 #define export_lexical(name, sv)  S_export_lexical(aTHX_ name, sv)
 static void S_export_lexical(pTHX_ SV *name, SV *sv)
 {
+    if(ckWARN(WARN_SHADOW) && SvPVX(name)[0] == '&') {
+        CV *cv = get_cvn_flags(SvPVX(name)+1, SvCUR(name)-1, GV_NOTQUAL);
+        if(cv)
+            warner(packWARN(WARN_SHADOW),
+                "Lexical import of subroutine %" SVf_QUOTEDPREFIX " masks package subroutine",
+                SVfARG(name));
+    }
+
     PADOFFSET off = pad_add_name_sv(name, padadd_STATE, 0, 0);
     SvREFCNT_dec(PL_curpad[off]);
     PL_curpad[off] = SvREFCNT_inc(sv);

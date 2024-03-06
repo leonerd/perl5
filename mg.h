@@ -14,10 +14,19 @@ struct mgvtbl {
     U32		(*svt_len)	(pTHX_ SV *sv, MAGIC* mg);
     int		(*svt_clear)    (pTHX_ SV *sv, MAGIC* mg);
     int		(*svt_free)	(pTHX_ SV *sv, MAGIC* mg);
+    /* svt_copy is used for copying container magic to elements of
+     * arrays/hashes during fetch operations. */
     int		(*svt_copy)	(pTHX_ SV *sv, MAGIC* mg,
                                         SV *nsv, const char *name, I32 namlen);
     int		(*svt_dup)	(pTHX_ MAGIC *mg, CLONE_PARAMS *param);
     int		(*svt_local)(pTHX_ SV *nsv, MAGIC *mg);
+};
+
+struct mgvtbl_with_copysv {
+    struct mgvtbl _vtbl;
+    /* svt_copysv is used for copying PERL_MAGIC_extvalue magic during
+     * sv_setsv() */
+    int         (*svt_copysv)   (pTHX_ SV *sv, MAGIC *mg, SV *nsv);
 };
 
 struct magic {
@@ -39,6 +48,7 @@ struct magic {
 #define MGf_COPY       8	/* has an svt_copy  MGVTBL entry */
 #define MGf_DUP     0x10 	/* has an svt_dup   MGVTBL entry */
 #define MGf_LOCAL   0x20	/* has an svt_local MGVTBL entry */
+#define MGf_COPYSV  0x20        /* MGVTBL is mgvtbl_with_copysv (for PERL_MAGIC_extvalue only) */
 #define MGf_BYTES   0x40        /* PERL_MAGIC_regex_global only */
 #define MGf_PERSIST    0x80     /* PERL_MAGIC_lvref only */
 

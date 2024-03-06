@@ -4728,6 +4728,40 @@ Perl_my_strlcpy(char *dst, const char *src, Size_t size)
 }
 #endif
 
+/* Invokes svt_clear on any PERL_MAGIC_extvalue on the SV, before an operation
+ * that clears or overwrites the value
+ */
+
+#if defined(PERL_IN_SV_C) || defined(PERL_IN_PP_C)
+PERL_STATIC_INLINE void
+S_clear_extvalue(pTHX_ SV *sv)
+{
+    MAGIC *mg, *mg_next;
+    for(mg = SvMAGIC(sv); mg; mg = mg_next) {
+        mg_next = mg->mg_moremagic;
+        if(mg->mg_type == PERL_MAGIC_extvalue)
+            if(mg->mg_virtual->svt_clear)
+                (*mg->mg_virtual->svt_clear)(aTHX_ sv, mg);
+    }
+}
+#endif
+
+#if defined(PERL_IN_SV_C)
+PERL_STATIC_INLINE void
+S_copy_extvalue(pTHX_ SV *dsv, SV *ssv)
+{
+    MAGIC *mg, *mg_next;
+    for(mg = SvMAGIC(ssv); mg; mg = mg_next) {
+        mg_next = mg->mg_moremagic;
+        if(mg->mg_type == PERL_MAGIC_extvalue) {
+            struct mgvtbl_with_copysv *mg_virtual = (struct mgvtbl_with_copysv *)mg->mg_virtual;
+            if((mg->mg_flags & MGf_COPYSV) && mg_virtual->svt_copysv)
+                (mg_virtual->svt_copysv)(aTHX_ ssv, mg, dsv);
+        }
+    }
+}
+#endif
+
 /*
  * ex: set ts=8 sts=4 sw=4 et:
  */

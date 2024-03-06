@@ -4293,10 +4293,12 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
         }
     }
 
-
-
     SV_CHECK_THINKFIRST_COW_DROP(dsv);
     dtype = SvTYPE(dsv); /* THINKFIRST may have changed type */
+
+    if (dtype >= SVt_PVMG)
+        /* Clear any extvalue magic on dsv */
+        S_clear_extvalue(aTHX_ dsv);
 
     /* There's a lot of redundancy below but we're going for speed here
      * Note: some of the cases below do return; rather than break; so the
@@ -4764,6 +4766,9 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
     }
     if (SvTAINTED(ssv))
         SvTAINT(dsv);
+
+    if (stype >= SVt_PVMG)
+        S_copy_extvalue(aTHX_ dsv, ssv);
 }
 
 
@@ -6763,6 +6768,7 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
             else if (SvMAGIC(sv)) {
                 /* Free back-references before other types of magic. */
                 sv_unmagic(sv, PERL_MAGIC_backref);
+                S_clear_extvalue(aTHX_ sv);
                 mg_free(sv);
             }
             SvMAGICAL_off(sv);

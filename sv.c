@@ -2765,7 +2765,7 @@ Perl_sv_2num(pTHX_ SV *const sv)
         return sv;
     if (SvAMAGIC(sv)) {
         SV * const tmpsv = AMG_CALLunary(sv, numer_amg);
-        TAINT_IF(tmpsv && SvTAINTED(tmpsv));
+        TAINT_IF_SV(tmpsv);
         if (tmpsv && (!SvROK(tmpsv) || (SvRV(tmpsv) != SvRV(sv))))
             return sv_2num(tmpsv);
     }
@@ -2940,7 +2940,7 @@ Perl_sv_2pv_flags(pTHX_ SV *const sv, STRLEN *const lp, const U32 flags)
             if (done_gmagic)
                 nsv = sv_mortalcopy_flags(sv,0);
             tmpstr = AMG_CALLunary(nsv, string_amg);
-            TAINT_IF(tmpstr && SvTAINTED(tmpstr));
+            TAINT_IF_SV(tmpstr);
             if (tmpstr && (!SvROK(tmpstr) || (SvRV(tmpstr) != SvRV(nsv)))) {
                 /* Unwrap this:  */
                 /* char *pv = lp ? SvPV(tmpstr, *lp) : SvPV_nolen(tmpstr);

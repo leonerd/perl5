@@ -943,6 +943,7 @@ symbol would not be defined on C<L</EBCDIC>> platforms.
 #   define TAINT		NOOP
 #   define TAINT_NOT		NOOP
 #   define TAINT_IF(c)		NOOP
+#   define TAINT_IF_SV(sv)      NOOP
 #   define TAINT_ENV()		NOOP
 #   define TAINT_PROPER(s)	NOOP
 #   define TAINT_set(s)		NOOP
@@ -969,6 +970,12 @@ Remove any taintedness previously set by, I<e.g.>, C<TAINT>.
 
 If C<c> evaluates to true, call L</C<TAINT>> to indicate that something is
 tainted; otherwise do nothing.
+
+=for apidoc Cm|void|TAINT_IF_SV|SV *sv
+
+If C<sv> is not NULL and is tainted, calls L</C<TAINT>> to indicate that
+something is tainted; otherwise do nothing. As a macro, it may evaluate the
+C<sv> expression more than once.
 
 =for apidoc Cmn|void|TAINT_ENV
 
@@ -1019,6 +1026,7 @@ violations are fatal.
 
 #   define TAINT_NOT	(PL_tainted = FALSE)        /* Untaint */
 #   define TAINT_IF(c)	if (UNLIKELY(c)) { TAINT; } /* Conditionally taint */
+#   define TAINT_IF_SV(sv)  if (UNLIKELY(sv && SvTAINTED(sv))) { TAINT; }
 #   define TAINT_ENV()	if (UNLIKELY(PL_tainting)) { taint_env(); }
                                 /* croak or warn if tainting */
 #   define TAINT_PROPER(s)	if (UNLIKELY(PL_tainting)) {                \

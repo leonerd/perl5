@@ -1024,9 +1024,13 @@ violations are fatal.
     /* Set to tainted if we are running under tainting mode */
 #   define TAINT		(PL_tainted = PL_tainting)
 
-#   define TAINT_NOT	(PL_tainted = FALSE)        /* Untaint */
+#   define TAINT_NOT	(PL_tainted = FALSE, \
+        UNLIKELY(PL_usertaint_annotations && SvMAGICAL(PL_usertaint_annotations)) && (sv_usertaint_clear(), false))
 #   define TAINT_IF(c)	if (UNLIKELY(c)) { TAINT; } /* Conditionally taint */
-#   define TAINT_IF_SV(sv)  if (UNLIKELY(sv && SvTAINTED(sv))) { TAINT; }
+#   define TAINT_IF_SV(sv)  STMT_START { \
+      if (UNLIKELY(sv && SvTAINTED(sv))) { TAINT; } \
+      if (UNLIKELY(sv && SvMAGICAL(sv))) { sv_usertaint_from(sv); } \
+    } STMT_END
 #   define TAINT_ENV()	if (UNLIKELY(PL_tainting)) { taint_env(); }
                                 /* croak or warn if tainting */
 #   define TAINT_PROPER(s)	if (UNLIKELY(PL_tainting)) {                \
@@ -1038,6 +1042,10 @@ violations are fatal.
 #   define TAINTING_set(s)	(PL_tainting = cBOOL(s))
 #   define TAINT_WARN_get       (PL_taint_warn)
 #   define TAINT_WARN_set(s)    (PL_taint_warn = cBOOL(s))
+
+#   define USERTAINT_APPLYTO(sv)                                                     \
+      if (UNLIKELY(PL_usertaint_annotations && SvMAGICAL(PL_usertaint_annotations))) \
+        sv_usertaint_applyto(sv);
 #endif
 
 /* flags used internally only within pp_subst and pp_substcont */

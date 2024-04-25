@@ -4967,6 +4967,20 @@ Perl_sv_usepvn_flags(pTHX_ SV * const sv, char *ptr, const STRLEN len, const U32
 #define PERL_ARGS_ASSERT_SV_USEPVN_FLAGS        \
         assert(sv)
 
+PERL_CALLCONV void
+Perl_sv_usertaint_applyto(pTHX_ SV *dsv);
+#define PERL_ARGS_ASSERT_SV_USERTAINT_APPLYTO   \
+        assert(dsv)
+
+PERL_CALLCONV void
+Perl_sv_usertaint_clear(pTHX);
+#define PERL_ARGS_ASSERT_SV_USERTAINT_CLEAR
+
+PERL_CALLCONV void
+Perl_sv_usertaint_from(pTHX_ SV *ssv);
+#define PERL_ARGS_ASSERT_SV_USERTAINT_FROM      \
+        assert(ssv)
+
 PERL_CALLCONV bool
 Perl_sv_utf8_decode(pTHX_ SV * const sv);
 #define PERL_ARGS_ASSERT_SV_UTF8_DECODE         \

@@ -16344,6 +16344,9 @@ perl_clone_using(PerlInterpreter *proto_perl, UV flags,
     PL_registered_mros  = hv_dup_inc(proto_perl->Iregistered_mros, param);
     PL_blockhooks	= av_dup_inc(proto_perl->Iblockhooks, param);
 
+    PL_usertaint_annotations = newSV(0);
+    SvUPGRADE(PL_usertaint_annotations, SVt_PVMG);
+
     /* Call the ->CLONE method, if it exists, for each of the stashes
        identified by sv_dup() above.
     */
@@ -17664,6 +17667,33 @@ Perl_report_uninit(pTHX_ const SV *uninit_sv)
         Perl_warner(aTHX_ packWARN(WARN_UNINITIALIZED), PL_warn_uninit,
                 "", "", "");
     GCC_DIAG_RESTORE_STMT;
+}
+
+/* Called by SvTAINT */
+void
+Perl_sv_usertaint_applyto(pTHX_ SV *dsv)
+{
+    PERL_ARGS_ASSERT_SV_USERTAINT_APPLYTO;
+
+    S_copy_extvalue(aTHX_ dsv, PL_usertaint_annotations);
+}
+
+/* Called by TAINT_NOT */
+void
+Perl_sv_usertaint_clear(pTHX)
+{
+    PERL_ARGS_ASSERT_SV_USERTAINT_CLEAR;
+
+    S_clear_extvalue(aTHX_ PL_usertaint_annotations);
+}
+
+/* Called by TAINT_FROM_SV */
+void
+Perl_sv_usertaint_from(pTHX_ SV *ssv)
+{
+    PERL_ARGS_ASSERT_SV_USERTAINT_FROM;
+
+    S_copy_extvalue(aTHX_ PL_usertaint_annotations, ssv);
 }
 
 /*

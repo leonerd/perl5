@@ -967,7 +967,8 @@ PERLVAR(I, blockhooks,	AV *)
 
 PERLVAR(I, custom_ops,	HV *)		/* custom op registrations */
 
-PERLVAR(I, Xpv,		XPV *)		/* (unused) held temporary value */
+// WAS PERLVAR(I, Xpv,		XPV *)		/* (unused) held temporary value */
+PERLVAR(I, usertaint_annotations, SV *)  /* temporary holder of usertaint magic during the current op */
 
 /* name of the scopes we've ENTERed. Only used with -DDEBUGGING, but needs to be
    present always, as -DDEBUGGING must be binary compatible with non.  */

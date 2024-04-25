@@ -1723,6 +1723,7 @@ attention to precisely which outputs are influenced by which inputs.
         assert(TAINTING_get || !TAINT_get); \
         if (UNLIKELY(TAINT_get))	\
             SvTAINTED_on(sv);	        \
+        USERTAINT_APPLYTO(sv);          \
     } STMT_END
 
 /*

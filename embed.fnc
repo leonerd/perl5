@@ -3458,6 +3458,11 @@ Adp	|void	|sv_usepvn_flags|NN SV * const sv			\
 AMbdp	|void	|sv_usepvn_mg	|NN SV *sv				\
 				|NULLOK char *ptr			\
 				|STRLEN len
+Cp	|void	|sv_usertaint_applyto					\
+				|NN SV *dsv
+Xp	|void	|sv_usertaint_clear
+Cp	|void	|sv_usertaint_from					\
+				|NN SV *ssv
 Adp	|bool	|sv_utf8_decode |NN SV * const sv
 AMbdp	|bool	|sv_utf8_downgrade					\
 				|NN SV * const sv			\

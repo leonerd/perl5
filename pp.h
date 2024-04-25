@@ -484,7 +484,7 @@ Does not use C<TARG>.  See also C<L</XPUSHu>>, C<L</mPUSHu>> and C<L</PUSHu>>.
         IV TARGi_iv = i;                                                \
         if (LIKELY(                                                     \
               ((SvFLAGS(TARG) & (SVTYPEMASK|SVf_THINKFIRST|SVf_IVisUV)) == SVt_IV) \
-            & (do_taint ? !TAINT_get : 1)))                             \
+            & (do_taint ? !TAINT_get : 1) && !SvMAGICAL(PL_usertaint_annotations))) \
         {                                                               \
             /* Cheap SvIOK_only().                                      \
              * Assert that flags which SvIOK_only() would test or       \
@@ -507,6 +507,7 @@ Does not use C<TARG>.  See also C<L</XPUSHu>>, C<L</mPUSHu>> and C<L</PUSHu>>.
         if (LIKELY(                                                     \
               ((SvFLAGS(TARG) & (SVTYPEMASK|SVf_THINKFIRST|SVf_IVisUV)) == SVt_IV) \
             & (do_taint ? !TAINT_get : 1)                               \
+            & (do_taint ? !TAINT_get : 1) && !SvMAGICAL(PL_usertaint_annotations) \
             & (TARGu_uv <= (UV)IV_MAX)))                                \
         {                                                               \
             /* Cheap SvIOK_only().                                      \
@@ -529,7 +530,7 @@ Does not use C<TARG>.  See also C<L</XPUSHu>>, C<L</mPUSHu>> and C<L</PUSHu>>.
         NV TARGn_nv = n;                                                \
         if (LIKELY(                                                     \
               ((SvFLAGS(TARG) & (SVTYPEMASK|SVf_THINKFIRST)) == SVt_NV) \
-            & (do_taint ? !TAINT_get : 1)))                             \
+            & (do_taint ? !TAINT_get : 1) && !SvMAGICAL(PL_usertaint_annotations))) \
         {                                                               \
             /* Cheap SvNOK_only().                                      \
              * Assert that flags which SvNOK_only() would test or       \

@@ -460,6 +460,9 @@ perl_construct(pTHXx)
     /* Start with 1 bucket, for DFS.  It's unlikely we'll need more.  */
     HvMAX(PL_registered_mros) = 0;
 
+    PL_usertaint_annotations = newSV(0);
+    SvUPGRADE(PL_usertaint_annotations, SVt_PVMG);
+
     ENTER;
     init_i18nl10n(1);
 }
@@ -925,6 +928,9 @@ perl_destruct(pTHXx)
      * Non-referenced objects are on their own.
      */
     sv_clean_objs();
+
+    SvREFCNT_dec(PL_usertaint_annotations);
+    PL_usertaint_annotations = NULL;
 
     /* unhook hooks which will soon be, or use, destroyed data */
     SvREFCNT_dec(PL_warnhook);

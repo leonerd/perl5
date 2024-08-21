@@ -5539,6 +5539,12 @@ and then thrown away. Any prototypes or attributes are therefore
 meaningless and are ignored. You should remove them from the C<BEGIN> block.
 Note this also means you cannot create a constant called C<BEGIN>.
 
+=item qt() is experimental
+
+(S experimental::qt) This warning is emitted if you use the C<qt()>
+templated quoting syntax.  This quoting form is currently experimental and
+its behaviour may change in future releases of Perl.
+
 =item Quantifier follows nothing in regex; marked by S<<-- HERE> in m/%s/
 
 (F) You started a regular expression with a quantifier.  Backslash it if

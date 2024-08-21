@@ -8518,6 +8518,9 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
         TERM(sublex_start());
 
     case KEY_qt:
+        Perl_ck_warner_d(aTHX_
+                         packWARN(WARN_EXPERIMENTAL__QT),
+                         "qt() is experimental");
         // For now parse purely as a single q(). Code entirely stolen from KEY_q
         s = scan_str(s,FALSE,FALSE,FALSE,NULL);
         if (!s)

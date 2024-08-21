@@ -7,6 +7,7 @@ BEGIN {
 }
 
 use feature 'qt';
+no warnings 'experimental::qt';
 
 # Literal quoting
 is( qt{some literal text}, "some literal text", 'qt{} as literal' );

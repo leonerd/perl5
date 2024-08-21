@@ -16,7 +16,7 @@
 #
 # This script is normally invoked from regen.pl.
 
-$VERSION = '1.70';
+$VERSION = '1.71';
 
 BEGIN {
     require './regen/regen_lib.pl';
@@ -160,6 +160,8 @@ our $WARNING_TREE = {
                                     [ 5.035, DEFAULT_ON],
                                 'experimental::class' =>
                                     [ 5.037, DEFAULT_ON ],
+                                'experimental::qt' =>
+                                    [ 5.041, DEFAULT_ON ],
                         }],
 
         'missing'       => [ 5.021, DEFAULT_OFF],

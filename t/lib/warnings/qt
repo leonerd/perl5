@@ -1,0 +1,7 @@
+toke.c		warnings from parsing qt() syntax
+__END__
+# experimental warnings
+use feature 'qt';
+my $str = qt{this is a quoted template string};
+EXPECT
+qt() is experimental at - line 3.

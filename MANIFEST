@@ -6381,6 +6381,7 @@ t/op/protowarn.t			See if the illegalproto warnings work
 t/op/push.t				See if push and pop work
 t/op/pwent.t				See if getpw*() functions work
 t/op/qr.t				See if qr works
+t/op/qt.t				See if qt quoted strings work
 t/op/quotemeta.t			See if quotemeta works
 t/op/rand.t				See if rand works
 t/op/range.t				See if .. works

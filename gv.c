@@ -624,8 +624,9 @@ S_maybe_add_coresub(pTHX_ HV * const stash, GV *gv,
     case KEY_map     : case KEY_method : case KEY_my    :
     case KEY_ne   : case KEY_next : case KEY_no: case KEY_or: case KEY_our:
     case KEY_package: case KEY_print: case KEY_printf:
-    case KEY_q    : case KEY_qq   : case KEY_qr     : case KEY_qw    :
-    case KEY_qx   : case KEY_redo : case KEY_require: case KEY_return:
+    case KEY_q    : case KEY_qq   : case KEY_qr     : case KEY_qt         :
+    case KEY_qw   : case KEY_qx   :
+    case KEY_redo : case KEY_require: case KEY_return:
     case KEY_s    : case KEY_say  : case KEY_sort   :
     case KEY_state: case KEY_sub  :
     case KEY_tr   : case KEY_try  :

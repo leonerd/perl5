@@ -8517,6 +8517,15 @@ yyl_word_or_keyword(pTHX_ char *s, STRLEN len, I32 key, I32 orig_keyword, struct
         s = scan_pat(s,OP_QR);
         TERM(sublex_start());
 
+    case KEY_qt:
+        // For now parse purely as a single q(). Code entirely stolen from KEY_q
+        s = scan_str(s,FALSE,FALSE,FALSE,NULL);
+        if (!s)
+            missingterm(NULL, 0);
+        COPLINE_SET_FROM_MULTI_END;
+        pl_yylval.ival = OP_CONST;
+        TERM(sublex_start());
+
     case KEY_qx:
         s = S_scan_terminated(aTHX_ s, OP_BACKTICK);
         TERM(sublex_start());

@@ -52,6 +52,7 @@ my %feature_kw = (
     method    => 'class',
     ADJUST    => 'class',
     __CLASS__ => 'class',
+    qt        => 'qt',
 );
 
 my %pos = map { ($_ => 1) } @{$by_strength{'+'}};
@@ -275,6 +276,7 @@ __END__
 +q
 +qq
 +qr
++qt
 -quotemeta
 +qw
 +qx

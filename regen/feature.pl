@@ -45,6 +45,7 @@ my %feature = (
     extra_paired_delimiters => 'more_delims',
     module_true             => 'module_true',
     class                   => 'class',
+    qt                      => 'qt',
 );
 
 # NOTE: If a feature is ever enabled in a non-contiguous range of Perl
@@ -542,7 +543,7 @@ read_only_bottom_close_and_rename($h);
 
 __END__
 package feature;
-our $VERSION = '1.91';
+our $VERSION = '1.92';
 
 FEATURES
 
@@ -964,6 +965,16 @@ warn when you use the feature, unless you have explicitly disabled the warning:
 
 This feature enables the C<class> block syntax and other associated keywords
 which implement the "new" object system, previously codenamed "Corinna".
+
+=head2 The 'qt' feature
+
+B<WARNING>: This feature is still experimental and the implementation may
+change or be removed in future versions of Perl.  For this reason, Perl will
+warn when you use the feature, unless you have explicitly disabled the warning:
+
+    no warnings "experimental::qt";
+
+This feature enables the C<qt> quoted template expression quoting syntax.
 
 =head1 FEATURE BUNDLES
 

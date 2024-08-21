@@ -4,10 +4,11 @@
 # Any changes made here will be lost!
 
 package feature;
-our $VERSION = '1.91';
+our $VERSION = '1.92';
 
 our %feature = (
     fc                      => 'feature_fc',
+    qt                      => 'feature_qt',
     isa                     => 'feature_isa',
     say                     => 'feature_say',
     try                     => 'feature_try',
@@ -39,7 +40,7 @@ our %feature_bundle = (
     "5.35"    => [qw(bareword_filehandles bitwise current_sub evalbytes fc isa postderef_qq say signatures state unicode_eval unicode_strings)],
     "5.37"    => [qw(bitwise current_sub evalbytes fc isa module_true postderef_qq say signatures state unicode_eval unicode_strings)],
     "5.39"    => [qw(bitwise current_sub evalbytes fc isa module_true postderef_qq say signatures state try unicode_eval unicode_strings)],
-    "all"     => [qw(bareword_filehandles bitwise class current_sub declared_refs defer evalbytes extra_paired_delimiters fc indirect isa module_true multidimensional postderef_qq refaliasing say signatures state try unicode_eval unicode_strings)],
+    "all"     => [qw(bareword_filehandles bitwise class current_sub declared_refs defer evalbytes extra_paired_delimiters fc indirect isa module_true multidimensional postderef_qq qt refaliasing say signatures state try unicode_eval unicode_strings)],
     "default" => [qw(bareword_filehandles indirect multidimensional)],
 );
 
@@ -505,6 +506,16 @@ warn when you use the feature, unless you have explicitly disabled the warning:
 
 This feature enables the C<class> block syntax and other associated keywords
 which implement the "new" object system, previously codenamed "Corinna".
+
+=head2 The 'qt' feature
+
+B<WARNING>: This feature is still experimental and the implementation may
+change or be removed in future versions of Perl.  For this reason, Perl will
+warn when you use the feature, unless you have explicitly disabled the warning:
+
+    no warnings "experimental::qt";
+
+This feature enables the C<qt> quoted template expression quoting syntax.
 
 =head1 FEATURE BUNDLES
 

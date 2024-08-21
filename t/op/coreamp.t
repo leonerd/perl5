@@ -1169,8 +1169,9 @@ like $@, qr'^Undefined format "STDOUT" called',
     and catch class cmp continue default defer do dump else elsif eq eval
     field finally
     for foreach format ge given goto grep gt if isa last le local lt m map
-    method my ne next no or our package print printf q qq qr qw qx redo require
-    return s say sort state sub tr try unless until use when while x xor y
+    method my ne next no or our package print printf q qq qr qt qw qx redo
+    require return s say sort state sub tr try unless until use when while x
+    xor y
   );
   open my $kh, $keywords_file
     or die "$0 cannot open $keywords_file: $!";

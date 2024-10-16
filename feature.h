@@ -20,19 +20,20 @@
 #define FEATURE_DEFER_BIT                   0x0020
 #define FEATURE_EVALBYTES_BIT               0x0040
 #define FEATURE_MORE_DELIMS_BIT             0x0080
-#define FEATURE_FC_BIT                      0x0100
-#define FEATURE_INDIRECT_BIT                0x0200
-#define FEATURE_ISA_BIT                     0x0400
-#define FEATURE_MODULE_TRUE_BIT             0x0800
-#define FEATURE_MULTIDIMENSIONAL_BIT        0x1000
-#define FEATURE_POSTDEREF_QQ_BIT            0x2000
-#define FEATURE_REFALIASING_BIT             0x4000
-#define FEATURE_SAY_BIT                     0x8000
-#define FEATURE_SIGNATURES_BIT              0x10000
-#define FEATURE_STATE_BIT                   0x20000
-#define FEATURE_TRY_BIT                     0x40000
-#define FEATURE_UNIEVAL_BIT                 0x80000
-#define FEATURE_UNICODE_BIT                 0x100000
+#define FEATURE_FASTER_SIGNATURES_BIT       0x0100
+#define FEATURE_FC_BIT                      0x0200
+#define FEATURE_INDIRECT_BIT                0x0400
+#define FEATURE_ISA_BIT                     0x0800
+#define FEATURE_MODULE_TRUE_BIT             0x1000
+#define FEATURE_MULTIDIMENSIONAL_BIT        0x2000
+#define FEATURE_POSTDEREF_QQ_BIT            0x4000
+#define FEATURE_REFALIASING_BIT             0x8000
+#define FEATURE_SAY_BIT                     0x10000
+#define FEATURE_SIGNATURES_BIT              0x20000
+#define FEATURE_STATE_BIT                   0x40000
+#define FEATURE_TRY_BIT                     0x80000
+#define FEATURE_UNIEVAL_BIT                 0x100000
+#define FEATURE_UNICODE_BIT                 0x200000
 
 #define FEATURE_BUNDLE_DEFAULT	0
 #define FEATURE_BUNDLE_510	1
@@ -203,6 +204,12 @@
 	 FEATURE_IS_ENABLED_MASK(FEATURE_MULTIDIMENSIONAL_BIT)) \
     )
 
+#define FEATURE_FASTER_SIGNATURES_IS_ENABLED \
+    ( \
+	CURRENT_FEATURE_BUNDLE == FEATURE_BUNDLE_CUSTOM && \
+	 FEATURE_IS_ENABLED_MASK(FEATURE_FASTER_SIGNATURES_BIT) \
+    )
+
 #define FEATURE_BAREWORD_FILEHANDLES_IS_ENABLED \
     ( \
 	CURRENT_FEATURE_BUNDLE <= FEATURE_BUNDLE_535 \
@@ -325,7 +332,12 @@ S_magic_sethint_feature(pTHX_ SV *keysv, const char *keypv, STRLEN keylen,
             return;
 
         case 'f':
-            if (keylen == sizeof("feature_fc")-1
+            if (keylen == sizeof("feature_faster_signatures")-1
+                 && memcmp(subf+1, "aster_signatures", keylen - sizeof("feature_")) == 0) {
+                mask = FEATURE_FASTER_SIGNATURES_BIT;
+                break;
+            }
+            else if (keylen == sizeof("feature_fc")-1
                  && memcmp(subf+1, "c", keylen - sizeof("feature_")) == 0) {
                 mask = FEATURE_FC_BIT;
                 break;
@@ -492,6 +504,12 @@ PL_feature_bits[] = {
         "feature_more_delims",
         STRLENs("feature_more_delims"),
         FEATURE_MORE_DELIMS_BIT
+    },
+    {
+        /* feature faster_signatures */
+        "feature_faster_signatures",
+        STRLENs("feature_faster_signatures"),
+        FEATURE_FASTER_SIGNATURES_BIT
     },
     {
         /* feature fc */

@@ -45,6 +45,7 @@ my %feature = (
     extra_paired_delimiters => 'more_delims',
     module_true             => 'module_true',
     class                   => 'class',
+    faster_signatures       => 'faster_signatures',
 );
 
 # NOTE: If a feature is ever enabled in a non-contiguous range of Perl
@@ -542,7 +543,7 @@ read_only_bottom_close_and_rename($h);
 
 __END__
 package feature;
-our $VERSION = '1.91';
+our $VERSION = '1.92';
 
 FEATURES
 

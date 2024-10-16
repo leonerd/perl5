@@ -4,7 +4,7 @@
 # Any changes made here will be lost!
 
 package feature;
-our $VERSION = '1.91';
+our $VERSION = '1.92';
 
 our %feature = (
     fc                      => 'feature_fc',
@@ -26,6 +26,7 @@ our %feature = (
     declared_refs           => 'feature_myref',
     unicode_strings         => 'feature_unicode',
     multidimensional        => 'feature_multidimensional',
+    faster_signatures       => 'feature_faster_signatures',
     bareword_filehandles    => 'feature_bareword_filehandles',
     extra_paired_delimiters => 'feature_more_delims',
 );
@@ -39,7 +40,7 @@ our %feature_bundle = (
     "5.35"    => [qw(bareword_filehandles bitwise current_sub evalbytes fc isa postderef_qq say signatures state unicode_eval unicode_strings)],
     "5.37"    => [qw(bitwise current_sub evalbytes fc isa module_true postderef_qq say signatures state unicode_eval unicode_strings)],
     "5.39"    => [qw(bitwise current_sub evalbytes fc isa module_true postderef_qq say signatures state try unicode_eval unicode_strings)],
-    "all"     => [qw(bareword_filehandles bitwise class current_sub declared_refs defer evalbytes extra_paired_delimiters fc indirect isa module_true multidimensional postderef_qq refaliasing say signatures state try unicode_eval unicode_strings)],
+    "all"     => [qw(bareword_filehandles bitwise class current_sub declared_refs defer evalbytes extra_paired_delimiters faster_signatures fc indirect isa module_true multidimensional postderef_qq refaliasing say signatures state try unicode_eval unicode_strings)],
     "default" => [qw(bareword_filehandles indirect multidimensional)],
 );
 

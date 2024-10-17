@@ -7763,20 +7763,10 @@ S_find_runcv_name(void)
  * signatured subs.
  */
 
-PP(pp_argcheck)
+static void
+S_check_argc(pTHX_ UV argc, UV params, UV opt_params, char slurpy)
 {
-    OP * const o       = PL_op;
-    struct op_argcheck_aux *aux = (struct op_argcheck_aux *)cUNOP_AUXo->op_aux;
-    UV   params        = aux->params;
-    UV   opt_params    = aux->opt_params;
-    char slurpy        = aux->slurpy;
-    AV  *defav         = GvAV(PL_defgv); /* @_ */
-    UV   argc;
-    bool too_few;
-
-    assert(!SvMAGICAL(defav));
-    argc = (UV)(AvFILLp(defav) + 1);
-    too_few = (argc < (params - opt_params));
+    bool too_few = (argc < (params - opt_params));
 
     if (UNLIKELY(too_few || (!slurpy && argc > params)))
 
@@ -7795,6 +7785,18 @@ PP(pp_argcheck)
         /* diag_listed_as: Odd name/value argument for subroutine '%s' */
         Perl_croak_caller("Odd name/value argument for subroutine '%" SVf "'",
                           S_find_runcv_name());
+}
+
+PP(pp_argcheck)
+{
+    OP * const o       = PL_op;
+    struct op_argcheck_aux *aux = (struct op_argcheck_aux *)cUNOP_AUXo->op_aux;
+    AV  *defav         = GvAV(PL_defgv); /* @_ */
+
+    assert(!SvMAGICAL(defav));
+    UV argc = (UV)(AvFILLp(defav) + 1);
+
+    S_check_argc(aTHX_ argc, aux->params, aux->opt_params, aux->slurpy);
 
     return NORMAL;
 }

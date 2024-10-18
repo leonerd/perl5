@@ -7801,6 +7801,11 @@ PP(pp_argcheck)
     return NORMAL;
 }
 
+PP(pp_signature)
+{
+    croak("TODO pp_signature");
+}
+
 PP_wrapped(pp_isa, 2, 0)
 {
     dSP;

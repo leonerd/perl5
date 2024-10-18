@@ -429,6 +429,7 @@ typedef enum opcode {
 	OP_METHSTART	 = 412,
 	OP_INITFIELD	 = 413,
 	OP_CLASSNAME	 = 414,
+	OP_SIGNATURE	 = 415,
 	OP_max		
 } opcode;
 
@@ -439,7 +440,7 @@ An enum of all the legal Perl opcodes, defined in F<opnames.h>
 =cut
 */
 
-#define MAXO 415
+#define MAXO 416
 #define OP_FREED MAXO
 
 /* the OP_IS_* macros are optimized to a simple range check because

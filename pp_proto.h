@@ -261,6 +261,7 @@ PERL_CALLCONV PP(pp_shift) __attribute__visibility__("hidden");
 PERL_CALLCONV PP(pp_shmwrite) __attribute__visibility__("hidden");
 PERL_CALLCONV PP(pp_shostent) __attribute__visibility__("hidden");
 PERL_CALLCONV PP(pp_shutdown) __attribute__visibility__("hidden");
+PERL_CALLCONV PP(pp_signature) __attribute__visibility__("hidden");
 PERL_CALLCONV PP(pp_sin) __attribute__visibility__("hidden");
 PERL_CALLCONV PP(pp_sle) __attribute__visibility__("hidden");
 PERL_CALLCONV PP(pp_sleep) __attribute__visibility__("hidden");

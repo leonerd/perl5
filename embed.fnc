@@ -4845,6 +4845,8 @@ Sd	|void	|cv_dump	|NN const CV *cv			\
 #if defined(PERL_IN_PEEP_C)
 S	|void	|finalize_op	|NN OP *o
 S	|void	|optimize_op	|NN OP *o
+S	|void	|optimize_signature_ops 				\
+				|NN OP *o
 Sd	|OP *	|traverse_op_tree					\
 				|NN OP *top				\
 				|NN OP *o

@@ -1486,6 +1486,7 @@
 #   if defined(PERL_IN_PEEP_C)
 #     define finalize_op(a)                     S_finalize_op(aTHX_ a)
 #     define optimize_op(a)                     S_optimize_op(aTHX_ a)
+#     define optimize_signature_ops(a)          S_optimize_signature_ops(aTHX_ a)
 #     define traverse_op_tree(a,b)              S_traverse_op_tree(aTHX_ a,b)
 #   endif
 #   if defined(PERL_IN_PERL_C)

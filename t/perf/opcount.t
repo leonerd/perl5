@@ -1011,4 +1011,23 @@ test_opcount(0, "Empty anonhash ref and direct lexical assignment",
                     srefgen     => 1,
                 });
 
+{
+    use feature qw( signatures faster_signatures );
+
+    test_opcount(0, "Zero-arg subroutine uses OP_SIGNATURE",
+        sub () { return; },
+        {
+            signature => 1,
+            argcheck => 0,
+        });
+
+    test_opcount(0, "Two-arg subroutine uses OP_SIGNATURE",
+        sub ($x, $y) { return; },
+        {
+            signature => 1,
+            argcheck => 0,
+            argelem => 0,
+        });
+}
+
 done_testing();

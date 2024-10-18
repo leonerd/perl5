@@ -24,6 +24,7 @@
 #include "EXTERN.h"
 #define PERL_IN_PEEP_C
 #include "perl.h"
+#include "feature.h"
 
 
 #define CALL_RPEEP(o) PL_rpeepp(aTHX_ o)
@@ -1040,7 +1041,115 @@ Perl_optimize_optree(pTHX_ OP* o)
 
     optimize_op(o);
 
+    if(CvSIGNATURE(PL_compcv) && FEATURE_FASTER_SIGNATURES_IS_ENABLED) {
+        optimize_signature_ops(o);
+    }
+
     LEAVE;
+}
+
+
+STATIC void
+S_optimize_signature_ops(pTHX_ OP *o)
+{
+    PERL_ARGS_ASSERT_OPTIMIZE_SIGNATURE_OPS;
+
+    /* Try to turn an initial sequence of OP_ARGCHECK followed by zero or more
+     * OP_ARGELEM ops into a single OP_SIGNATURE. If we succeed, we'll
+     * entirely replace the ops in question and set the CV flag
+     */
+
+    /* Expect a LEAVESUB or LEAVESUBLV, containing a LINESEQ, whose first
+     * (non-null) child is itself a LINESEQ, whose first kids are NEXTSTATE,
+     * ARGCHECK, ... This is the start of the signature ops
+     */
+
+    assert(o->op_type == OP_LEAVESUB || o->op_type == OP_LEAVESUBLV);
+    o = cUNOPo->op_first;
+    assert(o->op_type == OP_LINESEQ);
+    o = cLISTOPo->op_first;
+    if(o->op_type == OP_NULL && (o->op_flags & OPf_KIDS)) o = cUNOPo->op_first;
+    if(o->op_type == OP_LINESEQ) o = cLISTOPo->op_first;
+    assert(o->op_type == OP_NEXTSTATE || o->op_type == OP_DBSTATE);
+
+    OP *cop_before_argcheck = o;
+    o = OpSIBLING(o);
+
+    /* OK, so now o should point at OP_ARGCHECK. Its next siblings will be a
+     * few ARGELEMs, interleaved with COPs which we will ignore for now
+     */
+
+    assert(o->op_type == OP_ARGCHECK);
+    OP *argcheck = o;
+    struct op_argcheck_aux *argcheck_aux = (struct op_argcheck_aux *)cUNOP_AUXo->op_aux;
+
+    UV nparams = argcheck_aux->params;
+
+    /* FOR NOW we don't support optional args */
+    if(argcheck_aux->opt_params)
+        return;
+
+    /* Now we should expect to see 'params' count of COP/ARGELEM pairs. Check
+     * we have each, and **TODO** for now, none of them have an ARGDEFELEM
+     */
+    for(int parami = 0; parami < nparams; parami++) {
+        o = OpSIBLING(o);
+        assert(o->op_type == OP_NEXTSTATE || o->op_type == OP_DBSTATE);
+
+        o = OpSIBLING(o);
+
+        assert(o->op_type == OP_ARGELEM);
+
+        /* FOR NOW we don't support args with defaulting expressions */
+        if(o->op_flags & OPf_STACKED)
+            return;
+    }
+
+    /* TODO: If argcheck_aux->slurpy then we'll expect one more slurpy here */
+
+    /* If we made it this far then we must be good */
+
+    struct op_signature_aux *signature_aux = PerlMemShared_malloc(
+        sizeof(struct op_signature_aux) + nparams * sizeof(PADOFFSET));
+    signature_aux->param_padix = (PADOFFSET *)((char *)signature_aux +  sizeof(struct op_signature_aux));
+
+    signature_aux->params = nparams;
+    signature_aux->opt_params = argcheck_aux->opt_params;
+    signature_aux->slurpy     = argcheck_aux->slurpy;
+
+    o = argcheck;
+    OP *final_argelem = NULL;
+    for(int parami = 0; parami < argcheck_aux->params; parami++) {
+        o = OpSIBLING(o);
+        o = OpSIBLING(o);
+
+        signature_aux->param_padix[parami] = o->op_targ;
+
+        final_argelem = o;
+    }
+
+    OP *signature = newUNOP_AUX(OP_SIGNATURE, 0, NULL, (UNOP_AUX_item *)signature_aux);
+
+    OP *next_after_args = (final_argelem) ?
+        final_argelem->op_next : argcheck->op_next;
+    OP *cop_after_args = (final_argelem && OpSIBLING(final_argelem)) ?
+        OpSIBLING(final_argelem) : OpSIBLING(argcheck);
+
+    /* TODO: Now throw away the *ENTIRE* previous argcheck/argelem... sequence
+     * and replace it with this single OP_SIGNATURE
+     */
+    OpMORESIB_set(cop_before_argcheck, signature);
+    OpMORESIB_set(signature, cop_after_args);
+
+    if(final_argelem)
+        OpLASTSIB_set(final_argelem, NULL);
+    else
+        OpLASTSIB_set(argcheck, NULL);
+
+    cop_before_argcheck->op_next = signature;
+    signature->op_next = next_after_args;
+
+    /* TODO: throw away the entire old OP_ARG* sequence */
 }
 
 

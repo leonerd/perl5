@@ -1177,6 +1177,15 @@ struct op_argcheck_aux {
     char slurpy;     /* presence of slurpy: may be '\0', '@' or '%' */
 };
 
+/* for OP_SIGNATURE */
+
+struct op_signature_aux {
+    UV    params;
+    UV    opt_params;
+    char  slurpy;
+    PADOFFSET *param_padix; /* points at storage allocated along with the struct itself, immediately following */
+};
+
 #define MI_INIT_WORKAROUND_PACK "Module::Install::DSL"
 
 

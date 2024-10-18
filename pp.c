@@ -7803,7 +7803,30 @@ PP(pp_argcheck)
 
 PP(pp_signature)
 {
-    croak("TODO pp_signature");
+    struct op_signature_aux *aux = (struct op_signature_aux *)cUNOP_AUX->op_aux;
+    UV nparams = aux->params;
+    AV  *defav = GvAV(PL_defgv); /* @_ */
+
+    assert(!SvMAGICAL(defav));
+    UV argc = (UV)(AvFILLp(defav) + 1);
+
+    S_check_argc(aTHX_ argc, nparams, aux->opt_params, aux->slurpy);
+
+    for(UV parami = 0; parami < nparams; parami++) {
+        SV **padentry = &PAD_SVl(aux->param_padix[parami]);
+        save_clearsv(padentry);
+
+        SV **valp = av_fetch(defav, parami, FALSE);
+        SV *val = valp ? *valp : &PL_sv_undef;
+
+        assert(TAINTING_get || !TAINT_get);
+        if (UNLIKELY(TAINT_get) && !SvTAINTED(val))
+            TAINT_NOT;
+
+        SvSetMagicSV(*padentry, val);
+    }
+
+    return PL_op->op_next;
 }
 
 PP_wrapped(pp_isa, 2, 0)

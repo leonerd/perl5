@@ -7611,6 +7611,11 @@ S_optimize_op(pTHX_ OP *o);
 # define PERL_ARGS_ASSERT_OPTIMIZE_OP           \
         assert(o)
 
+STATIC void
+S_optimize_signature_ops(pTHX_ OP *o);
+# define PERL_ARGS_ASSERT_OPTIMIZE_SIGNATURE_OPS \
+        assert(o)
+
 STATIC OP *
 S_traverse_op_tree(pTHX_ OP *top, OP *o);
 # define PERL_ARGS_ASSERT_TRAVERSE_OP_TREE      \

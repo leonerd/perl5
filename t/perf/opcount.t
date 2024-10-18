@@ -1028,6 +1028,22 @@ test_opcount(0, "Empty anonhash ref and direct lexical assignment",
             argcheck => 0,
             argelem => 0,
         });
+
+    test_opcount(0, "One-arg plus slurpy array subroutine uses OP_SIGNATURE",
+        sub ($x, @rest) { return; },
+        {
+            signature => 1,
+            argcheck => 0,
+            argelem => 0,
+        });
+
+    test_opcount(0, "One-arg plus slurpy hash subroutine uses OP_SIGNATURE",
+        sub ($x, %rest) { return; },
+        {
+            signature => 1,
+            argcheck => 0,
+            argelem => 0,
+        });
 }
 
 done_testing();

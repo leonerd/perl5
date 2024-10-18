@@ -1184,6 +1184,7 @@ struct op_signature_aux {
     UV    opt_params;
     char  slurpy;
     PADOFFSET *param_padix; /* points at storage allocated along with the struct itself, immediately following */
+    PADOFFSET slurpy_padix;
 };
 
 #define MI_INIT_WORKAROUND_PACK "Module::Install::DSL"

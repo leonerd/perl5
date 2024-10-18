@@ -1092,6 +1092,7 @@ S_optimize_signature_ops(pTHX_ OP *o)
     /* Now we should expect to see 'params' count of COP/ARGELEM pairs. Check
      * we have each, and **TODO** for now, none of them have an ARGDEFELEM
      */
+    OP *final_argelem = NULL;
     for(int parami = 0; parami < nparams; parami++) {
         o = OpSIBLING(o);
         assert(o->op_type == OP_NEXTSTATE || o->op_type == OP_DBSTATE);
@@ -1103,9 +1104,31 @@ S_optimize_signature_ops(pTHX_ OP *o)
         /* FOR NOW we don't support args with defaulting expressions */
         if(o->op_flags & OPf_STACKED)
             return;
+
+        final_argelem = o;
     }
 
-    /* TODO: If argcheck_aux->slurpy then we'll expect one more slurpy here */
+    if(argcheck_aux->slurpy) {
+        o = OpSIBLING(o);
+        assert(o->op_type == OP_NEXTSTATE || o->op_type == OP_DBSTATE);
+
+        o = OpSIBLING(o);
+
+        assert(o->op_type == OP_ARGELEM);
+        U8 priv = o->op_private & OPpARGELEM_MASK;
+        assert(priv == OPpARGELEM_AV || priv == OPpARGELEM_HV);
+
+        final_argelem = o;
+    }
+    else {
+        /* TODO: Maybe look down the chain to see that we *don't* have an OP_ARGELEM ? */
+    }
+
+    OP *next_after_args = (final_argelem) ?
+        final_argelem->op_next : argcheck->op_next;
+    OP *cop_after_args = (final_argelem && OpSIBLING(final_argelem)) ?
+        OpSIBLING(final_argelem) : OpSIBLING(argcheck);
+    assert(cop_after_args->op_type == OP_NEXTSTATE || cop_after_args->op_type == OP_DBSTATE);
 
     /* If we made it this far then we must be good */
 
@@ -1116,24 +1139,24 @@ S_optimize_signature_ops(pTHX_ OP *o)
     signature_aux->params = nparams;
     signature_aux->opt_params = argcheck_aux->opt_params;
     signature_aux->slurpy     = argcheck_aux->slurpy;
+    signature_aux->slurpy_padix = 0;
 
     o = argcheck;
-    OP *final_argelem = NULL;
     for(int parami = 0; parami < argcheck_aux->params; parami++) {
         o = OpSIBLING(o);
         o = OpSIBLING(o);
 
         signature_aux->param_padix[parami] = o->op_targ;
+    }
 
-        final_argelem = o;
+    if(argcheck_aux->slurpy) {
+        o = OpSIBLING(o);
+        o = OpSIBLING(o);
+
+        signature_aux->slurpy_padix = o->op_targ;
     }
 
     OP *signature = newUNOP_AUX(OP_SIGNATURE, 0, NULL, (UNOP_AUX_item *)signature_aux);
-
-    OP *next_after_args = (final_argelem) ?
-        final_argelem->op_next : argcheck->op_next;
-    OP *cop_after_args = (final_argelem && OpSIBLING(final_argelem)) ?
-        OpSIBLING(final_argelem) : OpSIBLING(argcheck);
 
     /* TODO: Now throw away the *ENTIRE* previous argcheck/argelem... sequence
      * and replace it with this single OP_SIGNATURE

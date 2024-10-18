@@ -1566,15 +1566,21 @@ S_do_op_dump_bar(pTHX_ I32 level, UV bar, PerlIO *file, const OP *o)
     case OP_SIGNATURE:
     {
         struct op_signature_aux *aux = (struct op_signature_aux *)cUNOP_AUXo->op_aux;
-        S_opdump_indent(aTHX_ o, level, bar, file, "ARGS = %" UVuf " .. %" UVuf "\n",
-                aux->params, aux->opt_params);
-        if(aux->slurpy)
-            S_opdump_indent(aTHX_ o, level, bar, file, "SLURPY = '%c'\n", aux->slurpy);
-
         UV nparams = aux->params;
+        if(aux->opt_params)
+            S_opdump_indent(aTHX_ o, level, bar, file, "PARAMS = %" UVuf " .. %" UVuf "\n",
+                    nparams - aux->opt_params, nparams);
+        else
+            S_opdump_indent(aTHX_ o, level, bar, file, "PARAMS = %" UVuf "\n",
+                    nparams);
+
         for(Size_t i = 0; i < nparams; i++)
             S_opdump_indent(aTHX_ o, level, bar, file, "  PARAM [%zd] PADIX = %" UVuf "\n",
                     i, aux->param_padix[i]);
+
+        if(aux->slurpy)
+            S_opdump_indent(aTHX_ o, level, bar, file, "SLURPY = '%c' PADIX = %" UVuf "\n",
+                    aux->slurpy, aux->slurpy_padix);
 
         break;
     }

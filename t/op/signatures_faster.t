@@ -44,4 +44,20 @@ fails_ok( sub { p2("a1") }, qr/^Too few arguments for subroutine 'main::p2' \(go
 fails_ok( sub { p2("a1","a2","a3") }, qr/^Too many arguments for subroutine 'main::p2' \(got 3; expected 2\) at /,
     'p2 on three arguments' );
 
+# with slurpy array
+sub p1sa ( $x, @rest ) {
+    return "P1SA-$x+" . join( '+', @rest );
+}
+is( p1sa("a1", qw( a b c )), "P1SA-a1+a+b+c", 'p1sa OK' );
+fails_ok( sub { p1sa() }, qr/^Too few arguments for subroutine 'main::p1sa' \(got 0; expected at least 1\) at /,
+    'p1sa on zero arguments' );
+
+# with slurpy hash
+sub p1sh ( $x, %rest ) {
+    return "P1SH-$x+" . join( '+', map { "$_=$rest{$_}" } sort keys %rest );
+}
+is( p1sh("a1", a => "A", b => "B"), "P1SH-a1+a=A+b=B", 'p1ha OK' );
+fails_ok( sub { p1sh() }, qr/^Too few arguments for subroutine 'main::p1sh' \(got 0; expected at least 1\) at /,
+    'p1sh on zero arguments' );
+
 done_testing;

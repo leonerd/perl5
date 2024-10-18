@@ -7804,15 +7804,17 @@ PP(pp_argcheck)
 PP(pp_signature)
 {
     struct op_signature_aux *aux = (struct op_signature_aux *)cUNOP_AUX->op_aux;
-    UV nparams = aux->params;
+    UV nparams  = aux->params;
+    char slurpy = aux->slurpy;
     AV  *defav = GvAV(PL_defgv); /* @_ */
 
     assert(!SvMAGICAL(defav));
     UV argc = (UV)(AvFILLp(defav) + 1);
 
-    S_check_argc(aTHX_ argc, nparams, aux->opt_params, aux->slurpy);
+    S_check_argc(aTHX_ argc, nparams, aux->opt_params, slurpy);
 
-    for(UV parami = 0; parami < nparams; parami++) {
+    UV parami;
+    for(parami = 0; parami < nparams; parami++, argc--) {
         SV **padentry = &PAD_SVl(aux->param_padix[parami]);
         save_clearsv(padentry);
 
@@ -7824,6 +7826,56 @@ PP(pp_signature)
             TAINT_NOT;
 
         SvSetMagicSV(*padentry, val);
+    }
+
+    if(!slurpy)
+        return PL_op->op_next;
+
+    /* Now we know we have a slurpy */
+    assert(aux->slurpy_padix);
+    SV **padentry = &PAD_SVl(aux->slurpy_padix);
+    save_clearsv(padentry);
+
+    if(slurpy == '@') {
+        AV *av = (AV *)*padentry;
+        assert(SvTYPE(av) == SVt_PVAV);
+
+        av_extend(av, argc);
+
+        IV avidx = 0;
+        for(; argc; parami++, argc--) {
+            SV **valp = av_fetch(defav, parami, FALSE);
+            SV *val = valp ? *valp : &PL_sv_undef;
+
+            assert(TAINTING_get || !TAINT_get);
+            if (UNLIKELY(TAINT_get) && !SvTAINTED(val))
+                TAINT_NOT;
+
+            av_store(av, avidx++, newSVsv(val));
+        }
+    }
+    else if(slurpy == '%') {
+        HV *hv = (HV *)*padentry;
+        assert(SvTYPE(hv) == SVt_PVHV);
+
+        assert((argc % 2) == 0);
+
+        while(argc) {
+            SV **svp;
+
+            svp = av_fetch(defav, parami, FALSE); parami++;
+            SV *key = svp ? *svp : &PL_sv_undef;
+            svp = av_fetch(defav, parami, FALSE); parami++;
+            SV *val = svp ? *svp : &PL_sv_undef;
+            argc -= 2;
+
+            if (UNLIKELY(SvGMAGICAL(key)))
+                key = sv_mortalcopy(key);
+
+            hv_store_ent(hv, key, newSVsv(val), 0);
+            if (UNLIKELY(TAINT_get) && !SvTAINTED(val))
+                TAINT_NOT;
+        }
     }
 
     return PL_op->op_next;

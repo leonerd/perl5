@@ -16085,11 +16085,8 @@ function.
 */
 
 
-/* use PERL_MAGIC_ext to call a function to free the xop structure when
- * freeing PL_custom_ops */
-
-static int
-custom_op_register_free(pTHX_ SV *sv, MAGIC *mg)
+static void
+customop_xop_free(pTHX_ SV *sv, MAGIC *mg)
 {
     XOP *xop;
 
@@ -16098,21 +16095,14 @@ custom_op_register_free(pTHX_ SV *sv, MAGIC *mg)
     Safefree(xop->xop_name);
     Safefree(xop->xop_desc);
     Safefree(xop);
-    return 0;
 }
 
+static const struct HookFunctions customop_xop_hook = {
+    .ver   = 12345, /* TODO: PERL_API_VER */
+    .shape = HKs_BASE,
+    .debug_name = "customop_xop",
 
-static const MGVTBL custom_op_register_vtbl = {
-    0,                          /* get */
-    0,                          /* set */
-    0,                          /* len */
-    0,                          /* clear */
-    custom_op_register_free,     /* free */
-    0,                          /* copy */
-    0,                          /* dup */
-#ifdef MGf_LOCAL
-    0,                          /* local */
-#endif
+    .free = &customop_xop_free,
 };
 
 
@@ -16166,8 +16156,7 @@ Perl_custom_op_get_field(pTHX_ const OP *o, const xop_flags_enum field)
         /* add magic to the SV so that the xop struct (pointed to by
          * SvIV(sv)) is freed. Normally a static xop is registered, but
          * for this backcompat hack, we've alloced one */
-        (void)sv_magicext(HeVAL(he), NULL, PERL_MAGIC_ext,
-                &custom_op_register_vtbl, NULL, 0);
+        sv_hook_add(HeVAL(he), &customop_xop_hook, 0, NULL);
 
     }
     else {

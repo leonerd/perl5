@@ -2051,8 +2051,6 @@ p	|int	|magic_getnkeys |NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_getpack	|NN SV *sv				\
 				|NN MAGIC *mg
-p	|int	|magic_getpos	|NN SV *sv				\
-				|NN MAGIC *mg
 p	|int	|magic_getsig	|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_getsubstr|NN SV *sv				\
@@ -2123,8 +2121,6 @@ p	|int	|magic_setnonelem					\
 				|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_setpack	|NN SV *sv				\
-				|NN MAGIC *mg
-p	|int	|magic_setpos	|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_setregexp|NN SV *sv				\
 				|NN MAGIC *mg

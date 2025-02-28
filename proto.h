@@ -2160,12 +2160,6 @@ Perl_magic_getpack(pTHX_ SV *sv, MAGIC *mg)
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
-Perl_magic_getpos(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_GETPOS           \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
 Perl_magic_getsig(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_GETSIG           \
@@ -2319,12 +2313,6 @@ PERL_CALLCONV int
 Perl_magic_setpack(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_SETPACK          \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
-Perl_magic_setpos(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_SETPOS           \
         assert(sv); assert(mg)
 
 PERL_CALLCONV int

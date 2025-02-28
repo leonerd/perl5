@@ -5453,7 +5453,6 @@ test_get_vtbl()
         test_get_this_vtable(taint);
         test_get_this_vtable(substr);
         test_get_this_vtable(vec);
-        test_get_this_vtable(pos);
         test_get_this_vtable(bm);
         test_get_this_vtable(fm);
         test_get_this_vtable(uvar);

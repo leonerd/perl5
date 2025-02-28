@@ -15,7 +15,6 @@
 #define PERL_MAGIC_sv             '\0' /* Special scalar variable */
 #define PERL_MAGIC_arylen         '#' /* Array length ($#ary) */
 #define PERL_MAGIC_rhash          '%' /* Extra data for restricted hashes */
-#define PERL_MAGIC_pos            '.' /* pos() lvalue */
 #define PERL_MAGIC_symtab         ':' /* Extra data for symbol tables */
 #define PERL_MAGIC_backref        '<' /* For weak ref data */
 #define PERL_MAGIC_arylen_p       '@' /* To move arylen out of XPVAV */
@@ -84,7 +83,6 @@ enum {		/* pass one of these to get_vtbl */
     want_vtbl_ovrld,
     want_vtbl_pack,
     want_vtbl_packelem,
-    want_vtbl_pos,
     want_vtbl_regdata,
     want_vtbl_regdatum,
     want_vtbl_regexp,
@@ -122,7 +120,6 @@ EXTCONST char * const PL_magic_vtable_names[magic_vtable_max] INIT( {
     "ovrld",
     "pack",
     "packelem",
-    "pos",
     "regdata",
     "regdatum",
     "regexp",
@@ -181,7 +178,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max] = {
   { 0, 0, 0, 0, Perl_magic_freeovrld, 0, 0, 0 },
   { 0, 0, Perl_magic_sizepack, Perl_magic_wipepack, 0, 0, 0, 0 },
   { Perl_magic_getpack, Perl_magic_setpack, 0, Perl_magic_clearpack, 0, 0, 0, 0 },
-  { Perl_magic_getpos, Perl_magic_setpos, 0, 0, 0, 0, 0, 0 },
   { 0, 0, Perl_magic_regdata_cnt, 0, 0, 0, 0, 0 },
   { Perl_magic_regdatum_get, Perl_magic_regdatum_set, 0, 0, 0, 0, 0, 0 },
   { 0, Perl_magic_setregexp, 0, 0, 0, 0, 0, 0 },
@@ -225,7 +221,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max];
 #define PL_vtbl_ovrld PL_magic_vtables[want_vtbl_ovrld]
 #define PL_vtbl_pack PL_magic_vtables[want_vtbl_pack]
 #define PL_vtbl_packelem PL_magic_vtables[want_vtbl_packelem]
-#define PL_vtbl_pos PL_magic_vtables[want_vtbl_pos]
 #define PL_vtbl_regdata PL_magic_vtables[want_vtbl_regdata]
 #define PL_vtbl_regdatum PL_magic_vtables[want_vtbl_regdatum]
 #define PL_vtbl_regexp PL_magic_vtables[want_vtbl_regexp]

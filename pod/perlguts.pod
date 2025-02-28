@@ -1604,7 +1604,6 @@ will be lost.
  #  PERL_MAGIC_arylen         vtbl_arylen    Array length ($#ary)
  %  PERL_MAGIC_rhash          (none)         Extra data for restricted
                                              hashes
- .  PERL_MAGIC_pos            vtbl_pos       pos() lvalue
  :  PERL_MAGIC_symtab         (none)         Extra data for symbol
                                              tables
  <  PERL_MAGIC_backref        vtbl_backref   For weak ref data
@@ -1690,7 +1689,6 @@ will be lost.
 =for apidoc_item ||PERL_MAGIC_nkeys
 =for apidoc_item ||PERL_MAGIC_nonelem
 =for apidoc_item ||PERL_MAGIC_overload_table
-=for apidoc_item ||PERL_MAGIC_pos
 =for apidoc_item ||PERL_MAGIC_qr
 =for apidoc_item ||PERL_MAGIC_regdata
 =for apidoc_item ||PERL_MAGIC_regdatum

@@ -2542,39 +2542,6 @@ Perl_magic_freearylen_p(pTHX_ SV *sv, MAGIC *mg)
 }
 
 int
-Perl_magic_getpos(pTHX_ SV *sv, MAGIC *mg)
-{
-    SV* const lsv = LvTARG(sv);
-
-    PERL_ARGS_ASSERT_MAGIC_GETPOS;
-    PERL_UNUSED_ARG(mg);
-
-    STRLEN pos;
-    if (sv_regex_global_pos_get(lsv, &pos, 0)) {
-        sv_setuv(sv, pos);
-        return 0;
-    }
-    sv_set_undef(sv);
-    return 0;
-}
-
-int
-Perl_magic_setpos(pTHX_ SV *sv, MAGIC *mg)
-{
-    SV* const lsv = LvTARG(sv);
-
-    PERL_ARGS_ASSERT_MAGIC_SETPOS;
-    PERL_UNUSED_ARG(mg);
-
-    if(SvOK(sv))
-        sv_regex_global_pos_set(lsv, SvIV(sv), 0);
-    else
-        sv_regex_global_pos_clear(lsv);
-
-    return 0;
-}
-
-int
 Perl_magic_getsubstr(pTHX_ SV *sv, MAGIC *mg)
 {
     STRLEN len;

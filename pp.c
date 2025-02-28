@@ -343,13 +343,49 @@ PP(pp_av2arylen)
     return NORMAL;
 }
 
+static void
+hook_pos_pre_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_UNUSED_VAR(mg);
+    SV * const lsv = LvTARG(sv);
+
+    STRLEN pos;
+    if(sv_regex_global_pos_get(lsv, &pos, 0))
+        sv_setuv(sv, pos);
+    else
+        sv_set_undef(sv);
+}
+
+static void
+hook_pos_post_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_UNUSED_VAR(mg);
+    SV * const lsv = LvTARG(sv);
+
+    if(SvOK(sv))
+        sv_regex_global_pos_set(lsv, SvIV(sv), 0);
+    else
+        sv_regex_global_pos_clear(lsv);
+}
+
+static const struct ScalarVarHookFunctions hooks_pos = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .debug_name = "pos",
+
+    .pre_get  = &hook_pos_pre_get,
+    .post_set = &hook_pos_post_set,
+};
+
 PP(pp_pos)
 {
     SV *sv = *PL_stack_sp;
 
     if (PL_op->op_flags & OPf_MOD || LVRET) {
+        /* TODO: Do we really need SVt_PVLV here? A simple scalar would do now
+         * that we're using hooks, and put the target in HkAUXSV */
         SV * const ret = newSV_type_mortal(SVt_PVLV);/* Not TARG RT#67838 */
-        sv_magic(ret, NULL, PERL_MAGIC_pos, NULL, 0);
+        sv_hook_add(ret, (const struct HookFunctions *)&hooks_pos, 0, NULL);
         LvTYPE(ret) = '.';
         LvTARG(ret) = SvREFCNT_inc_simple(sv);
         rpp_replace_1_1_NN(ret);    /* no SvSETMAGIC */

@@ -12,8 +12,6 @@
       "/* arylen '#' Array length ($#ary) */" },
     { '%', "magic_vtable_max | PERL_MAGIC_VALUE_MAGIC",
       "/* rhash '%' Extra data for restricted hashes */" },
-    { '.', "want_vtbl_pos | PERL_MAGIC_VALUE_MAGIC",
-      "/* pos '.' pos() lvalue */" },
     { ':', "magic_vtable_max | PERL_MAGIC_VALUE_MAGIC",
       "/* symtab ':' Extra data for symbol tables */" },
     { '<', "want_vtbl_backref | PERL_MAGIC_READONLY_ACCEPTABLE | PERL_MAGIC_VALUE_MAGIC",

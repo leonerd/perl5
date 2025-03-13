@@ -159,9 +159,11 @@ Perl_mro_meta_init(pTHX_ HV* stash)
     PERL_ARGS_ASSERT_MRO_META_INIT;
     PERL_UNUSED_CONTEXT;
     assert(HvAUX(stash));
-    assert(!(HvAUX(stash)->xhv_mro_meta));
+    if(!HvHasSTASHAUX(stash))
+        Perl_hv_stashauxalloc(aTHX_ stash);
+    assert(!(HvSTASHAUX(stash)->mro_meta));
     Newxz(newmeta, 1, struct mro_meta);
-    HvAUX(stash)->xhv_mro_meta = newmeta;
+    HvSTASHAUX(stash)->mro_meta = newmeta;
     newmeta->cache_gen = 1;
     newmeta->pkg_gen = 1;
     newmeta->mro_which = &dfs_alg;

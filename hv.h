@@ -117,6 +117,8 @@ struct suspended_compcv;
 
 /* the additional set of fields used by HVs used as STASHes */
 struct xpvhv_stashaux {
+    struct mro_meta *mro_meta;
+
     HV          *class_superclass;         /* STASH of the :isa() base class */
     CV          *class_initfields_cv;      /* CV for running initfields */
     AV          *class_adjust_blocks;      /* CVs containing the ADJUST blocks */
@@ -141,7 +143,6 @@ struct xpvhv_aux {
  * tive, then xhv_name_u.xhvnameu_names[1] is the first effective name.
  */
     I32		xhv_name_count;
-    struct mro_meta *xhv_mro_meta;
 #ifdef PERL_HASH_RANDOMIZE_KEYS
     U32         xhv_rand;       /* random value for hash traversal */
     U32         xhv_last_rand;  /* last random value for hash traversal,
@@ -372,8 +373,8 @@ check whether it is valid to call C<HvSTASHAUX()>.
 
 /* Checking that hv is a valid package stash is the
    caller's responsibility */
-#define HvMROMETA(hv) (HvAUX(hv)->xhv_mro_meta \
-                       ? HvAUX(hv)->xhv_mro_meta \
+#define HvMROMETA(hv) ((HvHasSTASHAUX(hv) && HvSTASHAUX(hv)->mro_meta) \
+                       ? HvSTASHAUX(hv)->mro_meta \
                        : Perl_mro_meta_init(aTHX_ hv))
 
 #define HvNAME_HEK_NN(hv)			  \

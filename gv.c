@@ -889,9 +889,9 @@ S_gv_fetchmeth_internal(pTHX_ HV* stash, SV* meth, const char* name, STRLEN len,
     topgen_cmp = HvMROMETA(stash)->cache_gen + PL_sub_generation;
 
     if (flags & GV_SUPER) {
-        if (!HvAUX(stash)->xhv_mro_meta->super)
-            HvAUX(stash)->xhv_mro_meta->super = newHV();
-        cachestash = HvAUX(stash)->xhv_mro_meta->super;
+        if (!HvMROMETA(stash)->super)
+            HvMROMETA(stash)->super = newHV();
+        cachestash = HvMROMETA(stash)->super;
     }
     else cachestash = stash;
 

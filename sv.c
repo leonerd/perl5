@@ -1319,15 +1319,13 @@ Perl_hv_stashauxalloc(pTHX_ HV *hv)
 {
     PERL_ARGS_ASSERT_HV_STASHAUXALLOC;
     assert(!HvHasSTASHAUX(hv));
-    /* For now we know we'll only ever be asked to upgrade something that
-     * already has the basic HvAUX structure. But in future that may not
-     * hold
-     */
-    assert(HvHasAUX(hv));
 
     /* TODO: Eventually this storage wants to be merged into the regular
      * xpvhv_aux structure. For now we'll keep it elsewhere just to allow
      * the API to be provided. We can make it more efficient later */
+
+    if(!HvHasAUX(hv))
+        Perl_hv_auxalloc(aTHX_ hv);
 
     struct xpvhv_stashaux *stashaux;
     Newxz(stashaux, 1, struct xpvhv_stashaux);
@@ -14671,10 +14669,6 @@ S_sv_dup_hvaux(pTHX_ const SV *const ssv, SV *dsv, CLONE_PARAMS *const param)
                         saux->xhv_backreferences, param))
             : 0;
 
-    daux->xhv_mro_meta = saux->xhv_mro_meta
-        ? mro_meta_dup(saux->xhv_mro_meta, param)
-        : 0;
-
     /* Record stashes for possible cloning in Perl_clone(). */
     if (HvNAME(ssv))
         av_push(param->stashes, dsv);
@@ -14687,6 +14681,10 @@ S_sv_dup_hvaux(pTHX_ const SV *const ssv, SV *dsv, CLONE_PARAMS *const param)
         HvSTASHAUX(dsv) = dstashaux;
 
         *dstashaux = *sstashaux;
+
+        dstashaux->mro_meta = sstashaux->mro_meta
+            ? mro_meta_dup(sstashaux->mro_meta, param)
+            : 0;
 
         if (HvSTASH_IS_CLASS(ssv)) {
             dstashaux->class_superclass    = hv_dup_inc(sstashaux->class_superclass,    param);

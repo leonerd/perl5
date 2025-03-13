@@ -2361,25 +2361,26 @@ Perl_hv_undef_flags(pTHX_ HV *hv, U32 flags)
         }
         hv_name_set(hv, NULL, 0, flags);
       }
-      if((meta = aux->xhv_mro_meta)) {
-        if (meta->mro_linear_all) {
-            SvREFCNT_dec_NN(meta->mro_linear_all);
-            /* mro_linear_current is just acting as a shortcut pointer,
-               hence the else.  */
-        }
-        else
-            /* Only the current MRO is stored, so this owns the data.
-             */
-            SvREFCNT_dec(meta->mro_linear_current);
-        SvREFCNT_dec(meta->mro_nextmethod);
-        SvREFCNT_dec(meta->isa);
-        SvREFCNT_dec(meta->super);
-        Safefree(meta);
-        aux->xhv_mro_meta = NULL;
-      }
 
       if (HvHasSTASHAUX(hv)) {
           struct xpvhv_stashaux *stashaux = HvSTASHAUX(hv);
+
+          if((meta = stashaux->mro_meta)) {
+            if (meta->mro_linear_all) {
+                SvREFCNT_dec_NN(meta->mro_linear_all);
+                /* mro_linear_current is just acting as a shortcut pointer,
+                   hence the else.  */
+            }
+            else
+                /* Only the current MRO is stored, so this owns the data.
+                 */
+                SvREFCNT_dec(meta->mro_linear_current);
+            SvREFCNT_dec(meta->mro_nextmethod);
+            SvREFCNT_dec(meta->isa);
+            SvREFCNT_dec(meta->super);
+            Safefree(meta);
+            stashaux->mro_meta = NULL;
+          }
 
           if(HvSTASH_IS_CLASS(hv)) {
               SvREFCNT_dec(stashaux->class_superclass);
@@ -2499,7 +2500,6 @@ S_hv_auxinit(pTHX_ HV *hv) {
     iter->xhv_name_u.xhvnameu_name = 0;
     iter->xhv_name_count = 0;
     iter->xhv_backreferences = 0;
-    iter->xhv_mro_meta = NULL;
     iter->xhv_aux_flags = 0;
     return iter;
 }

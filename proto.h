@@ -2112,12 +2112,6 @@ Perl_magic_freearylen_p(pTHX_ SV *sv, MAGIC *mg)
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
-Perl_magic_freedestruct(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_FREEDESTRUCT     \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
 Perl_magic_freemglob(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_FREEMGLOB        \

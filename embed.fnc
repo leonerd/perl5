@@ -2034,9 +2034,6 @@ p	|int	|magic_existspack					\
 p	|int	|magic_freearylen_p					\
 				|NN SV *sv				\
 				|NN MAGIC *mg
-dp	|int	|magic_freedestruct					\
-				|NN SV *sv				\
-				|NN MAGIC *mg
 p	|int	|magic_freemglob|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_freeovrld|NN SV *sv				\

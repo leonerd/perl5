@@ -1942,64 +1942,32 @@ block>. If you are looking for a mechanism to trigger a function at the
 end of the B<current pseudo block> you should look at
 L<perlapi/C<SAVEDESTRUCTOR_X>> instead of this function.
 
-=for apidoc magic_freedestruct
-
-This function is called via magic to implement the
-C<mortal_destructor_sv()> and C<mortal_destructor_x()> functions. It
-should not be called directly and has no user serviceable parts.
-
 =cut
 */
 
-void
-Perl_mortal_destructor_sv(pTHX_ SV *coderef, SV *args) {
-    PERL_ARGS_ASSERT_MORTAL_DESTRUCTOR_SV;
-    assert(
-        (SvROK(coderef) && SvTYPE(SvRV(coderef)) == SVt_PVCV) /* perl coderef */
-         ||
-        (SvIOK(coderef) && !SvROK(coderef))                  /* C function ref */
-    );
-    SV *variable = newSV_type_mortal(SVt_IV);
-    (void)sv_magicext(variable, coderef, PERL_MAGIC_destruct,
-                      &PL_vtbl_destruct, (char *)args, args ? HEf_SVKEY : 0);
-}
+static void
+mortal_destructor_free(pTHX_ SV *sv, MAGIC *mg)
+{
+    if (PL_phase == PERL_PHASE_DESTRUCT) {
+        warn("Can't call destructor for 0x%p in global destruction\n", sv);
+        return;
+    }
 
-
-void
-Perl_mortal_svfunc_x(pTHX_ SVFUNC_t f, SV *sv) {
-    PERL_ARGS_ASSERT_MORTAL_SVFUNC_X;
-    SV *sviv = newSViv(PTR2IV(f));
-    mortal_destructor_sv(sviv,sv);
-}
-
-
-int
-Perl_magic_freedestruct(pTHX_ SV* sv, MAGIC* mg) {
-    PERL_ARGS_ASSERT_MAGIC_FREEDESTRUCT;
-    dSP;
+    SV *coderef = HkAUXSV(mg);
     union {
         SV   *sv;
         AV   *av;
-        char *pv;
     } args_any;
-    SV *coderef;
-
-    IV nargs = 0;
-    if (PL_phase == PERL_PHASE_DESTRUCT) {
-        warn("Can't call destructor for 0x%p in global destruction\n", sv);
-        return 1;
-    }
-
-    args_any.pv = mg->mg_ptr;
-    coderef = mg->mg_obj;
+    args_any.sv = sv_2mortal(*HkUSERSTRUCT(mg, SV **));
 
     /* Deal with C function destructor */
     if (SvTYPE(coderef) == SVt_IV && !SvROK(coderef)) {
         SVFUNC_t f = INT2PTR(SVFUNC_t, SvIV(coderef));
         (f)(aTHX_ args_any.sv);
-        return 0;
+        return;
     }
 
+    IV nargs = 0;
     if (args_any.sv) {
         if (SvTYPE(args_any.sv) == SVt_PVAV) {
             nargs = av_len(args_any.av) + 1;
@@ -2007,6 +1975,8 @@ Perl_magic_freedestruct(pTHX_ SV* sv, MAGIC* mg) {
             nargs = 1;
         }
     }
+
+    dSP;
     PUSHSTACKi(PERLSI_MAGIC);
     ENTER_with_name("call_freedestruct");
     SAVETMPS;
@@ -2029,7 +1999,38 @@ Perl_magic_freedestruct(pTHX_ SV* sv, MAGIC* mg) {
     FREETMPS;
     LEAVE_with_name("call_freedestruct");
     POPSTACK;
-    return 0;
+}
+
+static const struct HookFunctions mortal_destructor_funcs = {
+    .ver   = 12345, /* TODO: PERL_API_VER */
+    .shape = HKs_BASE,
+    .debug_name = "mortal_destructor",
+    .user_size = sizeof(SV *),
+
+    .free  = &mortal_destructor_free,
+};
+
+void
+Perl_mortal_destructor_sv(pTHX_ SV *coderef, SV *args) {
+    PERL_ARGS_ASSERT_MORTAL_DESTRUCTOR_SV;
+    assert(
+        (SvROK(coderef) && SvTYPE(SvRV(coderef)) == SVt_PVCV) /* perl coderef */
+         ||
+        (SvIOK(coderef) && !SvROK(coderef))                  /* C function ref */
+    );
+    SV *variable = newSV_type_mortal(SVt_IV);
+
+    MAGIC *mg = sv_hook_add(variable, &mortal_destructor_funcs, 0,
+        SvREFCNT_inc_NN(coderef));
+    *HkUSERSTRUCT(mg, SV **) = SvREFCNT_inc(args);
+}
+
+
+void
+Perl_mortal_svfunc_x(pTHX_ SVFUNC_t f, SV *sv) {
+    PERL_ARGS_ASSERT_MORTAL_SVFUNC_X;
+    SV *sviv = newSViv(PTR2IV(f));
+    mortal_destructor_sv(sviv,sv);
 }
 
 

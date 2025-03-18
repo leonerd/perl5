@@ -1649,7 +1649,6 @@ will be lost.
  V  PERL_MAGIC_vstring        (none)         SV was vstring literal
  v  PERL_MAGIC_vec            vtbl_vec       vec() lvalue
  w  PERL_MAGIC_utf8           vtbl_utf8      Cached UTF-8 information
- X  PERL_MAGIC_destruct       vtbl_destruct  destruct callback
  x  PERL_MAGIC_substr         vtbl_substr    substr() lvalue
  Y  PERL_MAGIC_nonelem        vtbl_nonelem   Array element that does not
                                              exist
@@ -1679,7 +1678,6 @@ will be lost.
 =for apidoc_item ||PERL_MAGIC_dbline
 =for apidoc_item ||PERL_MAGIC_debugvar
 =for apidoc_item ||PERL_MAGIC_defelem
-=for apidoc_item ||PERL_MAGIC_destruct
 =for apidoc_item ||PERL_MAGIC_env
 =for apidoc_item ||PERL_MAGIC_envelem
 =for apidoc_item ||PERL_MAGIC_ext

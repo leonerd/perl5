@@ -3481,21 +3481,33 @@ S_share_hek_flags(pTHX_ const char *str, STRLEN len, U32 hash, int flags)
     return HeKEY_hek(entry);
 }
 
+/* Most hashes are not restricted hashes. For the rare case of a restricted
+ * hash, we need to keep a count of placeholders.
+ * Rather than add an entire 4 bytes to every HvAUX structure, we'll use a
+ * Hook to attach that storage for those rare cases we need it. We can use
+ * the HkPTRLEN field, since we don't use HkPTR here.
+ *
+ * This hook has no interesting behaviour, it exists purely for its unique
+ * address identity.
+ */
+
+static const struct HookFunctions rhash_placeholder_hook = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .debug_name = "rhash_placeholder",
+
+    /* no flags, no funcs */
+};
+
 SSize_t *
 Perl_hv_placeholders_p(pTHX_ HV *hv)
 {
-    MAGIC *mg = mg_find((const SV *)hv, PERL_MAGIC_rhash);
-
     PERL_ARGS_ASSERT_HV_PLACEHOLDERS_P;
 
-    if (!mg) {
-        mg = sv_magicext(MUTABLE_SV(hv), 0, PERL_MAGIC_rhash, 0, 0, 0);
+    MAGIC *mg = sv_hook_find_or_add((SV *)hv, &rhash_placeholder_hook);
 
-        if (!mg) {
-            die("panic: hv_placeholders_p");
-        }
-    }
-    return &(mg->mg_len);
+    /* TODO: are we allowed to use HkPTRLEN as an lvalue? */
+    return &(HkPTRLEN(mg));
 }
 
 /*
@@ -3509,12 +3521,12 @@ Implements C<HvPLACEHOLDERS_get>, which you should use instead.
 I32
 Perl_hv_placeholders_get(pTHX_ const HV *hv)
 {
-    MAGIC * const mg = mg_find((const SV *)hv, PERL_MAGIC_rhash);
-
     PERL_ARGS_ASSERT_HV_PLACEHOLDERS_GET;
     PERL_UNUSED_CONTEXT;
 
-    return mg ? mg->mg_len : 0;
+    MAGIC *mg = sv_hook_find_by_funcs((SV *)hv, &rhash_placeholder_hook);
+
+    return mg ? HkPTRLEN(mg) : 0;
 }
 
 /*
@@ -3528,17 +3540,19 @@ Implements C<HvPLACEHOLDERS_set>, which you should use instead.
 void
 Perl_hv_placeholders_set(pTHX_ HV *hv, I32 ph)
 {
-    MAGIC * const mg = mg_find((const SV *)hv, PERL_MAGIC_rhash);
-
     PERL_ARGS_ASSERT_HV_PLACEHOLDERS_SET;
 
-    if (mg) {
-        mg->mg_len = ph;
-    } else if (ph) {
-        if (!sv_magicext(MUTABLE_SV(hv), 0, PERL_MAGIC_rhash, 0, 0, ph))
-            die("panic: hv_placeholders_set");
+    MAGIC *mg = sv_hook_find_by_funcs((SV *)hv, &rhash_placeholder_hook);
+    if (mg)
+        /* Don't delete it even if zero because likely we'll become nonzero
+         * again at some future time anyway
+         */
+        HkPTRLEN_set(mg, ph);
+    else if (ph != 0) {
+        mg = sv_hook_add((SV *)hv, &rhash_placeholder_hook, 0, NULL);
+        HkPTRLEN_set(mg, ph);
     }
-    /* else we don't need to add magic to record 0 placeholders.  */
+    /* else we don't need to add Hook to record 0 placeholders.  */
 }
 
 STATIC SV *

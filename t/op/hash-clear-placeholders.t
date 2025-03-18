@@ -41,16 +41,19 @@ my $got = <$fh>;
 
 my ($first, $second, $third) = split $sep, $got;
 
-like($first, qr/\bPERL_MAGIC_rhash\b/, 'first dump has rhash magic');
-like($second, qr/\bPERL_MAGIC_rhash\b/, 'second dump has rhash magic');
-like($third, qr/\bPERL_MAGIC_rhash\b/, 'third dump has rhash magic');
+# TODO(leonerd): These tests are quite fragile as they are checking the output
+#   of sv_dump() against various regexps.
+
+like($first, qr/\bFUNCS = rhash_placeholder\b/, 'first dump has rhash hook');
+like($second, qr/\bFUNCS = rhash_placeholder\b/, 'second dump has rhash hook');
+like($third, qr/\bFUNCS = rhash_placeholder\b/, 'third dump has rhash hook');
 
 like($first, qr/\bHASKFLAGS\b/, 'first dump has HASHKFLAGS set');
 like($second, qr/\bHASKFLAGS\b/, 'second dump has HASHKFLAGS set');
 unlike($third, qr/\bHASKFLAGS\b/, 'third dump has HASHKFLAGS clear');
 
-like($first, qr/\bMG_LEN = 1\b/, 'first dump has 1 placeholder');
-unlike($second, qr/\bMG_LEN\b/, 'second dump has 0 placeholders');
-unlike($third, qr/\bMG_LEN\b/, 'third dump has 0 placeholders');
+like($first, qr/\n      PTRLEN = 1/, 'first dump has 1 placeholder');
+unlike($second, qr/\n      PTRLEN\b/, 'second dump has 0 placeholders');
+unlike($third, qr/\n      PTRLEN\b/, 'third dump has 0 placeholders');
 
 done_testing();

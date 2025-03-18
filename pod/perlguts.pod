@@ -1602,8 +1602,6 @@ will be lost.
  --------------------------   ------         -------------
  \0 PERL_MAGIC_sv             vtbl_sv        Special scalar variable
  #  PERL_MAGIC_arylen         vtbl_arylen    Array length ($#ary)
- %  PERL_MAGIC_rhash          (none)         Extra data for restricted
-                                             hashes
  :  PERL_MAGIC_symtab         (none)         Extra data for symbol
                                              tables
  <  PERL_MAGIC_backref        vtbl_backref   For weak ref data
@@ -1693,7 +1691,6 @@ will be lost.
 =for apidoc_item ||PERL_MAGIC_regdata
 =for apidoc_item ||PERL_MAGIC_regdatum
 =for apidoc_item ||PERL_MAGIC_regex_global
-=for apidoc_item ||PERL_MAGIC_rhash
 =for apidoc_item ||PERL_MAGIC_shared
 =for apidoc_item ||PERL_MAGIC_shared_scalar
 =for apidoc_item ||PERL_MAGIC_sig

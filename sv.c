@@ -11329,21 +11329,7 @@ Perl_sv_resetpvn(pTHX_ const char *s, STRLEN len, HV * const stash)
         return;
 
     if (!s) {		/* reset ?? searches */
-        MAGIC * const mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
-        if (mg && mg->mg_len) {
-            const U32 count = mg->mg_len / sizeof(PMOP**);
-            PMOP **pmp = (PMOP**) mg->mg_ptr;
-            PMOP *const *const end = pmp + count;
-
-            while (pmp < end) {
-#ifdef USE_ITHREADS
-                SvREADONLY_off(PL_regex_pad[(*pmp)->op_pmoffset]);
-#else
-                (*pmp)->op_pmflags &= ~PMf_USED;
-#endif
-                ++pmp;
-            }
-        }
+        stash_reset_pmops(stash);
         return;
     }
 

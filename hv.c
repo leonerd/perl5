@@ -4183,6 +4183,78 @@ Perl_hv_assert(pTHX_ HV *hv)
 
 #endif
 
+void
+Perl_stash_add_pmop(pTHX_ HV *stash, PMOP *o)
+{
+    PERL_ARGS_ASSERT_STASH_ADD_PMOP;
+
+    MAGIC *mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
+    if (!mg) {
+        mg = sv_magicext(MUTABLE_SV(stash), 0, PERL_MAGIC_symtab, 0, 0, 0);
+    }
+    U32 elements = mg->mg_len / sizeof(PMOP**);
+    Renewc(mg->mg_ptr, elements + 1, PMOP*, char);
+    ((PMOP**)mg->mg_ptr) [elements++] = o;
+    mg->mg_len = elements * sizeof(PMOP**);
+    PmopSTASH_set(o, stash);
+}
+
+void
+Perl_stash_forget_pmop(pTHX_ HV *stash, PMOP *o)
+{
+    PERL_ARGS_ASSERT_STASH_FORGET_PMOP;
+
+    if(SvIS_FREED(stash) || !SvMAGICAL(stash))
+        return;
+
+    MAGIC * const mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
+    if(!mg)
+        return;
+
+    PMOP **const array = (PMOP**) mg->mg_ptr;
+    U32 count = mg->mg_len / sizeof(PMOP**);
+    U32 i = count;
+
+    while (i--) {
+        if (array[i] == o) {
+            /* Found it. Move the entry at the end to overwrite it.  */
+            array[i] = array[--count];
+            mg->mg_len = count * sizeof(PMOP**);
+            /* Could realloc smaller at this point always, but probably
+               not worth it. Probably worth free()ing if we're the
+               last.  */
+            if(!count) {
+                Safefree(mg->mg_ptr);
+                mg->mg_ptr = NULL;
+            }
+            break;
+        }
+    }
+}
+
+void
+Perl_stash_reset_pmops(pTHX_ HV *stash)
+{
+    PERL_ARGS_ASSERT_STASH_RESET_PMOPS;
+
+    MAGIC * const mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
+    if(!mg || !mg->mg_len)
+        return;
+
+    const U32 count = mg->mg_len / sizeof(PMOP**);
+    PMOP **pmp = (PMOP**) mg->mg_ptr;
+    PMOP *const *const end = pmp + count;
+
+    while (pmp < end) {
+#ifdef USE_ITHREADS
+        SvREADONLY_off(PL_regex_pad[(*pmp)->op_pmoffset]);
+#else
+        (*pmp)->op_pmflags &= ~PMf_USED;
+#endif
+        ++pmp;
+    }
+}
+
 /*
  * ex: set ts=8 sts=4 sw=4 et:
  */

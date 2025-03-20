@@ -1349,6 +1349,12 @@
 #       define new_he()                         S_new_he(aTHX)
 #     endif
 #   endif /* defined(PERL_IN_HV_C) */
+#   if defined(PERL_IN_HV_C) || defined(PERL_IN_OP_C) || \
+       defined(PERL_IN_SV_C) || defined(PERL_IN_TOKE_C)
+#     define stash_add_pmop(a,b)                Perl_stash_add_pmop(aTHX_ a,b)
+#     define stash_forget_pmop(a,b)             Perl_stash_forget_pmop(aTHX_ a,b)
+#     define stash_reset_pmops(a)               Perl_stash_reset_pmops(aTHX_ a)
+#   endif
 #   if defined(PERL_IN_LOCALE_C)
 #     define get_locale_string_utf8ness_i(a,b,c,d) S_get_locale_string_utf8ness_i(aTHX_ a,b,c,d)
 #     define ints_to_tm(a,b,c,d,e,f,g,h,i)      S_ints_to_tm(aTHX_ a,b,c,d,e,f,g,h,i)

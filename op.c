@@ -1422,34 +1422,12 @@ S_cop_free(pTHX_ COP* cop)
 STATIC void
 S_forget_pmop(pTHX_ PMOP *const o)
 {
-    HV * const pmstash = PmopSTASH(o);
-
     PERL_ARGS_ASSERT_FORGET_PMOP;
 
-    if (pmstash && !SvIS_FREED(pmstash) && SvMAGICAL(pmstash)) {
-        MAGIC * const mg = mg_find((const SV *)pmstash, PERL_MAGIC_symtab);
-        if (mg) {
-            PMOP **const array = (PMOP**) mg->mg_ptr;
-            U32 count = mg->mg_len / sizeof(PMOP**);
-            U32 i = count;
+    HV * const pmstash = PmopSTASH(o);
+    if(pmstash)
+        stash_forget_pmop(pmstash, o);
 
-            while (i--) {
-                if (array[i] == o) {
-                    /* Found it. Move the entry at the end to overwrite it.  */
-                    array[i] = array[--count];
-                    mg->mg_len = count * sizeof(PMOP**);
-                    /* Could realloc smaller at this point always, but probably
-                       not worth it. Probably worth free()ing if we're the
-                       last.  */
-                    if(!count) {
-                        Safefree(mg->mg_ptr);
-                        mg->mg_ptr = NULL;
-                    }
-                    break;
-                }
-            }
-        }
-    }
     if (PL_curpm == o)
         PL_curpm = NULL;
 }

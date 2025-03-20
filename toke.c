@@ -11232,17 +11232,7 @@ S_scan_pat(pTHX_ char *start, I32 type)
            matches.  */
         assert(type != OP_TRANS);
         if (PL_curstash) {
-            MAGIC *mg = mg_find((const SV *)PL_curstash, PERL_MAGIC_symtab);
-            U32 elements;
-            if (!mg) {
-                mg = sv_magicext(MUTABLE_SV(PL_curstash), 0, PERL_MAGIC_symtab, 0, 0,
-                                 0);
-            }
-            elements = mg->mg_len / sizeof(PMOP**);
-            Renewc(mg->mg_ptr, elements + 1, PMOP*, char);
-            ((PMOP**)mg->mg_ptr) [elements++] = pm;
-            mg->mg_len = elements * sizeof(PMOP**);
-            PmopSTASH_set(pm,PL_curstash);
+            stash_add_pmop(PL_curstash, pm);
         }
     }
 

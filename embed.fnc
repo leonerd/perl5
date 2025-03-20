@@ -4798,6 +4798,16 @@ opx	|void	|sv_kill_backrefs					\
 				|NN SV * const sv			\
 				|NULLOK NOCHECK AV * const av
 #endif
+#if defined(PERL_IN_HV_C) || defined(PERL_IN_OP_C) || \
+    defined(PERL_IN_SV_C) || defined(PERL_IN_TOKE_C)
+p	|void	|stash_add_pmop |NN HV *stash				\
+				|NN PMOP *o
+p	|void	|stash_forget_pmop					\
+				|NN HV *stash				\
+				|NN PMOP *o
+p	|void	|stash_reset_pmops					\
+				|NN HV *stash
+#endif
 #if defined(PERL_IN_HV_C) || defined(PERL_IN_SV_C)
 op	|SV *	|hfree_next_entry					\
 				|NN HV *hv				\

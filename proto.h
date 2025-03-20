@@ -7169,6 +7169,28 @@ Perl_sv_kill_backrefs(pTHX_ SV * const sv, AV * const av)
         assert(sv)
 
 #endif
+#if defined(PERL_IN_HV_C) || defined(PERL_IN_OP_C) || \
+    defined(PERL_IN_SV_C) || defined(PERL_IN_TOKE_C)
+PERL_CALLCONV void
+Perl_stash_add_pmop(pTHX_ HV *stash, PMOP *o)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_STASH_ADD_PMOP        \
+        assert(stash); assert(SvTYPE(stash) == SVt_PVHV); assert(o)
+
+PERL_CALLCONV void
+Perl_stash_forget_pmop(pTHX_ HV *stash, PMOP *o)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_STASH_FORGET_PMOP     \
+        assert(stash); assert(SvTYPE(stash) == SVt_PVHV); assert(o)
+
+PERL_CALLCONV void
+Perl_stash_reset_pmops(pTHX_ HV *stash)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_STASH_RESET_PMOPS     \
+        assert(stash); assert(SvTYPE(stash) == SVt_PVHV)
+
+#endif /* defined(PERL_IN_HV_C) || defined(PERL_IN_OP_C) ||
+          defined(PERL_IN_SV_C) || defined(PERL_IN_TOKE_C) */
 #if defined(PERL_IN_HV_C) || defined(PERL_IN_SV_C)
 PERL_CALLCONV SV *
 Perl_hfree_next_entry(pTHX_ HV *hv, STRLEN *indexp)

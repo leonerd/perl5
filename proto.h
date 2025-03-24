@@ -6389,6 +6389,14 @@ S_get_aux_mg(pTHX_ AV *av);
         assert(av); assert(SvTYPE(av) == SVt_PVAV)
 
 #endif
+#if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
+PERL_CALLCONV void
+Perl_av_flip_arylen_weakrefs(pTHX_ AV *av)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_AV_FLIP_ARYLEN_WEAKREFS \
+        assert(av); assert(SvTYPE(av) == SVt_PVAV)
+
+#endif
 #if defined(PERL_IN_BUILTIN_C) || defined(PERL_IN_OP_C)
 PERL_CALLCONV void
 Perl_XS_builtin_indexed(pTHX_ CV *cv)

@@ -1245,6 +1245,25 @@ Perl_av_nonelem(pTHX_ AV *av, SSize_t ix) {
     return sv;
 }
 
+void
+Perl_av_flip_arylen_weakrefs(pTHX_ AV *av)
+{
+    PERL_ARGS_ASSERT_AV_FLIP_ARYLEN_WEAKREFS;
+
+    MAGIC *mg_av = mg_find((const SV *)av, PERL_MAGIC_arylen_p);
+    assert(mg_av);
+
+    SV *arylen_sv = mg_av->mg_obj;
+
+    MAGIC *mg_al = mg_find(arylen_sv, PERL_MAGIC_arylen);
+    assert(mg_al);
+
+    assert(  mg_av->mg_flags & MGf_REFCOUNTED);
+    assert(!(mg_al->mg_flags & MGf_REFCOUNTED));
+    mg_av->mg_flags &= ~MGf_REFCOUNTED;
+    mg_al->mg_flags |=  MGf_REFCOUNTED;
+}
+
 /*
  * ex: set ts=8 sts=4 sw=4 et:
  */

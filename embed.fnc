@@ -4459,6 +4459,10 @@ i	|bool	|PerlEnv_putenv |NN char *str
 #if defined(PERL_IN_AV_C)
 S	|MAGIC *|get_aux_mg	|NN AV *av
 #endif
+#if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
+p	|void	|av_flip_arylen_weakrefs				\
+				|NN AV *av
+#endif
 #if defined(PERL_IN_BUILTIN_C) || defined(PERL_IN_OP_C)
 p	|void	|finish_export_lexical
 p	|void	|import_builtin_bundle					\

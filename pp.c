@@ -322,14 +322,7 @@ PP(pp_av2arylen)
              *
              * XXX perhaps this should be done even for SvREFCNT(av)>1 ?
              */
-            MAGIC *mg_av = mg_find((const SV *)av, PERL_MAGIC_arylen_p);
-            MAGIC *mg_al = mg_find(sv_al,          PERL_MAGIC_arylen);
-            assert(mg_av);
-            assert(mg_al);
-            assert(  mg_av->mg_flags & MGf_REFCOUNTED);
-            assert(!(mg_al->mg_flags & MGf_REFCOUNTED));
-            mg_av->mg_flags &= ~MGf_REFCOUNTED;
-            mg_al->mg_flags |=  MGf_REFCOUNTED;
+            av_flip_arylen_weakrefs(av);
             *PL_stack_sp = sv_al;
         }
         else

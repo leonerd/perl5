@@ -1229,6 +1229,9 @@
 #   if defined(PERL_IN_AV_C)
 #     define get_aux_mg(a)                      S_get_aux_mg(aTHX_ a)
 #   endif
+#   if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
+#     define av_flip_arylen_weakrefs(a)         Perl_av_flip_arylen_weakrefs(aTHX_ a)
+#   endif
 #   if defined(PERL_IN_BUILTIN_C) || defined(PERL_IN_OP_C)
 #     define XS_builtin_indexed(a)              Perl_XS_builtin_indexed(aTHX_ a)
 #     define finish_export_lexical()            Perl_finish_export_lexical(aTHX)

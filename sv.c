@@ -1314,6 +1314,30 @@ Perl_hv_auxalloc(pTHX_ HV *hv) {
     return HvAUX(hv);
 }
 
+struct xpvhv_stashaux *
+Perl_hv_stashauxalloc(pTHX_ HV *hv)
+{
+    PERL_ARGS_ASSERT_HV_STASHAUXALLOC;
+    assert(!HvHasSTASHAUX(hv));
+    /* For now we know we'll only ever be asked to upgrade something that
+     * already has the basic HvAUX structure. But in future that may not
+     * hold
+     */
+    assert(HvHasAUX(hv));
+
+    /* TODO: Eventually this storage wants to be merged into the regular
+     * xpvhv_aux structure. For now we'll keep it elsewhere just to allow
+     * the API to be provided. We can make it more efficient later */
+
+    struct xpvhv_stashaux *stashaux;
+    Newxz(stashaux, 1, struct xpvhv_stashaux);
+
+    HvSTASHAUX(hv) = stashaux;
+    HvAUX(hv)->xhv_aux_flags |= HvAUXf_IS_STASH;
+
+    return stashaux;
+}
+
 /*
 =for apidoc sv_backoff
 
@@ -14655,18 +14679,27 @@ S_sv_dup_hvaux(pTHX_ const SV *const ssv, SV *dsv, CLONE_PARAMS *const param)
     if (HvNAME(ssv))
         av_push(param->stashes, dsv);
 
-    if (HvSTASH_IS_CLASS(ssv)) {
-        daux->xhv_class_superclass    = hv_dup_inc(saux->xhv_class_superclass,    param);
-        daux->xhv_class_initfields_cv = cv_dup_inc(saux->xhv_class_initfields_cv, param);
-        daux->xhv_class_adjust_blocks = av_dup_inc(saux->xhv_class_adjust_blocks, param);
-        daux->xhv_class_fields        = padnamelist_dup_inc(saux->xhv_class_fields, param);
-        daux->xhv_class_next_fieldix  = saux->xhv_class_next_fieldix;
-        daux->xhv_class_param_map     = hv_dup_inc(saux->xhv_class_param_map,     param);
+    if (HvHasSTASHAUX(ssv)) {
+        struct xpvhv_stashaux *sstashaux = HvSTASHAUX(ssv);
 
-        /* TODO: This does mean that we can't compile more `field` expressions
-         * in the cloned thread, but surely we're done with compiletime now..?
-         */
-        daux->xhv_class_suspended_initfields_compcv = NULL;
+        struct xpvhv_stashaux *dstashaux;
+        Newx(dstashaux, 1, struct xpvhv_stashaux);
+        HvSTASHAUX(dsv) = dstashaux;
+
+        *dstashaux = *sstashaux;
+
+        if (HvSTASH_IS_CLASS(ssv)) {
+            dstashaux->class_superclass    = hv_dup_inc(sstashaux->class_superclass,    param);
+            dstashaux->class_initfields_cv = cv_dup_inc(sstashaux->class_initfields_cv, param);
+            dstashaux->class_adjust_blocks = av_dup_inc(sstashaux->class_adjust_blocks, param);
+            dstashaux->class_fields        = padnamelist_dup_inc(sstashaux->class_fields, param);
+            dstashaux->class_param_map     = hv_dup_inc(sstashaux->class_param_map,     param);
+
+            /* TODO: This does mean that we can't compile more `field` expressions
+             * in the cloned thread, but surely we're done with compiletime now..?
+             */
+            dstashaux->class_suspended_initfields_compcv = NULL;
+        }
     }
 }
 

@@ -2854,7 +2854,8 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
         if (nest < maxnest && ObjectFIELDS(sv)) {
             SSize_t count;
             SV **svp = ObjectFIELDS(sv);
-            PADNAME **pname = PadnamelistARRAY(HvAUX(SvSTASH(sv))->xhv_class_fields);
+            assert(HvHasSTASHAUX(SvSTASH(sv)));
+            PADNAME **pname = PadnamelistARRAY(HvSTASHAUX(SvSTASH(sv))->class_fields);
             for (count = 0;
                  count <= ObjectMAXFIELD(sv) && count < maxnest;
                  count++, svp++)

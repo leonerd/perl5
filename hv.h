@@ -115,6 +115,19 @@ union _xhvnameu {
 /* A struct defined by pad.h and used within class.c */
 struct suspended_compcv;
 
+/* the additional set of fields used by HVs used as STASHes */
+struct xpvhv_stashaux {
+    HV          *class_superclass;         /* STASH of the :isa() base class */
+    CV          *class_initfields_cv;      /* CV for running initfields */
+    AV          *class_adjust_blocks;      /* CVs containing the ADJUST blocks */
+    PADNAMELIST *class_fields;             /* PADNAMEs with PadnameIsFIELD() */
+    PADOFFSET    class_next_fieldix;
+    HV          *class_param_map;          /* Maps param names to field index stored in UV */
+
+    struct suspended_compcv
+                *class_suspended_initfields_compcv;
+};
+
 struct xpvhv_aux {
     union _xhvnameu xhv_name_u;	/* name, if a symbol table */
     AV		*xhv_backreferences; /* back references for weak references */
@@ -136,21 +149,13 @@ struct xpvhv_aux {
 #endif
     U32         xhv_aux_flags;      /* assorted extra flags */
 
-    /* The following fields are only valid if we have the flag HvAUXf_IS_CLASS */
-    HV          *xhv_class_superclass;         /* STASH of the :isa() base class */
-    CV          *xhv_class_initfields_cv;      /* CV for running initfields */
-    AV          *xhv_class_adjust_blocks;      /* CVs containing the ADJUST blocks */
-    PADNAMELIST *xhv_class_fields;             /* PADNAMEs with PadnameIsFIELD() */
-    PADOFFSET    xhv_class_next_fieldix;
-    HV          *xhv_class_param_map;          /* Maps param names to field index stored in UV */
-
-    struct suspended_compcv
-                *xhv_class_suspended_initfields_compcv;
+    struct xpvhv_stashaux *xhv_stashaux;
 };
 
 #define HvAUXf_SCAN_STASH   0x1   /* stash is being scanned by gv_check */
 #define HvAUXf_NO_DEREF     0x2   /* @{}, %{} etc (and nomethod) not present */
-#define HvAUXf_IS_CLASS     0x4   /* the package is a 'class' */
+#define HvAUXf_IS_STASH     0x4   /* aux structure has a xpvhv_stashaux */
+#define HvAUXf_IS_CLASS     0x8   /* the package is a 'class' */
 
 #define HvSTASH_IS_CLASS(hv) \
     (HvHasAUX(hv) && HvAUX(hv)->xhv_aux_flags & HvAUXf_IS_CLASS)
@@ -335,6 +340,22 @@ whether it is valid to call C<HvAUX()>.
 /* This quite intentionally does no flag checking first. That's your
    responsibility. Use HvHasAUX() first */
 #define HvAUX(hv)       (&(((struct xpvhv_with_aux*)  SvANY(hv))->xhv_aux))
+
+/*
+=for apidoc Am|bool|HvHasSTASHAUX|HV *const hv
+
+Returns true if the HV has a C<struct xpvhv_stashaux> extension. Use this to
+check whether it is valid to call C<HvSTASHAUX()>.
+
+=cut
+*/
+
+#define HvHasSTASHAUX(hv)  \
+    (HvHasAUX(hv) && HvAUX(hv)->xhv_aux_flags & HvAUXf_IS_STASH)
+
+/* This also does no flag checking first. Again, caller's responsibility */
+#define HvSTASHAUX(hv)  (HvAUX(hv)->xhv_stashaux)
+
 #define HvRITER(hv)	(*Perl_hv_riter_p(aTHX_ MUTABLE_HV(hv)))
 #define HvEITER(hv)	(*Perl_hv_eiter_p(aTHX_ MUTABLE_HV(hv)))
 #define HvRITER_set(hv,r)	Perl_hv_riter_set(aTHX_ MUTABLE_HV(hv), r)

@@ -137,13 +137,13 @@ XS(injected_constructor)
     HV *stash = CvSTASH(cv);
     assert(HvSTASH_IS_CLASS(stash));
 
-    struct xpvhv_aux *aux = HvAUX(stash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
 
     if((items - 1) % 2)
         warn("Odd number of arguments passed to %" HvNAMEf_QUOTEDPREFIX " constructor",
                 HvNAMEfARG(stash));
 
-    if (!aux->xhv_class_initfields_cv) {
+    if (!stashaux->class_initfields_cv) {
         croak("Cannot create an object of incomplete class %" HvNAMEf_QUOTEDPREFIX,
                    HvNAMEfARG(stash));
     }
@@ -169,13 +169,13 @@ XS(injected_constructor)
         }
     }
 
-    SV *instance = newSVobject(aux->xhv_class_next_fieldix);
+    SV *instance = newSVobject(stashaux->class_next_fieldix);
     SvOBJECT_on(instance);
     SvSTASH_set(instance, HvREFCNT_inc_simple(stash));
 
     SV *self = sv_2mortal(newRV_noinc(instance));
 
-    assert(aux->xhv_class_initfields_cv);
+    assert(stashaux->class_initfields_cv);
     {
         ENTER;
         SAVETMPS;
@@ -189,7 +189,7 @@ XS(injected_constructor)
             PUSHs(&PL_sv_undef);
         PUTBACK;
 
-        call_sv((SV *)aux->xhv_class_initfields_cv, G_VOID);
+        call_sv((SV *)stashaux->class_initfields_cv, G_VOID);
 
         SPAGAIN;
 
@@ -197,9 +197,9 @@ XS(injected_constructor)
         LEAVE;
     }
 
-    if(aux->xhv_class_adjust_blocks) {
-        CV **cvp = (CV **)AvARRAY(aux->xhv_class_adjust_blocks);
-        U32 nblocks = av_count(aux->xhv_class_adjust_blocks);
+    if(stashaux->class_adjust_blocks) {
+        CV **cvp = (CV **)AvARRAY(stashaux->class_adjust_blocks);
+        U32 nblocks = av_count(stashaux->class_adjust_blocks);
 
         for(U32 i = 0; i < nblocks; i++) {
             ENTER;
@@ -381,15 +381,24 @@ Perl_class_setup_stash(pTHX_ HV *stash)
      *   DOES method
      */
 
-    struct xpvhv_aux *aux = HvAUX(stash);
-    aux->xhv_class_superclass    = NULL;
-    aux->xhv_class_initfields_cv = NULL;
-    aux->xhv_class_adjust_blocks = NULL;
-    aux->xhv_class_fields        = NULL;
-    aux->xhv_class_next_fieldix  = 0;
-    aux->xhv_class_param_map     = NULL;
+    /* TODO(leonerd):
+     *   Eventually, all stashes will have a STASHAUX so this should simply
+     *   read
+     *     assert(HvHasSTASHAUX(stash));
+     */
+    if(!HvHasSTASHAUX(stash)) {
+        Perl_hv_stashauxalloc(aTHX_ stash);
+    }
 
-    aux->xhv_aux_flags |= HvAUXf_IS_CLASS;
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
+    stashaux->class_superclass    = NULL;
+    stashaux->class_initfields_cv = NULL;
+    stashaux->class_adjust_blocks = NULL;
+    stashaux->class_fields        = NULL;
+    stashaux->class_next_fieldix  = 0;
+    stashaux->class_param_map     = NULL;
+
+    HvAUX(stash)->xhv_aux_flags |= HvAUXf_IS_CLASS;
 
     SAVEDESTRUCTOR_X(invoke_class_seal, stash);
 
@@ -410,8 +419,8 @@ Perl_class_setup_stash(pTHX_ HV *stash)
 
         PERL_UNUSED_VAR(padix);
 
-        Newx(aux->xhv_class_suspended_initfields_compcv, 1, struct suspended_compcv);
-        suspend_compcv(aux->xhv_class_suspended_initfields_compcv);
+        Newx(stashaux->class_suspended_initfields_compcv, 1, struct suspended_compcv);
+        suspend_compcv(stashaux->class_suspended_initfields_compcv);
 
         LEAVE_SCOPE(floor_ix);
     }
@@ -513,7 +522,7 @@ static void
 apply_class_attribute_isa(pTHX_ HV *stash, SV *value)
 {
     assert(HvSTASH_IS_CLASS(stash));
-    struct xpvhv_aux *aux = HvAUX(stash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
 
     /* Parse `value` into name + version */
     SV *superclassname = sv_newmortal(), *superclassver = sv_newmortal();
@@ -521,7 +530,7 @@ apply_class_attribute_isa(pTHX_ HV *stash, SV *value)
     if(*end)
         croak("Unexpected characters while parsing class :isa attribute: %s", end);
 
-    if(aux->xhv_class_superclass)
+    if(stashaux->class_superclass)
         croak("Class already has a superclass, cannot add another");
 
     HV *superstash = gv_stashsv(superclassname, 0);
@@ -559,22 +568,22 @@ apply_class_attribute_isa(pTHX_ HV *stash, SV *value)
         LEAVE;
     }
 
-    aux->xhv_class_superclass = (HV *)SvREFCNT_inc(superstash);
+    stashaux->class_superclass = (HV *)SvREFCNT_inc(superstash);
 
-    struct xpvhv_aux *superaux = HvAUX(superstash);
+    struct xpvhv_stashaux *superstashaux = HvSTASHAUX(superstash);
 
-    aux->xhv_class_next_fieldix = superaux->xhv_class_next_fieldix;
+    stashaux->class_next_fieldix = superstashaux->class_next_fieldix;
 
-    if(superaux->xhv_class_adjust_blocks) {
-        if(!aux->xhv_class_adjust_blocks)
-            aux->xhv_class_adjust_blocks = newAV();
+    if(superstashaux->class_adjust_blocks) {
+        if(!stashaux->class_adjust_blocks)
+            stashaux->class_adjust_blocks = newAV();
 
-        for(SSize_t i = 0; i <= AvFILL(superaux->xhv_class_adjust_blocks); i++)
-            av_push(aux->xhv_class_adjust_blocks, AvARRAY(superaux->xhv_class_adjust_blocks)[i]);
+        for(SSize_t i = 0; i <= AvFILL(superstashaux->class_adjust_blocks); i++)
+            av_push(stashaux->class_adjust_blocks, AvARRAY(superstashaux->class_adjust_blocks)[i]);
     }
 
-    if(superaux->xhv_class_param_map) {
-        aux->xhv_class_param_map = newHVhv(superaux->xhv_class_param_map);
+    if(superstashaux->class_param_map) {
+        stashaux->class_param_map = newHVhv(superstashaux->class_param_map);
     }
 }
 
@@ -645,7 +654,7 @@ Perl_class_seal_stash(pTHX_ HV *stash)
     PERL_ARGS_ASSERT_CLASS_SEAL_STASH;
 
     assert(HvSTASH_IS_CLASS(stash));
-    struct xpvhv_aux *aux = HvAUX(stash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
 
     if (PL_parser->error_count == 0) {
         /* generate initfields CV */
@@ -653,7 +662,7 @@ Perl_class_seal_stash(pTHX_ HV *stash)
         SAVEI32(PL_subline);
         save_item(PL_subname);
 
-        resume_compcv_final(aux->xhv_class_suspended_initfields_compcv);
+        resume_compcv_final(stashaux->class_suspended_initfields_compcv);
 
         /* Some OP_INITFIELD ops will need to populate the pad with their
          * result because later ops will rely on it. There's no need to do
@@ -679,10 +688,10 @@ Perl_class_seal_stash(pTHX_ HV *stash)
         ops = op_append_list(OP_LINESEQ, ops,
                 newUNOP_AUX(OP_METHSTART, OPpINITFIELDS << 8, NULL, NULL));
 
-        if(aux->xhv_class_superclass) {
-            HV *superstash = aux->xhv_class_superclass;
+        if(stashaux->class_superclass) {
+            HV *superstash = stashaux->class_superclass;
             assert(HvSTASH_IS_CLASS(superstash));
-            struct xpvhv_aux *superaux = HvAUX(superstash);
+            struct xpvhv_stashaux *superstashaux = HvSTASHAUX(superstash);
 
             /* Build an OP_ENTERSUB */
             OP *o = newLISTOPn(OP_ENTERSUB, OPf_WANT_VOID|OPf_STACKED,
@@ -692,13 +701,13 @@ Perl_class_seal_stash(pTHX_ HV *stash)
                  * it embeds the CV * to the superclass initfields CV right into
                  * the optree. Maybe we'll have to pop it in the pad or something
                  */
-                newSVOP(OP_CONST, 0, (SV *)superaux->xhv_class_initfields_cv),
+                newSVOP(OP_CONST, 0, (SV *)superstashaux->class_initfields_cv),
                 NULL);
 
             ops = op_append_list(OP_LINESEQ, ops, o);
         }
 
-        PADNAMELIST *fieldnames = aux->xhv_class_fields;
+        PADNAMELIST *fieldnames = stashaux->class_fields;
 
         for(SSize_t i = 0; fieldnames && i <= PadnamelistMAX(fieldnames); i++) {
             PADNAME *pn = PadnamelistARRAY(fieldnames)[i];
@@ -805,11 +814,11 @@ Perl_class_seal_stash(pTHX_ HV *stash)
         CV *initfields = newATTRSUB(floor_ix, NULL, NULL, NULL, ops);
         CvIsMETHOD_on(initfields);
 
-        aux->xhv_class_initfields_cv = initfields;
+        stashaux->class_initfields_cv = initfields;
     }
     else {
         /* we had errors, clean up and don't populate initfields */
-        PADNAMELIST *fieldnames = aux->xhv_class_fields;
+        PADNAMELIST *fieldnames = stashaux->class_fields;
         if (fieldnames) {
             for(SSize_t i = PadnamelistMAX(fieldnames); i >= 0 ; i--) {
                 PADNAME *pn = PadnamelistARRAY(fieldnames)[i];
@@ -825,9 +834,9 @@ Perl_class_prepare_initfield_parse(pTHX)
     PERL_ARGS_ASSERT_CLASS_PREPARE_INITFIELD_PARSE;
 
     assert(HvSTASH_IS_CLASS(PL_curstash));
-    struct xpvhv_aux *aux = HvAUX(PL_curstash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(PL_curstash);
 
-    resume_compcv_and_save(aux->xhv_class_suspended_initfields_compcv);
+    resume_compcv_and_save(stashaux->class_suspended_initfields_compcv);
     CvOUTSIDE_SEQ(PL_compcv) = PL_cop_seqmax;
 }
 
@@ -924,10 +933,10 @@ Perl_class_add_field(pTHX_ HV *stash, PADNAME *pn)
     PERL_ARGS_ASSERT_CLASS_ADD_FIELD;
 
     assert(HvSTASH_IS_CLASS(stash));
-    struct xpvhv_aux *aux = HvAUX(stash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
 
-    PADOFFSET fieldix = aux->xhv_class_next_fieldix;
-    aux->xhv_class_next_fieldix++;
+    PADOFFSET fieldix = stashaux->class_next_fieldix;
+    stashaux->class_next_fieldix++;
 
     Newxz(PadnameFIELDINFO(pn), 1, struct padname_fieldinfo);
     PadnameFLAGS(pn) |= PADNAMEf_FIELD;
@@ -936,10 +945,10 @@ Perl_class_add_field(pTHX_ HV *stash, PADNAME *pn)
     PadnameFIELDINFO(pn)->fieldix = fieldix;
     PadnameFIELDINFO(pn)->fieldstash = (HV *)SvREFCNT_inc(stash);
 
-    if(!aux->xhv_class_fields)
-        aux->xhv_class_fields = newPADNAMELIST(0);
+    if(!stashaux->class_fields)
+        stashaux->class_fields = newPADNAMELIST(0);
 
-    padnamelist_store(aux->xhv_class_fields, PadnamelistMAX(aux->xhv_class_fields)+1, pn);
+    padnamelist_store(stashaux->class_fields, PadnamelistMAX(stashaux->class_fields)+1, pn);
     PadnameREFCNT_inc(pn);
 }
 
@@ -958,19 +967,19 @@ apply_field_attribute_param(pTHX_ PADNAME *pn, SV *value)
 
     HV *stash = PadnameFIELDINFO(pn)->fieldstash;
     assert(HvSTASH_IS_CLASS(stash));
-    struct xpvhv_aux *aux = HvAUX(stash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
 
-    if(aux->xhv_class_param_map &&
-            hv_exists_ent(aux->xhv_class_param_map, value, 0))
+    if(stashaux->class_param_map &&
+            hv_exists_ent(stashaux->class_param_map, value, 0))
         croak("Cannot assign :param(%" SVf ") to field %" SVf " because that name is already in use",
                 SVfARG(value), SVfARG(PadnameSV(pn)));
 
     PadnameFIELDINFO(pn)->paramname = SvREFCNT_inc(value);
 
-    if(!aux->xhv_class_param_map)
-        aux->xhv_class_param_map = newHV();
+    if(!stashaux->class_param_map)
+        stashaux->class_param_map = newHV();
 
-    (void)hv_store_ent(aux->xhv_class_param_map, value, newSVuv(PadnameFIELDINFO(pn)->fieldix), 0);
+    (void)hv_store_ent(stashaux->class_param_map, value, newSVuv(PadnameFIELDINFO(pn)->fieldix), 0);
 }
 
 static void
@@ -1271,12 +1280,12 @@ Perl_class_add_ADJUST(pTHX_ HV *stash, CV *cv)
     PERL_ARGS_ASSERT_CLASS_ADD_ADJUST;
 
     assert(HvSTASH_IS_CLASS(stash));
-    struct xpvhv_aux *aux = HvAUX(stash);
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(stash);
 
-    if(!aux->xhv_class_adjust_blocks)
-        aux->xhv_class_adjust_blocks = newAV();
+    if(!stashaux->class_adjust_blocks)
+        stashaux->class_adjust_blocks = newAV();
 
-    av_push(aux->xhv_class_adjust_blocks, (SV *)cv);
+    av_push(stashaux->class_adjust_blocks, (SV *)cv);
 }
 
 OP *

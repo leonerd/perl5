@@ -1582,6 +1582,8 @@ Cdop	|void	|hv_riter_set	|NN HV *hv				\
 				|I32 riter
 
 ARdp	|SV *	|hv_scalar	|NN HV *hv
+op	|struct xpvhv_stashaux *|hv_stashauxalloc			\
+				|NN HV *hv
 Admp	|SV **	|hv_store	|NULLOK HV *hv				\
 				|NULLOK const char *key 		\
 				|I32 klen				\

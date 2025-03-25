@@ -2378,17 +2378,25 @@ Perl_hv_undef_flags(pTHX_ HV *hv, U32 flags)
         aux->xhv_mro_meta = NULL;
       }
 
-      if(HvSTASH_IS_CLASS(hv)) {
-          SvREFCNT_dec(aux->xhv_class_superclass);
-          SvREFCNT_dec(aux->xhv_class_initfields_cv);
-          SvREFCNT_dec(aux->xhv_class_adjust_blocks);
-          if(aux->xhv_class_fields)
-            PadnamelistREFCNT_dec(aux->xhv_class_fields);
-          SvREFCNT_dec(aux->xhv_class_param_map);
-          Safefree(aux->xhv_class_suspended_initfields_compcv);
-          aux->xhv_class_suspended_initfields_compcv = NULL;
+      if (HvHasSTASHAUX(hv)) {
+          struct xpvhv_stashaux *stashaux = HvSTASHAUX(hv);
 
-          aux->xhv_aux_flags &= ~HvAUXf_IS_CLASS;
+          if(HvSTASH_IS_CLASS(hv)) {
+              SvREFCNT_dec(stashaux->class_superclass);
+              SvREFCNT_dec(stashaux->class_initfields_cv);
+              SvREFCNT_dec(stashaux->class_adjust_blocks);
+              if(stashaux->class_fields)
+                PadnamelistREFCNT_dec(stashaux->class_fields);
+              SvREFCNT_dec(stashaux->class_param_map);
+              Safefree(stashaux->class_suspended_initfields_compcv);
+              stashaux->class_suspended_initfields_compcv = NULL;
+
+              aux->xhv_aux_flags &= ~HvAUXf_IS_CLASS;
+          }
+
+          Safefree(stashaux);
+          HvSTASHAUX(hv) = NULL;
+          aux->xhv_aux_flags &= ~HvAUXf_IS_STASH;
       }
     }
 

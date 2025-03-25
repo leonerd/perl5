@@ -1770,6 +1770,12 @@ Perl_hv_scalar(pTHX_ HV *hv)
 #define PERL_ARGS_ASSERT_HV_SCALAR              \
         assert(hv); assert(SvTYPE(hv) == SVt_PVHV)
 
+PERL_CALLCONV struct xpvhv_stashaux *
+Perl_hv_stashauxalloc(pTHX_ HV *hv)
+        __attribute__visibility__("hidden");
+#define PERL_ARGS_ASSERT_HV_STASHAUXALLOC       \
+        assert(hv); assert(SvTYPE(hv) == SVt_PVHV)
+
 /* PERL_CALLCONV SV **
 Perl_hv_store(pTHX_ HV *hv, const char *key, I32 klen, SV *val, U32 hash); */
 

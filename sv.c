@@ -14623,25 +14623,6 @@ S_sv_dup_hvaux(pTHX_ const SV *const ssv, SV *dsv, CLONE_PARAMS *const param)
     /* This flag isn't copied.  */
     SvFLAGS(dsv) |= SVphv_HasAUX;
 
-    if (saux->xhv_name_count) {
-        HEK ** const sname = saux->xhv_name_u.xhvnameu_names;
-        const I32 count = saux->xhv_name_count < 0
-            ? -saux->xhv_name_count
-            :  saux->xhv_name_count;
-        HEK **shekp = sname + count;
-        HEK **dhekp;
-        Newx(daux->xhv_name_u.xhvnameu_names, count, HEK *);
-        dhekp = daux->xhv_name_u.xhvnameu_names + count;
-        while (shekp-- > sname) {
-            dhekp--;
-            *dhekp = hek_dup(*shekp, param);
-        }
-    }
-    else {
-        daux->xhv_name_u.xhvnameu_name = hek_dup(saux->xhv_name_u.xhvnameu_name, param);
-    }
-    daux->xhv_name_count = saux->xhv_name_count;
-
     daux->xhv_aux_flags = saux->xhv_aux_flags;
 #ifdef PERL_HASH_RANDOMIZE_KEYS
     daux->xhv_rand = saux->xhv_rand;
@@ -14681,6 +14662,25 @@ S_sv_dup_hvaux(pTHX_ const SV *const ssv, SV *dsv, CLONE_PARAMS *const param)
         HvSTASHAUX(dsv) = dstashaux;
 
         *dstashaux = *sstashaux;
+
+        if (sstashaux->name_count) {
+            HEK ** const sname = sstashaux->name_u.xhvnameu_names;
+            const I32 count = sstashaux->name_count < 0
+                ? -sstashaux->name_count
+                :  sstashaux->name_count;
+            HEK **shekp = sname + count;
+            HEK **dhekp;
+            Newx(dstashaux->name_u.xhvnameu_names, count, HEK *);
+            dhekp = dstashaux->name_u.xhvnameu_names + count;
+            while (shekp-- > sname) {
+                dhekp--;
+                *dhekp = hek_dup(*shekp, param);
+            }
+        }
+        else {
+            dstashaux->name_u.xhvnameu_name = hek_dup(sstashaux->name_u.xhvnameu_name, param);
+        }
+        dstashaux->name_count = sstashaux->name_count;
 
         dstashaux->mro_meta = sstashaux->mro_meta
             ? mro_meta_dup(sstashaux->mro_meta, param)

@@ -108,8 +108,8 @@ struct mro_meta {
 */
 
 union _xhvnameu {
-    HEK *xhvnameu_name;		/* When xhv_name_count is 0 */
-    HEK **xhvnameu_names;	/* When xhv_name_count is non-0 */
+    HEK *xhvnameu_name;		/* When name_count is 0 */
+    HEK **xhvnameu_names;	/* When name_count is non-0 */
 };
 
 /* A struct defined by pad.h and used within class.c */
@@ -117,6 +117,15 @@ struct suspended_compcv;
 
 /* the additional set of fields used by HVs used as STASHes */
 struct xpvhv_stashaux {
+    union _xhvnameu name_u;	/* name, if a symbol table */
+/* Concerning name_count: When non-zero, xhv_name_u contains a pointer 
+ * to an array of HEK pointers, this being the length. The first element is
+ * the name of the stash, which may be NULL. If name_count is positive,
+ * then *xhv_name is one of the effective names. If name_count is nega-
+ * tive, then xhv_name_u.xhvnameu_names[1] is the first effective name.
+ */
+    I32		name_count;
+
     struct mro_meta *mro_meta;
 
     HV          *class_superclass;         /* STASH of the :isa() base class */
@@ -131,18 +140,10 @@ struct xpvhv_stashaux {
 };
 
 struct xpvhv_aux {
-    union _xhvnameu xhv_name_u;	/* name, if a symbol table */
     AV		*xhv_backreferences; /* back references for weak references */
     HE		*xhv_eiter;	/* current entry of iterator */
     I32		xhv_riter;	/* current root of iterator */
 
-/* Concerning xhv_name_count: When non-zero, xhv_name_u contains a pointer 
- * to an array of HEK pointers, this being the length. The first element is
- * the name of the stash, which may be NULL. If xhv_name_count is positive,
- * then *xhv_name is one of the effective names. If xhv_name_count is nega-
- * tive, then xhv_name_u.xhvnameu_names[1] is the first effective name.
- */
-    I32		xhv_name_count;
 #ifdef PERL_HASH_RANDOMIZE_KEYS
     U32         xhv_rand;       /* random value for hash traversal */
     U32         xhv_last_rand;  /* last random value for hash traversal,
@@ -379,36 +380,36 @@ check whether it is valid to call C<HvSTASHAUX()>.
 
 #define HvNAME_HEK_NN(hv)			  \
  (						  \
-  HvAUX(hv)->xhv_name_count			  \
-  ? *HvAUX(hv)->xhv_name_u.xhvnameu_names	  \
-  : HvAUX(hv)->xhv_name_u.xhvnameu_name		  \
+  HvSTASHAUX(hv)->name_count			  \
+  ? *HvSTASHAUX(hv)->name_u.xhvnameu_names	  \
+  : HvSTASHAUX(hv)->name_u.xhvnameu_name	  \
  )
 /* This macro may go away without notice.  */
 #define HvNAME_HEK(hv) \
-        (HvHasAUX(hv) && HvAUX(hv)->xhv_name_u.xhvnameu_name ? HvNAME_HEK_NN(hv) : NULL)
+        (HvHasSTASHAUX(hv) && HvSTASHAUX(hv)->name_u.xhvnameu_name ? HvNAME_HEK_NN(hv) : NULL)
 #define HvHasNAME(hv) \
-        (HvHasAUX(hv) && HvAUX(hv)->xhv_name_u.xhvnameu_name && HvNAME_HEK_NN(hv))
+        (HvHasSTASHAUX(hv) && HvSTASHAUX(hv)->name_u.xhvnameu_name && HvNAME_HEK_NN(hv))
 #define HvNAME_get(hv) \
         (HvHasNAME(hv) ? HEK_KEY(HvNAME_HEK_NN(hv)) : NULL)
 #define HvNAMELEN_get(hv) \
-        ((HvHasAUX(hv) && HvAUX(hv)->xhv_name_u.xhvnameu_name && HvNAME_HEK_NN(hv)) \
+        ((HvHasSTASHAUX(hv) && HvSTASHAUX(hv)->name_u.xhvnameu_name && HvNAME_HEK_NN(hv)) \
                                  ? HEK_LEN(HvNAME_HEK_NN(hv)) : 0)
 #define HvNAMEUTF8(hv) \
-        ((HvHasAUX(hv) && HvAUX(hv)->xhv_name_u.xhvnameu_name && HvNAME_HEK_NN(hv)) \
+        ((HvHasSTASHAUX(hv) && HvSTASHAUX(hv)->name_u.xhvnameu_name && HvNAME_HEK_NN(hv)) \
                                  ? HEK_UTF8(HvNAME_HEK_NN(hv)) : 0)
 #define HvENAME_HEK_NN(hv)                                             \
  (                                                                      \
-  HvAUX(hv)->xhv_name_count > 0   ? HvAUX(hv)->xhv_name_u.xhvnameu_names[0] : \
-  HvAUX(hv)->xhv_name_count < -1  ? HvAUX(hv)->xhv_name_u.xhvnameu_names[1] : \
-  HvAUX(hv)->xhv_name_count == -1 ? NULL                              : \
-                                    HvAUX(hv)->xhv_name_u.xhvnameu_name \
+  HvSTASHAUX(hv)->name_count > 0   ? HvSTASHAUX(hv)->name_u.xhvnameu_names[0] : \
+  HvSTASHAUX(hv)->name_count < -1  ? HvSTASHAUX(hv)->name_u.xhvnameu_names[1] : \
+  HvSTASHAUX(hv)->name_count == -1 ? NULL                              : \
+                                    HvSTASHAUX(hv)->name_u.xhvnameu_name \
  )
 #define HvHasENAME_HEK(hv) \
-        (HvHasAUX(hv) && HvAUX(hv)->xhv_name_u.xhvnameu_name)
+        (HvHasSTASHAUX(hv) && HvSTASHAUX(hv)->name_u.xhvnameu_name)
 #define HvENAME_HEK(hv) \
         (HvHasENAME_HEK(hv) ? HvENAME_HEK_NN(hv) : NULL)
 #define HvHasENAME(hv) \
-        (HvHasENAME_HEK(hv) && HvAUX(hv)->xhv_name_count != -1)
+        (HvHasENAME_HEK(hv) && HvSTASHAUX(hv)->name_count != -1)
 #define HvENAME_get(hv) \
         (HvHasENAME(hv) ? HEK_KEY(HvENAME_HEK_NN(hv)) : NULL)
 #define HvENAMELEN_get(hv) \

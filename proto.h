@@ -6962,6 +6962,11 @@ S_hv_notallowed(pTHX_ int flags, const char *key, I32 klen, const char *msg)
 # define PERL_ARGS_ASSERT_HV_NOTALLOWED         \
         assert(key); assert(msg)
 
+STATIC struct xpvhv_stashaux *
+S_hv_stashauxinit(pTHX_ HV *hv);
+# define PERL_ARGS_ASSERT_HV_STASHAUXINIT       \
+        assert(hv); assert(SvTYPE(hv) == SVt_PVHV)
+
 STATIC SV *
 S_refcounted_he_value(pTHX_ const struct refcounted_he *he);
 # define PERL_ARGS_ASSERT_REFCOUNTED_HE_VALUE   \

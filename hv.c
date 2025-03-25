@@ -2347,23 +2347,23 @@ Perl_hv_undef_flags(pTHX_ HV *hv, U32 flags)
         }
       }
 
-      /* If this call originated from sv_clear, then we must check for
-       * effective names that need freeing, as well as the usual name. */
-      name = HvNAME(hv);
-      if (flags & HV_NAME_SETALL
-          ? cBOOL(aux->xhv_name_u.xhvnameu_name)
-          : cBOOL(name))
-      {
-        if (name && PL_stashcache) {
-            DEBUG_o(Perl_deb(aTHX_ "hv_undef_flags clearing PL_stashcache for name '%"
-                             HEKf "'\n", HEKfARG(HvNAME_HEK_NN(hv))));
-            (void)hv_deletehek(PL_stashcache, HvNAME_HEK_NN(hv), G_DISCARD);
-        }
-        hv_name_set(hv, NULL, 0, flags);
-      }
-
       if (HvHasSTASHAUX(hv)) {
           struct xpvhv_stashaux *stashaux = HvSTASHAUX(hv);
+
+          /* If this call originated from sv_clear, then we must check for
+           * effective names that need freeing, as well as the usual name. */
+          name = HvNAME(hv);
+          if (flags & HV_NAME_SETALL
+              ? cBOOL(stashaux->name_u.xhvnameu_name)
+              : cBOOL(name))
+          {
+            if (name && PL_stashcache) {
+                DEBUG_o(Perl_deb(aTHX_ "hv_undef_flags clearing PL_stashcache for name '%"
+                                 HEKf "'\n", HEKfARG(HvNAME_HEK_NN(hv))));
+                (void)hv_deletehek(PL_stashcache, HvNAME_HEK_NN(hv), G_DISCARD);
+            }
+            hv_name_set(hv, NULL, 0, flags);
+          }
 
           if((meta = stashaux->mro_meta)) {
             if (meta->mro_linear_all) {
@@ -2497,11 +2497,27 @@ S_hv_auxinit(pTHX_ HV *hv) {
 #ifdef PERL_HASH_RANDOMIZE_KEYS
     iter->xhv_last_rand = iter->xhv_rand;
 #endif
-    iter->xhv_name_u.xhvnameu_name = 0;
-    iter->xhv_name_count = 0;
     iter->xhv_backreferences = 0;
     iter->xhv_aux_flags = 0;
     return iter;
+}
+
+static struct xpvhv_stashaux*
+S_hv_stashauxinit(pTHX_ HV *hv)
+{
+    PERL_ARGS_ASSERT_HV_STASHAUXINIT;
+
+    struct xpvhv_stashaux *stashaux;
+
+    if (!HvHasSTASHAUX(hv))
+        stashaux = Perl_hv_stashauxalloc(aTHX_ hv);
+    else
+        stashaux = HvSTASHAUX(hv);
+
+    stashaux->name_u.xhvnameu_name = 0;
+    stashaux->name_count = 0;
+
+    return stashaux;
 }
 
 /*
@@ -2678,7 +2694,6 @@ are set.
 void
 Perl_hv_name_set(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
 {
-    struct xpvhv_aux *iter;
     U32 hash;
     HEK **spot;
 
@@ -2687,60 +2702,61 @@ Perl_hv_name_set(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
     if (len > I32_MAX)
         croak("panic: hv name too long (%" UVuf ")", (UV) len);
 
-    if (HvHasAUX(hv)) {
-        iter = HvAUX(hv);
-        if (iter->xhv_name_u.xhvnameu_name) {
-            if(iter->xhv_name_count) {
+    if (HvHasSTASHAUX(hv)) {
+        struct xpvhv_stashaux *stashaux = HvSTASHAUX(hv);
+
+        if (stashaux->name_u.xhvnameu_name) {
+            if(stashaux->name_count) {
               if(flags & HV_NAME_SETALL) {
-                HEK ** const this_name = HvAUX(hv)->xhv_name_u.xhvnameu_names;
+                HEK ** const this_name = stashaux->name_u.xhvnameu_names;
                 HEK **hekp = this_name + (
-                    iter->xhv_name_count < 0
-                     ? -iter->xhv_name_count
-                     :  iter->xhv_name_count
+                    stashaux->name_count < 0
+                     ? -stashaux->name_count
+                     :  stashaux->name_count
                    );
                 while(hekp-- > this_name+1)
                     unshare_hek_or_pvn(*hekp, 0, 0, 0);
                 /* The first elem may be null. */
                 if(*this_name) unshare_hek_or_pvn(*this_name, 0, 0, 0);
                 Safefree(this_name);
-                spot = &iter->xhv_name_u.xhvnameu_name;
-                iter->xhv_name_count = 0;
+                spot = &stashaux->name_u.xhvnameu_name;
+                stashaux->name_count = 0;
               }
               else {
-                if(iter->xhv_name_count > 0) {
+                if(stashaux->name_count > 0) {
                     /* shift some things over */
                     Renew(
-                     iter->xhv_name_u.xhvnameu_names, iter->xhv_name_count + 1, HEK *
+                     stashaux->name_u.xhvnameu_names, stashaux->name_count + 1, HEK *
                     );
-                    spot = iter->xhv_name_u.xhvnameu_names;
-                    spot[iter->xhv_name_count] = spot[1];
+                    spot = stashaux->name_u.xhvnameu_names;
+                    spot[stashaux->name_count] = spot[1];
                     spot[1] = spot[0];
-                    iter->xhv_name_count = -(iter->xhv_name_count + 1);
+                    stashaux->name_count = -(stashaux->name_count + 1);
                 }
-                else if(*(spot = iter->xhv_name_u.xhvnameu_names)) {
+                else if(*(spot = stashaux->name_u.xhvnameu_names)) {
                     unshare_hek_or_pvn(*spot, 0, 0, 0);
                 }
               }
             }
             else if (flags & HV_NAME_SETALL) {
-                unshare_hek_or_pvn(iter->xhv_name_u.xhvnameu_name, 0, 0, 0);
-                spot = &iter->xhv_name_u.xhvnameu_name;
+                unshare_hek_or_pvn(stashaux->name_u.xhvnameu_name, 0, 0, 0);
+                spot = &stashaux->name_u.xhvnameu_name;
             }
             else {
-                HEK * const existing_name = iter->xhv_name_u.xhvnameu_name;
-                Newx(iter->xhv_name_u.xhvnameu_names, 2, HEK *);
-                iter->xhv_name_count = -2;
-                spot = iter->xhv_name_u.xhvnameu_names;
+                HEK * const existing_name = stashaux->name_u.xhvnameu_name;
+                Newx(stashaux->name_u.xhvnameu_names, 2, HEK *);
+                stashaux->name_count = -2;
+                spot = stashaux->name_u.xhvnameu_names;
                 spot[1] = existing_name;
             }
         }
-        else { spot = &iter->xhv_name_u.xhvnameu_name; iter->xhv_name_count = 0; }
+        else { spot = &stashaux->name_u.xhvnameu_name; stashaux->name_count = 0; }
     } else {
         if (name == 0)
             return;
 
-        iter = hv_auxinit(hv);
-        spot = &iter->xhv_name_u.xhvnameu_name;
+        struct xpvhv_stashaux *stashaux = hv_stashauxinit(hv);
+        spot = &stashaux->name_u.xhvnameu_name;
     }
     PERL_HASH(hash, name, len);
     *spot = name ? share_hek(name, flags & SVf_UTF8 ? -(I32)len : (I32)len, hash) : NULL;
@@ -2783,7 +2799,9 @@ table.
 void
 Perl_hv_ename_add(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
 {
-    struct xpvhv_aux *aux = HvHasAUX(hv) ? HvAUX(hv) : hv_auxinit(hv);
+    struct xpvhv_stashaux *stashaux = HvHasSTASHAUX(hv)
+        ? HvSTASHAUX(hv)
+        : hv_stashauxinit(hv);
     U32 hash;
 
     PERL_ARGS_ASSERT_HV_ENAME_ADD;
@@ -2793,9 +2811,9 @@ Perl_hv_ename_add(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
 
     PERL_HASH(hash, name, len);
 
-    if (aux->xhv_name_count) {
-        I32 count = aux->xhv_name_count;
-        HEK ** const xhv_name = aux->xhv_name_u.xhvnameu_names + (count<0);
+    if (stashaux->name_count) {
+        I32 count = stashaux->name_count;
+        HEK ** const xhv_name = stashaux->name_u.xhvnameu_names + (count<0);
         HEK **hekp = xhv_name + (count < 0 ? -count - 1 : count);
         while (hekp-- > xhv_name)
         {
@@ -2806,17 +2824,17 @@ Perl_hv_ename_add(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
                     : (HEK_LEN(*hekp) == (I32)len && memEQ(HEK_KEY(*hekp), name, len))
                ) {
                 if (hekp == xhv_name && count < 0)
-                    aux->xhv_name_count = -count;
+                    stashaux->name_count = -count;
                 return;
             }
         }
-        if (count < 0) aux->xhv_name_count--, count = -count;
-        else aux->xhv_name_count++;
-        Renew(aux->xhv_name_u.xhvnameu_names, count + 1, HEK *);
-        (aux->xhv_name_u.xhvnameu_names)[count] = share_hek(name, (flags & SVf_UTF8 ? -(I32)len : (I32)len), hash);
+        if (count < 0) stashaux->name_count--, count = -count;
+        else stashaux->name_count++;
+        Renew(stashaux->name_u.xhvnameu_names, count + 1, HEK *);
+        (stashaux->name_u.xhvnameu_names)[count] = share_hek(name, (flags & SVf_UTF8 ? -(I32)len : (I32)len), hash);
     }
     else {
-        HEK *existing_name = aux->xhv_name_u.xhvnameu_name;
+        HEK *existing_name = stashaux->name_u.xhvnameu_name;
         if (
             existing_name && (
              (HEK_UTF8(existing_name) || (flags & SVf_UTF8))
@@ -2824,10 +2842,10 @@ Perl_hv_ename_add(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
                 : (HEK_LEN(existing_name) == (I32)len && memEQ(HEK_KEY(existing_name), name, len))
             )
         ) return;
-        Newx(aux->xhv_name_u.xhvnameu_names, 2, HEK *);
-        aux->xhv_name_count = existing_name ? 2 : -2;
-        *aux->xhv_name_u.xhvnameu_names = existing_name;
-        (aux->xhv_name_u.xhvnameu_names)[1] = share_hek(name, (flags & SVf_UTF8 ? -(I32)len : (I32)len), hash);
+        Newx(stashaux->name_u.xhvnameu_names, 2, HEK *);
+        stashaux->name_count = existing_name ? 2 : -2;
+        *stashaux->name_u.xhvnameu_names = existing_name;
+        (stashaux->name_u.xhvnameu_names)[1] = share_hek(name, (flags & SVf_UTF8 ? -(I32)len : (I32)len), hash);
     }
 }
 
@@ -2846,21 +2864,19 @@ This is called when a stash is deleted from the symbol table.
 void
 Perl_hv_ename_delete(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
 {
-    struct xpvhv_aux *aux;
-
     PERL_ARGS_ASSERT_HV_ENAME_DELETE;
 
     if (len > I32_MAX)
         croak("panic: hv name too long (%" UVuf ")", (UV) len);
 
-    if (!HvHasAUX(hv)) return;
+    if (!HvHasSTASHAUX(hv)) return;
 
-    aux = HvAUX(hv);
-    if (!aux->xhv_name_u.xhvnameu_name) return;
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(hv);
+    if (!stashaux->name_u.xhvnameu_name) return;
 
-    if (aux->xhv_name_count) {
-        HEK ** const namep = aux->xhv_name_u.xhvnameu_names;
-        I32 const count = aux->xhv_name_count;
+    if (stashaux->name_count) {
+        HEK ** const namep = stashaux->name_u.xhvnameu_names;
+        I32 const count = stashaux->name_count;
         HEK **victim = namep + (count < 0 ? -count : count);
         while (victim-- > namep + 1)
             if (
@@ -2869,15 +2885,15 @@ Perl_hv_ename_delete(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
                 : (HEK_LEN(*victim) == (I32)len && memEQ(HEK_KEY(*victim), name, len))
             ) {
                 unshare_hek_or_pvn(*victim, 0, 0, 0);
-                if (count < 0) ++aux->xhv_name_count;
-                else --aux->xhv_name_count;
+                if (count < 0) ++stashaux->name_count;
+                else --stashaux->name_count;
                 if (
-                    (aux->xhv_name_count == 1 || aux->xhv_name_count == -1)
+                    (stashaux->name_count == 1 || stashaux->name_count == -1)
                  && !*namep
                 ) {  /* if there are none left */
                     Safefree(namep);
-                    aux->xhv_name_u.xhvnameu_names = NULL;
-                    aux->xhv_name_count = 0;
+                    stashaux->name_u.xhvnameu_names = NULL;
+                    stashaux->name_count = 0;
                 }
                 else {
                     /* Move the last one back to fill the empty slot. It
@@ -2892,19 +2908,19 @@ Perl_hv_ename_delete(pTHX_ HV *hv, const char *name, U32 len, U32 flags)
                 : (HEK_LEN(*namep) == (I32)len && memEQ(HEK_KEY(*namep), name, len))
             )
         ) {
-            aux->xhv_name_count = -count;
+            stashaux->name_count = -count;
         }
     }
     else if(
-        (HEK_UTF8(aux->xhv_name_u.xhvnameu_name) || (flags & SVf_UTF8))
-                ? hek_eq_pvn_flags(aTHX_ aux->xhv_name_u.xhvnameu_name, name, (I32)len, flags)
-                : (HEK_LEN(aux->xhv_name_u.xhvnameu_name) == (I32)len &&
-                            memEQ(HEK_KEY(aux->xhv_name_u.xhvnameu_name), name, len))
+        (HEK_UTF8(stashaux->name_u.xhvnameu_name) || (flags & SVf_UTF8))
+                ? hek_eq_pvn_flags(aTHX_ stashaux->name_u.xhvnameu_name, name, (I32)len, flags)
+                : (HEK_LEN(stashaux->name_u.xhvnameu_name) == (I32)len &&
+                            memEQ(HEK_KEY(stashaux->name_u.xhvnameu_name), name, len))
     ) {
-        HEK * const namehek = aux->xhv_name_u.xhvnameu_name;
-        Newx(aux->xhv_name_u.xhvnameu_names, 1, HEK *);
-        *aux->xhv_name_u.xhvnameu_names = namehek;
-        aux->xhv_name_count = -1;
+        HEK * const namehek = stashaux->name_u.xhvnameu_name;
+        Newx(stashaux->name_u.xhvnameu_names, 1, HEK *);
+        *stashaux->name_u.xhvnameu_names = namehek;
+        stashaux->name_count = -1;
     }
 }
 

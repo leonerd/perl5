@@ -2403,47 +2403,49 @@ Perl_do_sv_dump(pTHX_ I32 level, PerlIO *file, SV *sv, I32 nest, I32 maxnest, bo
         }
         }
         if (HvHasAUX(sv)) {
-            AV * const backrefs
-                = *Perl_hv_backreferences_p(aTHX_ MUTABLE_HV(sv));
-            if (HvAUX(sv)->xhv_name_count)
-                Perl_dump_indent(aTHX_
-                 level, file, "  NAMECOUNT = %" IVdf "\n",
-                 (IV)HvAUX(sv)->xhv_name_count
-                );
-            if (HvAUX(sv)->xhv_name_u.xhvnameu_name && HvENAME_HEK_NN(sv)) {
-                const I32 count = HvAUX(sv)->xhv_name_count;
-                if (count) {
-                    SV * const names = newSVpvs_flags("", SVs_TEMP);
-                    /* The starting point is the first element if count is
-                       positive and the second element if count is negative. */
-                    HEK *const *hekp = HvAUX(sv)->xhv_name_u.xhvnameu_names
-                        + (count < 0 ? 1 : 0);
-                    HEK *const *const endp = HvAUX(sv)->xhv_name_u.xhvnameu_names
-                        + (count < 0 ? -count : count);
-                    while (hekp < endp) {
-                        if (*hekp) {
-                            SV *tmp = newSVpvs_flags("", SVs_TEMP);
-                            sv_catpvf(names, ", \"%s\"",
-                              generic_pv_escape(tmp, HEK_KEY(*hekp), HEK_LEN(*hekp), HEK_UTF8(*hekp)));
-                        } else {
-                            /* This should never happen. */
-                            sv_catpvs(names, ", (null)");
+            if (HvHasSTASHAUX(sv)) {
+                struct xpvhv_stashaux *stashaux = HvSTASHAUX(sv);
+                const I32 count = stashaux->name_count;
+                if (count)
+                    Perl_dump_indent(aTHX_
+                     level, file, "  NAMECOUNT = %" IVdf "\n", (IV)count);
+
+                if (stashaux->name_u.xhvnameu_name && HvENAME_HEK_NN(sv)) {
+                    if (count) {
+                        SV * const names = newSVpvs_flags("", SVs_TEMP);
+                        /* The starting point is the first element if count is
+                           positive and the second element if count is negative. */
+                        HEK *const *hekp = stashaux->name_u.xhvnameu_names
+                            + (count < 0 ? 1 : 0);
+                        HEK *const *const endp = stashaux->name_u.xhvnameu_names
+                            + (count < 0 ? -count : count);
+                        while (hekp < endp) {
+                            if (*hekp) {
+                                SV *tmp = newSVpvs_flags("", SVs_TEMP);
+                                sv_catpvf(names, ", \"%s\"",
+                                  generic_pv_escape(tmp, HEK_KEY(*hekp), HEK_LEN(*hekp), HEK_UTF8(*hekp)));
+                            } else {
+                                /* This should never happen. */
+                                sv_catpvs(names, ", (null)");
+                            }
+                            ++hekp;
                         }
-                        ++hekp;
+                        Perl_dump_indent(aTHX_
+                         level, file, "  ENAME = %s\n", SvPV_nolen(names)+2
+                        );
                     }
-                    Perl_dump_indent(aTHX_
-                     level, file, "  ENAME = %s\n", SvPV_nolen(names)+2
-                    );
-                }
-                else {
-                    SV * const tmp = newSVpvs_flags("", SVs_TEMP);
-                    const char *const hvename = HvENAME_get(sv);
-                    Perl_dump_indent(aTHX_
-                     level, file, "  ENAME = \"%s\"\n",
-                     generic_pv_escape(tmp, hvename,
-                                       HvENAMELEN_get(sv), HvENAMEUTF8(sv)));
+                    else {
+                        SV * const tmp = newSVpvs_flags("", SVs_TEMP);
+                        const char *const hvename = HvENAME_get(sv);
+                        Perl_dump_indent(aTHX_
+                         level, file, "  ENAME = \"%s\"\n",
+                         generic_pv_escape(tmp, hvename,
+                                           HvENAMELEN_get(sv), HvENAMEUTF8(sv)));
+                    }
                 }
             }
+            AV * const backrefs
+                = *Perl_hv_backreferences_p(aTHX_ MUTABLE_HV(sv));
             if (backrefs) {
                 Perl_dump_indent(aTHX_ level, file, "  BACKREFS = 0x%" UVxf "\n",
                                  PTR2UV(backrefs));

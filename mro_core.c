@@ -244,10 +244,10 @@ S_mro_get_linear_isa_dfs(pTHX_ HV *stash, U32 level)
     HV *stored = NULL;
 
     PERL_ARGS_ASSERT_MRO_GET_LINEAR_ISA_DFS;
-    assert(HvAUX(stash));
+    assert(HvHasSTASHAUX(stash));
 
     stashhek
-     = HvAUX(stash)->xhv_name_u.xhvnameu_name && HvENAME_HEK_NN(stash)
+     = HvSTASHAUX(stash)->name_u.xhvnameu_name && HvENAME_HEK_NN(stash)
         ? HvENAME_HEK_NN(stash)
         : HvNAME_HEK(stash);
 
@@ -796,17 +796,19 @@ Perl_mro_package_moved(pTHX_ HV * const stash, HV * const oldstash,
          *svp != (SV *)gv
         ) return;
     }
-    assert(HvHasAUX(GvSTASH(gv)));
+    assert(HvHasSTASHAUX(GvSTASH(gv)));
+    struct xpvhv_stashaux *stashaux = HvSTASHAUX(GvSTASH(gv));
+
     assert(GvNAMELEN(gv));
     assert(GvNAME(gv)[GvNAMELEN(gv) - 1] == ':');
     assert(GvNAMELEN(gv) == 1 || GvNAME(gv)[GvNAMELEN(gv) - 2] == ':');
-    name_count = HvAUX(GvSTASH(gv))->xhv_name_count;
+    name_count = stashaux->name_count;
     if (!name_count) {
         name_count = 1;
-        namep = &HvAUX(GvSTASH(gv))->xhv_name_u.xhvnameu_name;
+        namep = &stashaux->name_u.xhvnameu_name;
     }
     else {
-        namep = HvAUX(GvSTASH(gv))->xhv_name_u.xhvnameu_names;
+        namep = stashaux->name_u.xhvnameu_names;
         if (name_count < 0) ++namep, name_count = -name_count - 1;
     }
     if (name_count == 1) {

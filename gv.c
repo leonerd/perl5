@@ -1665,7 +1665,7 @@ S_gv_stashpvn_internal(pTHX_ const char *name, U32 namelen, I32 flags)
         /* FIXME: This is a repeat of logic in gv_fetchpvn_flags */
         /* If the containing stash has multiple effective
            names, see that this one gets them, too. */
-        if (HvAUX(GvSTASH(tmpgv))->xhv_name_count)
+        if (HvSTASHAUX(GvSTASH(tmpgv))->name_count)
             mro_package_moved(stash, NULL, tmpgv, 1);
     }
     return stash;
@@ -1871,7 +1871,7 @@ S_parse_gv_stash_name(pTHX_ HV **stash, GV **gv, const char **name,
                             );
                     /* If the containing stash has multiple effective
                     names, see that this one gets them, too. */
-                    if (HvAUX(GvSTASH(*gv))->xhv_name_count)
+                    if (HvSTASHAUX(GvSTASH(*gv))->name_count)
                         mro_package_moved(*stash, NULL, *gv, 1);
                     }
                 }
@@ -2798,7 +2798,7 @@ Perl_gv_check(pTHX_ HV *stash)
 
     PERL_ARGS_ASSERT_GV_CHECK;
 
-    if (!HvHasAUX(stash))
+    if (!HvHasSTASHAUX(stash))
         return;
 
     assert(HvARRAY(stash));

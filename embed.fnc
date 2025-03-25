@@ -4544,6 +4544,8 @@ Sr	|void	|hv_notallowed	|int flags				\
 				|NN const char *key			\
 				|I32 klen				\
 				|NN const char *msg
+S	|struct xpvhv_stashaux *|hv_stashauxinit			\
+				|NN HV *hv
 S	|SV *	|refcounted_he_value					\
 				|NN const struct refcounted_he *he
 RSTa	|HEK *	|save_hek_flags |NN const char *str			\

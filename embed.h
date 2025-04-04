@@ -770,6 +770,7 @@
 # define sv_vsetpvf(a,b,c)                      Perl_sv_vsetpvf(aTHX_ a,b,c)
 # define sv_vsetpvf_mg(a,b,c)                   Perl_sv_vsetpvf_mg(aTHX_ a,b,c)
 # define sv_vsetpvfn(a,b,c,d,e,f,g)             Perl_sv_vsetpvfn(aTHX_ a,b,c,d,e,f,g)
+# define sv_vstring_apply(a,b,c)                Perl_sv_vstring_apply(aTHX_ a,b,c)
 # define sv_vstring_get(a,b)                    Perl_sv_vstring_get(aTHX_ a,b)
 # define switch_argstack(a)                     Perl_switch_argstack(aTHX_ a)
 # define switch_to_global_locale()              Perl_switch_to_global_locale(aTHX)

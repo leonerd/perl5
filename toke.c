@@ -13850,8 +13850,7 @@ Perl_scan_vstring(pTHX_ const char *s, const char *const e, SV *sv)
                  pos++;
         }
         SvPOK_on(sv);
-        sv_magic(sv,NULL,PERL_MAGIC_vstring,(const char*)start, pos-start);
-        SvRMAGICAL_on(sv);
+        sv_vstring_apply(sv, start, pos - start);
     }
     return (char *)s;
 }

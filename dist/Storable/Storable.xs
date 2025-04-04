@@ -297,6 +297,32 @@ typedef STRLEN ntag_t;
 #define VSTRING_CROAK() CROAK(("Cannot retrieve vstring in this perl"))
 #endif
 
+#ifndef sv_vstring_get
+#define sv_vstring_get(sv,lenp) S_sv_vstring_get(aTHX_ sv,lenp)
+static const char *S_sv_vstring_get(pTHX_ SV *sv, STRLEN *lenp)
+{
+  MAGIC *mg;
+  if(!SvMAGICAL(sv) || !(mg = mg_find(sv, PERL_MAGIC_vstring)))
+    return NULL;
+
+  *lenp = mg->mg_len;
+  return mg->mg_ptr;
+}
+#endif
+
+#ifndef sv_vstring_apply
+#define sv_vstring_apply(sv,pv,len)  S_sv_vstring_apply(aTHX_ sv,pv,len)
+static void S_sv_vstring_apply(pTHX_ SV *sv, const char *vstr_pv, STRLEN vstr_len)
+{
+    sv_magic(sv, NULL, PERL_MAGIC_vstring, vstr_pv, vstr_len);
+    SvRMAGICAL_on(sv);
+}
+#endif
+
+#ifndef SvVSTRING
+#define SvVSTRING(sv,len)  (sv_vstring_get(sv, &(len)))
+#endif
+
 #ifdef HvPLACEHOLDERS
 #define HAS_RESTRICTED_HASHES
 #else
@@ -5847,9 +5873,7 @@ static SV *retrieve_vstring(pTHX_ stcxt_t *cxt, const char *cname)
     sv = retrieve(aTHX_ cxt, cname);
     if (!sv)
         return (SV *) 0;                /* Failed */
-    sv_magic(sv,NULL,PERL_MAGIC_vstring,s,len);
-    /* 5.10.0 and earlier seem to need this */
-    SvRMAGICAL_on(sv);
+    sv_vstring_apply(sv, s, len);
 
     TRACEME(("ok (retrieve_vstring at 0x%" UVxf ")", PTR2UV(sv)));
     return sv;
@@ -5890,9 +5914,7 @@ static SV *retrieve_lvstring(pTHX_ stcxt_t *cxt, const char *cname)
         Safefree(s);
         return (SV *) 0;                /* Failed */
     }
-    sv_magic(sv,NULL,PERL_MAGIC_vstring,s,len);
-    /* 5.10.0 and earlier seem to need this */
-    SvRMAGICAL_on(sv);
+    sv_vstring_apply(sv, s, len);
 
     Safefree(s);
 

@@ -4825,8 +4825,7 @@ SVt_PVMG_common:
             const char *vstr_pv;
             STRLEN vstr_len;
             if ((vstr_pv = SvVSTRING(ssv, vstr_len))) {
-                sv_magic(dsv, NULL, PERL_MAGIC_vstring, vstr_pv, vstr_len);
-                SvRMAGICAL_on(dsv);
+                sv_vstring_apply(dsv, vstr_pv, vstr_len);
             }
         }
     }
@@ -19311,6 +19310,24 @@ Perl_sv_vstring_get(pTHX_ SV * const sv, STRLEN *lenp)
 
     if(lenp) *lenp = mg->mg_len;
     return mg->mg_ptr;
+}
+
+/*
+=for apidoc sv_vstring_apply
+
+Applies vstring magic to the SV, by storing a copy of the string given by
+C<vstr_pv> and C<vstr_len>.
+
+=cut
+*/
+
+void
+Perl_sv_vstring_apply(pTHX_ SV *sv, const char *vstr_pv, STRLEN vstr_len)
+{
+    PERL_ARGS_ASSERT_SV_VSTRING_APPLY;
+
+    sv_magic(sv, NULL, PERL_MAGIC_vstring, vstr_pv, vstr_len);
+    SvRMAGICAL_on(sv);
 }
 
 /*

@@ -3942,6 +3942,10 @@ Adp	|void	|sv_vsetpvfn	|NN SV * const sv			\
 				|NULLOK SV ** const svargs		\
 				|const Size_t sv_count			\
 				|NULLOK bool * const maybe_tainted
+Adp	|void	|sv_vstring_apply					\
+				|NN SV *sv				\
+				|NN const char *vstr_pv 		\
+				|STRLEN vstr_len
 Adp	|const char *|sv_vstring_get					\
 				|NN SV * const sv			\
 				|NULLOK STRLEN *lenp

@@ -8002,6 +8002,14 @@ Perl_sv_vsetpvfn(pTHX_ SV * const sv, const char * const pat, const STRLEN patle
 #define PERL_ARGS_ASSERT_SV_VSETPVFN            \
         Perl_assert_aTHX; assert(sv); assert(pat)
 
+PERL_CALLCONV void
+Perl_sv_vstring_apply(pTHX_ SV *sv, const char *vstr_pv, STRLEN vstr_len)
+        Perl_attribute_nonnull_aTHX
+        Perl_attribute_nonnull(pTHX_1)
+        Perl_attribute_nonnull(pTHX_2);
+#define PERL_ARGS_ASSERT_SV_VSTRING_APPLY       \
+        Perl_assert_aTHX; assert(sv); assert(vstr_pv)
+
 PERL_CALLCONV const char *
 Perl_sv_vstring_get(pTHX_ SV * const sv, STRLEN *lenp)
         Perl_attribute_nonnull_aTHX

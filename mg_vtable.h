@@ -14,7 +14,6 @@
 
 #define PERL_MAGIC_sv             '\0' /* Special scalar variable */
 #define PERL_MAGIC_arylen         '#' /* Array length ($#ary) */
-#define PERL_MAGIC_symtab         ':' /* Extra data for symbol tables */
 #define PERL_MAGIC_backref        '<' /* For weak ref data */
 #define PERL_MAGIC_arylen_p       '@' /* To move arylen out of XPVAV */
 #define PERL_MAGIC_bm             'B' /* Boyer-Moore (fast string search) */

@@ -4183,19 +4183,32 @@ Perl_hv_assert(pTHX_ HV *hv)
 
 #endif
 
+/* Most stashes do not need to store these extra PMOP pointers. For the rare
+ * case they do, we'll use an array of PMOP* pointers stored in the HkPTR
+ * buffer of a Hook. This Hook structure defines no functions, and exists
+ * purely to store this extra data
+ */
+
+static const struct HookFunctions stash_pmops_hook = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .debug_name = "stash_pmops",
+};
+
 void
 Perl_stash_add_pmop(pTHX_ HV *stash, PMOP *o)
 {
     PERL_ARGS_ASSERT_STASH_ADD_PMOP;
 
-    MAGIC *mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
-    if (!mg) {
-        mg = sv_magicext(MUTABLE_SV(stash), 0, PERL_MAGIC_symtab, 0, 0, 0);
-    }
-    U32 elements = mg->mg_len / sizeof(PMOP**);
-    Renewc(mg->mg_ptr, elements + 1, PMOP*, char);
-    ((PMOP**)mg->mg_ptr) [elements++] = o;
-    mg->mg_len = elements * sizeof(PMOP**);
+    MAGIC *mg = sv_hook_find_or_add((SV *)stash, &stash_pmops_hook);
+
+    U32 elements = HkPTRLEN(mg) / sizeof(PMOP*);
+
+    hk_ptr_store(mg, HkPTR(mg), (elements + 1) * sizeof(PMOP*));
+
+    PMOP **pmops = (PMOP **)HkPTR(mg);
+    pmops[elements] = o;
+
     PmopSTASH_set(o, stash);
 }
 
@@ -4207,29 +4220,30 @@ Perl_stash_forget_pmop(pTHX_ HV *stash, PMOP *o)
     if(SvIS_FREED(stash) || !SvMAGICAL(stash))
         return;
 
-    MAGIC * const mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
-    if(!mg)
+    MAGIC *mg = sv_hook_find_by_funcs((SV *)stash, &stash_pmops_hook);
+    if (!mg)
         return;
 
-    PMOP **const array = (PMOP**) mg->mg_ptr;
-    U32 count = mg->mg_len / sizeof(PMOP**);
-    U32 i = count;
+    U32 elements = HkPTRLEN(mg) / sizeof(PMOP*);
+    PMOP **pmops = (PMOP **)HkPTR(mg);
+    U32 i = elements;
 
     while (i--) {
-        if (array[i] == o) {
+        if (pmops[i] == o) {
             /* Found it. Move the entry at the end to overwrite it.  */
-            array[i] = array[--count];
-            mg->mg_len = count * sizeof(PMOP**);
+            pmops[i] = pmops[--elements];
             /* Could realloc smaller at this point always, but probably
                not worth it. Probably worth free()ing if we're the
                last.  */
-            if(!count) {
-                Safefree(mg->mg_ptr);
-                mg->mg_ptr = NULL;
+            if(!elements) {
+                Safefree(pmops);
+                HkPTR_set(mg, NULL);
             }
             break;
         }
     }
+
+    HkPTRLEN_set(mg, elements * sizeof(PMOP*));
 }
 
 void
@@ -4237,13 +4251,16 @@ Perl_stash_reset_pmops(pTHX_ HV *stash)
 {
     PERL_ARGS_ASSERT_STASH_RESET_PMOPS;
 
-    MAGIC * const mg = mg_find((const SV *)stash, PERL_MAGIC_symtab);
-    if(!mg || !mg->mg_len)
+    MAGIC *mg = sv_hook_find_by_funcs((SV *)stash, &stash_pmops_hook);
+    if (!mg)
         return;
 
-    const U32 count = mg->mg_len / sizeof(PMOP**);
-    PMOP **pmp = (PMOP**) mg->mg_ptr;
-    PMOP *const *const end = pmp + count;
+    U32 elements = HkPTRLEN(mg) / sizeof(PMOP*);
+    if (!elements)
+        return;
+
+    PMOP **pmp = (PMOP **)HkPTR(mg);
+    PMOP *const *const end = pmp + elements;
 
     while (pmp < end) {
 #ifdef USE_ITHREADS

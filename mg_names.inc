@@ -8,7 +8,6 @@
 
 	{ PERL_MAGIC_sv,             "sv(\\0)" },
 	{ PERL_MAGIC_arylen,         "arylen(#)" },
-	{ PERL_MAGIC_symtab,         "symtab(:)" },
 	{ PERL_MAGIC_backref,        "backref(<)" },
 	{ PERL_MAGIC_arylen_p,       "arylen_p(@)" },
 	{ PERL_MAGIC_bm,             "bm(B)" },

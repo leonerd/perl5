@@ -201,8 +201,6 @@ my %mg =
                  desc => 'Array length ($#ary)' },
      backref => { char => '<', vtable => 'backref', value_magic => 1,
                   readonly_acceptable => 1, desc => 'For weak ref data' },
-     symtab => { char => ':', value_magic => 1,
-                 desc => 'Extra data for symbol tables' },
      arylen_p => { char => '@', value_magic => 1,
                    desc => 'To move arylen out of XPVAV' },
      ext => { char => '~', desc => 'Variable magic available for use by extensions',

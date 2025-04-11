@@ -16749,6 +16749,8 @@ perl_clone_using(PerlInterpreter *proto_perl, UV flags,
         param->unreferenced = newAV();
     }
 
+    PL_viralmagic_annotations = proto_perl->Iviralmagic_annotations ? newSV_type(SVt_PVMG) : NULL;
+
 #ifdef PERLIO_LAYERS
     /* Clone PerlIO tables as soon as we can handle general xx_dup() */
     PerlIO_clone(aTHX_ proto_perl, param);

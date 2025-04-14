@@ -1957,10 +1957,26 @@ Perl_warn_sv(pTHX_ SV *baseex)
 void
 Perl_vwarn(pTHX_ const char* pat, va_list *args)
 {
+    bool must_leave = PL_viralmagic_annotations;
+    if (must_leave) {
+        /* Disable viral magic annotations while generating the message itself
+         * otherwise infinite recursion is easily possible
+         * TODO: This means we lose annotations during warnings. It'd be nice
+         * to permit one level of recursion but no further, but that requires
+         * more complex tracking of what's going on.
+         */
+        ENTER;
+        SAVESPTR(PL_viralmagic_annotations);
+        PL_viralmagic_annotations = NULL;
+    }
+
     SV *ex = vmess(pat, args);
     PERL_ARGS_ASSERT_VWARN;
     if (!invoke_exception_hook(ex, TRUE))
         write_to_stderr(ex);
+
+    if (must_leave)
+        LEAVE;
 }
 
 /*

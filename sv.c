@@ -6526,6 +6526,11 @@ bad_shape:
     if(!(funcs->flags & HKf_ALWAYS_WEAK_AUXSV))
         HkFLAGS(mg) |= HKf_REFCOUNTED_AUXSV;
 
+    if(funcs->shape == HKs_SCALARVALUE)
+        if(!PL_viralmagic_annotations && !(flags & HKp_NO_CREATE_VIRALMAGIC)) {
+            PL_viralmagic_annotations = newSV_type(SVt_PVMG);
+        }
+
     return mg;
 }
 
@@ -19073,7 +19078,9 @@ Perl_sv_vstring_apply(pTHX_ SV *sv, const char *vstr_pv, STRLEN vstr_len)
 {
     PERL_ARGS_ASSERT_SV_VSTRING_APPLY;
 
-    MAGIC *mg = sv_hook_add(sv, (const struct HookFunctions *)&vstring_hook, 0, NULL);
+    MAGIC *mg = sv_hook_add(sv, (const struct HookFunctions *)&vstring_hook,
+            HKp_NO_CREATE_VIRALMAGIC, /* do not create PL_viralmagic_annotations as we won't need it */
+            NULL);
 
     hk_ptr_store(mg, vstr_pv, vstr_len);
     SvRMAGICAL_on(sv);

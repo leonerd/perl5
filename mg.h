@@ -111,6 +111,9 @@ enum HookShape {
 #define HKf_CONTAINER         (1<<16)
 #define HKf_ALWAYS_WEAK_AUXSV (1<<17)
 
+/* Flag constants passed to sv_hook_add() */
+#define HKp_NO_CREATE_VIRALMAGIC (1<<24)   /* implementation private */
+
 /* common to all hook function structs */
 #define _PERL_HOOKFUNCTIONS_COMMON_FIELDS  \
     MGVTBL _v1_vtbl; /* reserve space */   \

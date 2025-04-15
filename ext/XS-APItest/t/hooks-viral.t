@@ -208,4 +208,69 @@ base_or_unop_viral_ok("xyz", sub ($x) { fc,      fc $x },      fc "xyz", "fc");
 base_or_unop_viral_ok("a",   sub ($x) { ord,     ord $x },     ord "a", "ord");
 base_or_unop_viral_ok(65,    sub ($x) { chr,     chr $x },     chr 65,  "chr");
 
+sub binop_viral_ok( $in1, $in2, $code, $want_out, $name )
+{
+    foreach my $round (qw( first second )) {
+        my @args;
+        my $got_out;
+
+        # Just LHS
+        @args = ( $in1, $in2 );
+        sv_hook_add($args[0], viral => \"test-val $name LHS $round");
+
+        $got_out = $code->( @args );
+        $round eq "first" and
+            is($got_out, $want_out, "$name viral hook yields correct result");
+
+        is_deeply([HkAUXSV_values($got_out, 'viral')], ["test-val $name LHS $round"],
+            "$name binop passes viral hook from LHS");
+
+        # Just RHS
+        @args = ( $in1, $in2 );
+        sv_hook_add($args[1], viral => \"test-val $name RHS $round");
+
+        $got_out = $code->( @args );
+        is_deeply([HkAUXSV_values($got_out, 'viral')], ["test-val $name RHS $round"],
+            "$name binop passes viral hook from RHS");
+
+        # Both
+        @args = ( $in1, $in2 );
+        sv_hook_add($args[0], viral => \"test-val $name ALLLHS $round");
+        sv_hook_add($args[1], viral => \"test-val $name ALLRHS $round");
+
+        $got_out = $code->( @args );
+        is_deeply([sort +HkAUXSV_values($got_out, 'viral')],
+                  ["test-val $name ALLLHS $round", "test-val $name ALLRHS $round"],
+            "$name binop passes viral hook from both args simultaneously");
+    }
+}
+
+binop_viral_ok(1, 1, sub ($x, $y) { $x +  $y },      2, "add" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x += $y; $x },  2, "add mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x -  $y },      0, "subtract" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x -= $y; $x },  0, "subtract mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x *  $y },      1, "multiply" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x *= $y; $x },  1, "multiply mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x /  $y },      1, "divide" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x /= $y; $x },  1, "divide mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x %  $y },      0, "modulo" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x %= $y; $x },  0, "modulo mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x **  $y },     1, "power" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x **= $y; $x }, 1, "power mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x <<  $y },     2, "left-shift" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x <<= $y; $x }, 2, "left-shift mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x >>  $y },     0, "right-shift" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x >>= $y; $x }, 0, "right-shift mutating" );
+
+binop_viral_ok(1, 1, sub ($x, $y) { $x &  $y },     1, "bitwise-and" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x &= $y; $x }, 1, "bitwise-and mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x |  $y },     1, "bitwise-or" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x |= $y; $x }, 1, "bitwise-or mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x ^  $y },     0, "bitwise-xor" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x ^= $y; $x }, 0, "bitwise-xor mutating" );
+
+binop_viral_ok(1, 1, sub ($x, $y) { $x .  $y },         "11", "concat" );
+binop_viral_ok(1, 1, sub ($x, $y) { $x .= $y; $x },     "11", "concat mutating" );
+binop_viral_ok(1, 1, sub ($x, $y) { $y = $x . $y; $y }, "11", "concat reuse right" );
+
 done_testing;

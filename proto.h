@@ -6922,6 +6922,28 @@ S_do_trans_simple(pTHX_ SV * const sv, const OPtrans_map * const tbl)
         assert(sv); assert(tbl)
 
 #endif /* defined(PERL_IN_DOOP_C) */
+#if defined(PERL_IN_DOOP_C) || defined(PERL_IN_MG_C) || \
+    defined(PERL_IN_PP_C)   || defined(PERL_IN_SV_C)
+PERL_CALLCONV void
+Perl_mg_disinfect(pTHX_ SV *sv)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_DISINFECT          \
+        assert(sv)
+
+PERL_CALLCONV void
+Perl_mg_infect(pTHX_ SV *ssv, SV *dsv)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_INFECT             \
+        assert(ssv)
+
+PERL_CALLCONV void
+Perl_mg_infect_common(pTHX_ SV *ssv, SV *dsv, bool also_vstring)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_INFECT_COMMON      \
+        assert(ssv)
+
+#endif /* defined(PERL_IN_DOOP_C) || defined(PERL_IN_MG_C) ||
+          defined(PERL_IN_PP_C)   || defined(PERL_IN_SV_C) */
 #if defined(PERL_IN_DOOP_C)    || defined(PERL_IN_OP_C)        || \
     defined(PERL_IN_PP_C)      || defined(PERL_IN_REGCOMP_ANY) || \
     defined(PERL_IN_REGEXEC_C) || defined(PERL_IN_TOKE_C)      || \

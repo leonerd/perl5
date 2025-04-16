@@ -1316,6 +1316,12 @@
 #     define do_trans_invmap(a,b)               S_do_trans_invmap(aTHX_ a,b)
 #     define do_trans_simple(a,b)               S_do_trans_simple(aTHX_ a,b)
 #   endif
+#   if defined(PERL_IN_DOOP_C) || defined(PERL_IN_MG_C) || \
+       defined(PERL_IN_PP_C)   || defined(PERL_IN_SV_C)
+#     define mg_disinfect(a)                    Perl_mg_disinfect(aTHX_ a)
+#     define mg_infect(a,b)                     Perl_mg_infect(aTHX_ a,b)
+#     define mg_infect_common(a,b,c)            Perl_mg_infect_common(aTHX_ a,b,c)
+#   endif
 #   if defined(PERL_IN_DUMP_C)
 #     define deb_curcv(a)                       S_deb_curcv(aTHX_ a)
 #     define debprof(a)                         S_debprof(aTHX_ a)

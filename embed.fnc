@@ -4564,6 +4564,16 @@ RS	|Size_t |do_trans_invmap|NN SV * const sv			\
 RS	|Size_t |do_trans_simple|NN SV * const sv			\
 				|NN const OPtrans_map * const tbl
 #endif
+#if defined(PERL_IN_DOOP_C) || defined(PERL_IN_MG_C) || \
+    defined(PERL_IN_PP_C)   || defined(PERL_IN_SV_C)
+p	|void	|mg_disinfect	|NN SV *sv
+p	|void	|mg_infect	|NN SV *ssv				\
+				|NULLOK SV *dsv
+p	|void	|mg_infect_common					\
+				|NN SV *ssv				\
+				|NULLOK SV *dsv 			\
+				|bool also_vstring
+#endif
 #if defined(PERL_IN_DOOP_C)    || defined(PERL_IN_OP_C)        || \
     defined(PERL_IN_PP_C)      || defined(PERL_IN_REGCOMP_ANY) || \
     defined(PERL_IN_REGEXEC_C) || defined(PERL_IN_TOKE_C)      || \

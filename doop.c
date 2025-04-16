@@ -714,6 +714,8 @@ Perl_do_join(pTHX_ SV *sv, SV *delim, SV **mark, SV **sp)
 
     if (TAINTING_get && SvMAGICAL(sv))
         SvTAINTED_off(sv);
+    if(SvMAGICAL(sv)) /* TODO: need more flags */
+        mg_disinfect(sv);
 
     if (items-- > 0) {
         if (*mark)

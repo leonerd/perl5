@@ -1346,6 +1346,8 @@ PP(pp_multiconcat)
                  * the PADTMP from OP_CONST. In later iterations this will
                  * be appended to */
                 nexttarg = PAD_SV(aux[PERL_MULTICONCAT_IX_PADTMP0].pad_offset);
+                if (UNLIKELY(SvMAGICAL(nexttarg)))
+                    mg_disinfect(nexttarg);
                 nextappend = FALSE;
             }
             else {

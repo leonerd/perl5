@@ -152,6 +152,23 @@ unop_viral_ok(1, sub ($x) { -$x }, -1, "negate");
 unop_viral_ok(1, sub ($x) { ~$x }, ~1, "complement");
 unop_viral_ok("abc", sub ($x) { length $x }, 3, "length");
 
+# OP_STRINGIFY is a listop despite only taking 1 argument
+# OP_SUBSTR only copies viral magic from the string argument, not the positions
+# We can treat both as unops
+unop_viral_ok("xyz", sub ($x) { "$x" }, "xyz", "stringify");
+
+unop_viral_ok("xyz", sub ($x) { return substr $x, 1, 1 }, "y", "substr (3arg non-MOD)");
+unop_viral_ok("xyz", sub ($x) { return substr $x, 1, 1, "B" }, "y", "substr (4arg non-MOD)");
+unop_viral_ok("xyz", sub ($x) { my $ret = "ABC"; substr $ret, 1, 1, $x; $ret; }, "AxyzC", "substr (4arg non-MOD) mutation");
+unop_viral_ok("xyz", sub ($x) { my $ret = "ABC"; substr( $ret, 1, 1 ) = $x; $ret; }, "AxyzC", "substr (3arg MOD rewritten)");
+# Perl will rewrite a simple  substr($x, $n, $c) = $y  into a 4-arg with
+# reördered arguments, so we have to test true lvalue returns via $_
+unop_viral_ok("xyz", sub ($x) { my $ret = "ABC"; $_ = $x for substr( $ret, 1, 1 ); $ret; }, "AxyzC", "substr (3arg MOD)");
+
+# OP_SUBSTR_LEFT kicks in if known non-lvalue, offset is constant zero and
+# there is no replacement
+unop_viral_ok("xyz", sub ($x) { my $ret = substr $x, 0, 2; $ret; }, "xy", "substr_left");
+
 # Inplace-mutating UNOPs; check variable also
 sub mut_unop_viral_ok ( $inp, $code, $want_out, $want_outvar, $name )
 {
@@ -272,5 +289,57 @@ binop_viral_ok(1, 1, sub ($x, $y) { $x ^= $y; $x }, 0, "bitwise-xor mutating" );
 binop_viral_ok(1, 1, sub ($x, $y) { $x .  $y },         "11", "concat" );
 binop_viral_ok(1, 1, sub ($x, $y) { $x .= $y; $x },     "11", "concat mutating" );
 binop_viral_ok(1, 1, sub ($x, $y) { $y = $x . $y; $y }, "11", "concat reuse right" );
+
+sub listop_viral_ok ( $argspec, $code, $want_out, $name )
+{
+    my @argspec = split m//, $argspec;
+    my $argc = @argspec;
+
+    foreach my $round (qw( first second )) {
+        foreach my $idx ( 0 .. $#argspec ) {
+            next unless $argspec[$idx] eq "V";
+
+            my @args = ( "xyz" ) x $argc;
+            sv_hook_add($args[$idx], viral => \"test-val $name ARG$idx $round");
+
+            my $got_out = $code->( @args );
+            $round eq "first" and
+                is($got_out, $want_out, "$name viral hook yields correct result");
+
+            is_deeply([HkAUXSV_values($got_out, 'viral')], ["test-val $name ARG$idx $round"],
+                "$name listop passes viral hook from arg[$idx]");
+        }
+
+        # Now once more with all args annotated
+        if( $argc > 1 ) {
+            my @args = ( "xyz" ) x $argc;
+            sv_hook_add($args[$_], viral => \"test-val $name ALLARG$_ $round") for 0 .. $#argspec;
+
+            my $got_out = $code->( @args );
+
+            is_deeply([sort +HkAUXSV_values($got_out, 'viral')], [map { "test-val $name ALLARG$_ $round" } ( 0 .. $#argspec )],
+                "$name listop passes all viral hooks");
+        }
+    }
+}
+
+listop_viral_ok( "VVV", sub ($sep, @s) { join $sep, @s }, "xyzxyzxyz", "join" );
+
+# OP_MULTICONCAT has many forms
+listop_viral_ok( "VV", sub ($x, $y) { "paste ($x) and ($y)" }, "paste (xyz) and (xyz)",
+    "multiconcat (padtmp)" );
+listop_viral_ok( "VV", sub ($x, $y) { my $ret = "paste ($x) and ($y)"; $ret }, "paste (xyz) and (xyz)",
+    "multiconcat (my \$lex)" );
+listop_viral_ok( "VV", sub ($x, $y) { my $ret; $ret = "paste ($x) and ($y)"; $ret }, "paste (xyz) and (xyz)",
+    "multiconcat (\$lex)" );
+listop_viral_ok( "VV", sub ($x, $y) { my @ret; $ret[0] = "paste ($x) and ($y)"; $ret[0] }, "paste (xyz) and (xyz)",
+    "multiconcat (\$lex)" );
+listop_viral_ok( "VVV", sub ($pre, $x, $y) { my $ret = $pre; $ret .= " and ($x) and ($y)"; $ret }, "xyz and (xyz) and (xyz)",
+    "multiconcat (\$lex append)" );
+
+# Perl will turn a simple sprintf with just %s into an OP_MULTICONCAT so we
+# have to be more subtle here
+listop_viral_ok( "VV", sub ($x, $y) { sprintf "format with %3s and %3s", $x, $y }, "format with xyz and xyz",
+    "sprintf" );
 
 done_testing;

@@ -362,4 +362,9 @@ sub listret_viral_ok ( $inp, $code, $want_out, $name )
 listret_viral_ok("one,two,three", sub ($x) { split m/,/, $x }, [qw( one two three )],
     "split");
 
+listret_viral_ok("one,two,three", sub ($x) { ( "$x" =~ m/(.*),(.*),(.*)/ )[0,1,2] }, [qw( one two three )], "match OPf_STACKED+OPf_LIST" );
+listret_viral_ok("one,two,three", sub ($x) { ( $x =~ m/(.*),(.*),(.*)/ )[0,1,2] }, [qw( one two three )], "match OPf_LIST" );
+listret_viral_ok("one,two,three", sub ($x) { $x =~ m/(.*),(.*),(.*)/ }, [qw( one two three )], "match unknown context" );
+listret_viral_ok("one,two,three", sub ($x) { $_ = $x; m/(.*),(.*),(.*)/ }, [qw( one two three )], "match unknown context on defsv" );
+
 done_testing;

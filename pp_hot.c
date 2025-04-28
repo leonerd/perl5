@@ -3743,6 +3743,7 @@ PP(pp_match)
     strend = truebase + len;
     rxtainted = (RXp_ISTAINTED(prog) ||
                  (TAINT_get && (pm->op_pmflags & PMf_RETAINT)));
+    const bool targ_has_valuemagic = sv_has_valuemagic(TARG);
     TAINT_NOT;
 
     /* We need to know this in case we fail out early - pos() must be reset */
@@ -3929,11 +3930,13 @@ PP(pp_match)
                             "start=%zd, end=%zd, s=%p, strend=%p, len=%zd",
                             phys_paren, offs_start, offs_end, s, strend, len);
                     }
-                    rpp_push_1(newSVpvn_flags(s, len,
+                    SV *retsv = newSVpvn_flags(s, len,
                         (DO_UTF8(TARG))
                         ? SVf_UTF8|SVs_TEMP
-                        : SVs_TEMP)
-                    );
+                        : SVs_TEMP);
+                    if (targ_has_valuemagic)
+                        mg_infect(TARG, retsv);
+                    rpp_push_1(retsv);
                     break;
                 } else if (!p2l_next || !(phys_paren = p2l_next[phys_paren])) {
                     /* Either logical_paren and phys_paren are the same and

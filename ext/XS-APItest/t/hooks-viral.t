@@ -342,4 +342,24 @@ listop_viral_ok( "VVV", sub ($pre, $x, $y) { my $ret = $pre; $ret .= " and ($x) 
 listop_viral_ok( "VV", sub ($x, $y) { sprintf "format with %3s and %3s", $x, $y }, "format with xyz and xyz",
     "sprintf" );
 
+sub listret_viral_ok ( $inp, $code, $want_out, $name )
+{
+    foreach my $round (qw( first second )) {
+        my @args = ($inp);
+        sv_hook_add($args[0], viral => \"test-val $name $round");
+
+        my $got_out = [ $code->( @args ) ];
+        $round eq "first" and
+            is_deeply($got_out, $want_out, "$name viral hook yields correct result list");
+
+        foreach my $gotidx ( 0 .. $#$got_out ) {
+            is_deeply([HkAUXSV_values($got_out->[$gotidx], 'viral')], ["test-val $name $round"],
+                "$name op passes viral hook in result $gotidx");
+        }
+    }
+}
+
+listret_viral_ok("one,two,three", sub ($x) { split m/,/, $x }, [qw( one two three )],
+    "split");
+
 done_testing;

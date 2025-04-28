@@ -1068,7 +1068,7 @@ PP(pp_undef)
             break;
         }
     default:
-        if (SvTYPE(sv) >= SVt_PVMG)
+        if (SvTYPE(sv) >= SVt_PVMG && SvMAGICAL(sv))
             mg_disinfect(sv);
         if (SvTYPE(sv) >= SVt_PV && SvPVX_const(sv) && SvLEN(sv)
             && !(PL_op->op_private & OPpUNDEF_KEEP_PV)

@@ -1177,6 +1177,7 @@
 #   define opslab_free_nopad(a)                 Perl_opslab_free_nopad(aTHX_ a)
 #   define parser_free_nexttoke_ops(a,b)        Perl_parser_free_nexttoke_ops(aTHX_ a,b)
 #   define should_warn_nl                       S_should_warn_nl
+#   define sv_has_valuemagic(a)                 Perl_sv_has_valuemagic(aTHX_ a)
 #   if defined(DEBUGGING)
 #     define get_debug_opts(a,b)                Perl_get_debug_opts(aTHX_ a,b)
 #     define set_padlist                        Perl_set_padlist

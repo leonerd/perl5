@@ -6786,6 +6786,18 @@ Perl_mg_disinfect(pTHX_ SV *sv)
     S_sv_hook_remove(aTHX_ sv, &S_filter_hook_viralvalue, NULL);
 }
 
+bool
+Perl_sv_has_valuemagic(pTHX_ const SV *sv)
+{
+    PERL_ARGS_ASSERT_SV_HAS_VALUEMAGIC;
+
+    /* TODO: It'd be nice to have a good efficient flag in SvFLAGS to test
+     * this. But currently there are no spare bits, so we have to search the
+     * magic chain
+     */
+    return (bool)S_sv_hook_find(aTHX_ sv, &S_filter_hook_viralvalue, NULL, NULL);
+}
+
 MAGIC *
 Perl_sv_magicext_mglob(pTHX_ SV *sv)
 {

@@ -6075,6 +6075,12 @@ Perl_parser_free_nexttoke_ops(pTHX_ yy_parser *parser, OPSLAB *slab)
 # define PERL_ARGS_ASSERT_PARSER_FREE_NEXTTOKE_OPS \
         assert(parser); assert(slab)
 
+PERL_CALLCONV bool
+Perl_sv_has_valuemagic(pTHX_ const SV *sv)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_SV_HAS_VALUEMAGIC     \
+        assert(sv)
+
 # if defined(PERL_DEBUG_READONLY_OPS)
 PERL_CALLCONV void
 Perl_Slab_to_ro(pTHX_ OPSLAB *slab);

@@ -169,6 +169,44 @@ unop_viral_ok("xyz", sub ($x) { my $ret = "ABC"; $_ = $x for substr( $ret, 1, 1 
 # there is no replacement
 unop_viral_ok("xyz", sub ($x) { my $ret = substr $x, 0, 2; $ret; }, "xy", "substr_left");
 
+# OP_SUBST has many corner-cases
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,/-/; $x }, "one-two,three",
+    'subst const' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,/-/g; $x }, "one-two-three",
+    'subst const global' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,//; $x }, "onetwo,three",
+    'subst const shorter' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,/--/; $x }, "one--two,three",
+    'subst const longer' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,/-/r }, "one-two,three",
+    'subst const non-destruct' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,/-/gr }, "one-two-three",
+    'subst const global non-destruct' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,//r }, "onetwo,three",
+    'subst const non-destruct longer' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,/--/r }, "one--two,three",
+    'subst const non-destruct shorter' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,...,/-two-/; $x }, "one-two-three",
+    'subst const variable-pattern' );
+unop_viral_ok("one,two,three", sub ($x) { $x =~ s/,...,/-two-/r }, "one-two-three",
+    'subst const variable-pattern non-destruct' );
+unop_viral_ok("one,two,three", sub ($x) { "$x" =~ s/,/-/gr }, "one-two-three",
+    'subst const global non-destruct OPf_STACKED' );
+unop_viral_ok("one,two,three", sub ($x) { $_ = $x; s/,/-/g; $_ }, "one-two-three",
+    'subst const global on defsv' );
+unop_viral_ok("one,two,three", sub ($x) { my $s = "four,five"; $s =~ s/.*/$x/; $s }, "one,two,three",
+    'subst expr[padsv]' );
+unop_viral_ok("one,two,three", sub ($x) { my $s = "four,five"; $s =~ s/.*/$x/r }, "one,two,three",
+    'subst expr[padsv] non-destruct' );
+unop_viral_ok("one,two,three", sub ($x) { $_ = "four,five"; s/.*/$x/; $_ }, "one,two,three",
+    'subst expr[padsv] on defsv' );
+unop_viral_ok("one,two,three", sub ($x) { $_ = "four,five"; s/.*/($x)/; $_ }, "(one,two,three)",
+    'subst expr[multiconcat] on defsv' );
+unop_viral_ok("one,two,three", sub ($x) { "four,five" =~ s/.*/($x)/r }, "(one,two,three)",
+    'subst expr[multiconcat] non-destruct' );
+# TODO: There may be other combinations as yet untested that have subtle weird
+# behaviours
+
 # Inplace-mutating UNOPs; check variable also
 sub mut_unop_viral_ok ( $inp, $code, $want_out, $want_outvar, $name )
 {

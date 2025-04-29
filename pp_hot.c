@@ -5654,6 +5654,8 @@ PP(pp_subst)
         if (rpm->op_pmflags & PMf_NONDESTRUCT) {
             /* From here on down we're using the copy, and leaving the original
                untouched.  */
+            if (sv_has_valuemagic(TARG))
+                mg_infect(TARG, dstr);
             TARG = dstr;
             retval = dstr;
             goto ret;
@@ -5675,6 +5677,8 @@ PP(pp_subst)
             SvCUR_set(TARG, SvCUR(dstr));
             SvLEN_set(TARG, SvLEN(dstr));
             SvFLAGS(TARG) |= SvUTF8(dstr);
+            if (sv_has_valuemagic(dstr))
+                mg_infect(dstr, TARG);
             SvPV_set(dstr, NULL);
             goto ret_iters;
         }

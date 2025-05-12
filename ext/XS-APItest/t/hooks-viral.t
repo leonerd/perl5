@@ -328,6 +328,39 @@ binop_viral_ok(1, 1, sub ($x, $y) { $x .  $y },         "11", "concat" );
 binop_viral_ok(1, 1, sub ($x, $y) { $x .= $y; $x },     "11", "concat mutating" );
 binop_viral_ok(1, 1, sub ($x, $y) { $y = $x . $y; $y }, "11", "concat reuse right" );
 
+{
+    my $x = -12;
+    my $y = 456;
+    sv_hook_add($y, viral => \"SVt_IV fast-path test");
+
+    $x += $y;
+
+    is_deeply([HkAUXSV_values($x, 'viral')], ["SVt_IV fast-path test"],
+        'found annotations after SVt_IV fast path');
+}
+
+{
+    my $x = 123;
+    my $y = 456;
+    sv_hook_add($y, viral => \"SVt_UV fast-path test");
+
+    $x += $y;
+
+    is_deeply([HkAUXSV_values($x, 'viral')], ["SVt_UV fast-path test"],
+        'found annotations after SVt_UV fast path');
+}
+
+{
+    my $x = 1.23;
+    my $y = 456;
+    sv_hook_add($y, viral => \"SVt_NV fast-path test");
+
+    $x += $y;
+
+    is_deeply([HkAUXSV_values($x, 'viral')], ["SVt_NV fast-path test"],
+        'found annotations after SVt_NV fast path');
+}
+
 sub listop_viral_ok ( $argspec, $code, $want_out, $name )
 {
     my @argspec = split m//, $argspec;

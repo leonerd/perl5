@@ -303,12 +303,7 @@ PP(pp_av2arylen)
     AV * const av = MUTABLE_AV(*PL_stack_sp);
     const I32 lvalue = PL_op->op_flags & OPf_MOD || LVRET;
     if (lvalue) {
-        SV ** const svp = Perl_av_arylen_p(aTHX_ MUTABLE_AV(av));
-        if (!*svp) {
-            *svp = newSV_type(SVt_PVMG);
-            sv_magic(*svp, MUTABLE_SV(av), PERL_MAGIC_arylen, NULL, 0);
-        }
-        SV *sv_al = *svp; /* the temporary SV with arylen magic */
+        SV *sv_al = av_get_arylen_sv(av); /* the temporary SV with arylen magic */
 #ifdef PERL_RC_STACK
         if (SvREFCNT(av) == 1) {
             /* At this point there are two SVs pointing at each other,

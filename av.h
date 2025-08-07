@@ -94,7 +94,6 @@ If all you need is to look up an array element, then prefer C<av_fetch>.
 #define AvALLOC(av)	((XPVAV*)  SvANY(av))->xav_alloc
 #define AvMAX(av)	((XPVAV*)  SvANY(av))->xav_max
 #define AvFILLp(av)	((XPVAV*)  SvANY(av))->xav_fill
-#define AvARYLEN(av)	(*Perl_av_arylen_p(aTHX_ MUTABLE_AV(av)))
 
 #define AvREAL(av)	(SvFLAGS(av) & SVpav_REAL)
 #define AvREAL_on(av)	(SvFLAGS(av) |= SVpav_REAL)

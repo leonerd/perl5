@@ -1207,13 +1207,19 @@ S_get_aux_mg(pTHX_ AV *av) {
     return mg;
 }
 
-SV **
-Perl_av_arylen_p(pTHX_ AV *av) {
+SV *
+Perl_av_get_arylen_sv(pTHX_ AV *av)
+{
+    PERL_ARGS_ASSERT_AV_GET_ARYLEN_SV;
+
     MAGIC *const mg = get_aux_mg(av);
 
-    PERL_ARGS_ASSERT_AV_ARYLEN_P;
+    if (!mg->mg_obj) {
+        mg->mg_obj = newSV_type(SVt_PVMG);
+        sv_magic(mg->mg_obj, MUTABLE_SV(av), PERL_MAGIC_arylen, NULL, 0);
+    }
 
-    return &(mg->mg_obj);
+    return mg->mg_obj;
 }
 
 IV *

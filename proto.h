@@ -158,11 +158,6 @@ PERL_CALLCONV void
 Perl_atfork_unlock(void);
 #define PERL_ARGS_ASSERT_ATFORK_UNLOCK
 
-PERL_CALLCONV SV **
-Perl_av_arylen_p(pTHX_ AV *av);
-#define PERL_ARGS_ASSERT_AV_ARYLEN_P            \
-        assert(av); assert(SvTYPE(av) == SVt_PVAV)
-
 PERL_CALLCONV void
 Perl_av_clear(pTHX_ AV *av);
 #define PERL_ARGS_ASSERT_AV_CLEAR               \
@@ -6396,7 +6391,13 @@ Perl_av_flip_arylen_weakrefs(pTHX_ AV *av)
 # define PERL_ARGS_ASSERT_AV_FLIP_ARYLEN_WEAKREFS \
         assert(av); assert(SvTYPE(av) == SVt_PVAV)
 
-#endif
+PERL_CALLCONV SV *
+Perl_av_get_arylen_sv(pTHX_ AV *av)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_AV_GET_ARYLEN_SV      \
+        assert(av); assert(SvTYPE(av) == SVt_PVAV)
+
+#endif /* defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C) */
 #if defined(PERL_IN_BUILTIN_C) || defined(PERL_IN_OP_C)
 PERL_CALLCONV void
 Perl_XS_builtin_indexed(pTHX_ CV *cv)

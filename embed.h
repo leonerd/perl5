@@ -1231,6 +1231,7 @@
 #   endif
 #   if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
 #     define av_flip_arylen_weakrefs(a)         Perl_av_flip_arylen_weakrefs(aTHX_ a)
+#     define av_get_arylen_sv(a)                Perl_av_get_arylen_sv(aTHX_ a)
 #   endif
 #   if defined(PERL_IN_BUILTIN_C) || defined(PERL_IN_OP_C)
 #     define XS_builtin_indexed(a)              Perl_XS_builtin_indexed(aTHX_ a)

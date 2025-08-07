@@ -844,7 +844,6 @@ Adp	|OP *	|apply_builtin_cv_attributes				\
 CTp	|void	|atfork_child
 CTp	|void	|atfork_lock
 CTp	|void	|atfork_unlock
-Cop	|SV **	|av_arylen_p	|NN AV *av
 Adp	|void	|av_clear	|NN AV *av
 ARdip	|Size_t |av_count	|NN AV *av
 Adeop	|void	|av_create_and_push					\
@@ -4461,6 +4460,8 @@ S	|MAGIC *|get_aux_mg	|NN AV *av
 #endif
 #if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
 p	|void	|av_flip_arylen_weakrefs				\
+				|NN AV *av
+p	|SV *	|av_get_arylen_sv					\
 				|NN AV *av
 #endif
 #if defined(PERL_IN_BUILTIN_C) || defined(PERL_IN_OP_C)

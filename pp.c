@@ -7644,16 +7644,13 @@ PP(pp_anonconst)
  * Replaces elements in an AV with a new SV cloned from the original value
  * at each position from startix onwards until endix.
  */
-#define av_refresh_elements_range(av, startix, endix)  S_av_refresh_elements_range(aTHX_ av, startix, endix)
+#define argv_refresh_elements_range(argv, startix, endix)  S_argv_refresh_elements_range(aTHX_ argv, startix, endix)
 STATIC void
-S_av_refresh_elements_range(pTHX_ AV *av, IV startix, IV endix)
+S_argv_refresh_elements_range(pTHX_ SV **argv, IV startix, IV endix)
 {
     for(IV ix = startix; ix < endix; ix++) {
-        SV **svp = av_fetch(av, ix, FALSE);
-        SV *newsv = newSVsv_flags(svp ? *svp : &PL_sv_undef,
-                (SV_DO_COW_SVSETSV|SV_NOSTEAL));
-        if(!av_store(av, ix, newsv))
-            SvREFCNT_dec_NN(newsv);
+        SV *newsv = newSVsv_flags(argv[ix], (SV_DO_COW_SVSETSV|SV_NOSTEAL));
+        argv[ix] = newsv;
     }
 }
 
@@ -7735,7 +7732,7 @@ PP_wrapped(pp_argelem,
              * to avoid the equivalent of @a = ($a[0]) prematurely freeing
              * elements. See similar code in pp_aassign.
              */
-            av_refresh_elements_range(defav, ix, ix + argc);
+            argv_refresh_elements_range(AvARRAY(defav), ix, ix + argc);
             av_clear((AV*)targ);
         }
 
@@ -7761,7 +7758,7 @@ PP_wrapped(pp_argelem,
 
         if (SvRMAGICAL(targ) || HvUSEDKEYS((HV*)targ)) {
             /* see "target should usually be empty" comment above */
-            av_refresh_elements_range(defav, ix, ix + argc);
+            argv_refresh_elements_range(AvARRAY(defav), ix, ix + argc);
             hv_clear((HV*)targ);
         }
 
@@ -7892,11 +7889,11 @@ PP(pp_argcheck)
 
 PP(pp_multiparam)
 {
+    dSP;
     struct op_multiparam_aux *aux = (struct op_multiparam_aux *)cUNOP_AUX->op_aux;
     size_t nparams = aux->n_positional;
     char slurpy = aux->slurpy;
     PADOFFSET *param_padix = aux->param_padix;
-    AV  *defav = GvAV(PL_defgv); /* @_ */
 
     /* Do some of the work of the missing OP_NEXTSTATE. We specifically do
      * not reset the stack pointer or call FREETMPS.
@@ -7906,8 +7903,20 @@ PP(pp_multiparam)
     TAINT_NOT;
     PERL_ASYNC_CHECK();
 
-    assert(!SvMAGICAL(defav));
-    size_t argc = (AvFILLp(defav) + 1);
+    size_t argc; SV **argv;
+    if (PL_op->op_flags & OPf_STACKED) {
+        dMARK;
+
+        argc = SP - MARK;
+        argv = MARK + 1;
+    }
+    else {
+        AV  *defav = GvAV(PL_defgv); /* @_ */
+        assert(!SvMAGICAL(defav));
+
+        argc = AvFILLp(defav) + 1;
+        argv = AvARRAY(defav);
+    }
 
     S_check_argc(aTHX_ argc, nparams, nparams - aux->min_args, slurpy);
 
@@ -7931,7 +7940,7 @@ PP(pp_multiparam)
             continue;
         }
 
-        SV **valp = av_fetch(defav, parami, FALSE);
+        SV **valp = argv + parami;
         SV *val = valp ? *valp : &PL_sv_undef;
         argc--;
 
@@ -7955,7 +7964,7 @@ PP(pp_multiparam)
 
         if(av_count(av)) {
             /* see "target should be empty" comments in pp_argelem above */
-            av_refresh_elements_range(defav, parami, parami + argc);
+            argv_refresh_elements_range(argv, parami, parami + argc);
             av_clear(av);
         }
 
@@ -7963,7 +7972,7 @@ PP(pp_multiparam)
 
         size_t avidx = 0;
         for(; argc; parami++, argc--) {
-            SV **valp = av_fetch(defav, parami, FALSE);
+            SV **valp = argv + parami;
             SV *val = valp ? *valp : &PL_sv_undef;
 
             assert(TAINTING_get || !TAINT_get);
@@ -7979,7 +7988,7 @@ PP(pp_multiparam)
 
         if(SvRMAGICAL(hv) || HvUSEDKEYS(hv) > 0) {
             /* see "target should be empty" comments in pp_argelem above */
-            av_refresh_elements_range(defav, parami, parami + argc);
+            argv_refresh_elements_range(argv, parami, parami + argc);
             hv_clear(hv);
         }
 
@@ -7988,9 +7997,9 @@ PP(pp_multiparam)
         while(argc) {
             SV **svp;
 
-            svp = av_fetch(defav, parami, FALSE); parami++;
+            svp = argv + parami; parami++;
             SV *key = svp ? *svp : &PL_sv_undef;
-            svp = av_fetch(defav, parami, FALSE); parami++;
+            svp = argv + parami; parami++;
             SV *val = svp ? *svp : &PL_sv_undef;
             argc -= 2;
 
@@ -8002,6 +8011,8 @@ PP(pp_multiparam)
                 TAINT_NOT;
         }
     }
+
+    /* TODO: if OPf_STACKED, we ought to tidy up the stack by POP'ing the consuemd values */
 
     return PL_op->op_next;
 }

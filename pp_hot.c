@@ -6428,6 +6428,11 @@ PP(pp_entersub)
         gimme = GIMME_V;
         cx = cx_pushblock(CXt_SUB, gimme, MARK, old_savestack_ix);
         hasargs = cBOOL(PL_op->op_flags & OPf_STACKED);
+        if (CvNOSNAIL(cv)) {
+            /* put the mark back on the markstack so pp_multiparam can find it */
+            PUSHMARK(MARK);
+            hasargs = false;
+        }
         cx_pushsub(cx, cv, PL_op->op_next, hasargs);
 
         padlist = CvPADLIST(cv);

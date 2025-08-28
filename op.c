@@ -2847,6 +2847,11 @@ S_process_optree(pTHX_ CV *cv, OP *optree, OP* start)
         pad_tidy(optree->op_type == OP_LEAVEWRITE ? padtidy_FORMAT
                  : CvCLONE(cv) ? padtidy_SUBCLONE : padtidy_SUB);
     }
+
+    if (cv && CvSIGNATURE(cv) && (*startp)->op_type == OP_MULTIPARAM) {
+        CvNOSNAIL_on(cv);
+        (*startp)->op_flags |= OPf_STACKED;
+    }
 }
 
 #ifdef USE_ITHREADS

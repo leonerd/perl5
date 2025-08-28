@@ -159,6 +159,7 @@ See L<perlguts/Autoloading with XSUBs>.
 #define CVf_XS_RCSTACK  0x200000 /* the XS function understands a
                                     reference-counted stack */
 #define CVf_EVAL_COMPILED 0x400000 /* an eval CV is fully compiled */
+#define CVf_NOSNAIL       0x800000 /* CV does not use @_ but passes args on stack directly to OP_MULTIPARAM */
 
 /* This symbol for optimised communication between toke.c and op.c: */
 #define CVf_BUILTIN_ATTRS	(CVf_NOWARN_AMBIGUOUS|CVf_LVALUE|CVf_ANONCONST)
@@ -251,6 +252,10 @@ See L<perlguts/Autoloading with XSUBs>.
 #define CvSIGNATURE(cv)		(CvFLAGS(cv) & CVf_SIGNATURE)
 #define CvSIGNATURE_on(cv)	(CvFLAGS(cv) |= CVf_SIGNATURE)
 #define CvSIGNATURE_off(cv)	(CvFLAGS(cv) &= ~CVf_SIGNATURE)
+
+#define CvNOSNAIL(cv)		(CvFLAGS(cv) & CVf_NOSNAIL)
+#define CvNOSNAIL_on(cv)	(CvFLAGS(cv) |= CVf_NOSNAIL)
+#define CvNOSNAIL_off(cv)	(CvFLAGS(cv) &= ~CVf_NOSNAIL)
 
 /*
 

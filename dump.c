@@ -2159,6 +2159,7 @@ const struct flag_to_name cv_flags_names[] = {
     {CVf_IsMETHOD,         "IsMETHOD,"},
     {CVf_XS_RCSTACK,       "XS_RCSTACK,"},
     {CVf_EVAL_COMPILED,    "EVAL_COMPILED,"},
+    {CVf_NOSNAIL,          "NOSNAIL,"},
 };
 
 const struct flag_to_name hv_flags_names[] = {

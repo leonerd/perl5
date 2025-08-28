@@ -433,19 +433,8 @@ is eval("t128(456, 789, 987)"), undef;
 like $@, _create_flexible_mismatch_regexp('main::t128', 3, 2);
 is $a, 123;
 
-sub t130 { join(",", @_).";".scalar(@_) }
-{
-    no warnings 'experimental::args_array_with_signatures';
-    sub t131 ($a = 222, $b = goto &t130) { "$a/$b" }
-}
-is prototype(\&t131), undef;
-is eval("t131()"), ";0";
-is eval("t131(0)"), "0;1";
-is eval("t131(456)"), "456;1";
-is eval("t131(456, 789)"), "456/789";
-is eval("t131(456, 789, 987)"), undef;
-like $@, _create_flexible_mismatch_regexp('main::t131', 3, 2);
-is $a, 123;
+# t130 / t131 used to test the interaction of `goto &sub` from within a
+# signature. This no longer works.
 
 sub t025 ($ = undef) { $a // "z" }
 is prototype(\&t025), undef;

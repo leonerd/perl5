@@ -4132,6 +4132,10 @@ L<perlfunc/require EXPR> and L<perlfunc/do EXPR>.
 compiled with C<require> or C<do> with an empty string an undefined value
 which is forbidden.  See L<perlvar/%{^HOOK}> and L<perlfunc/require EXPR>.
 
+=item Missing required named parameter '%s' to subroutine '%s'
+
+(F) TODO signature-named-params
+
 =item Missing right brace on \%c{} in regex; marked by S<<-- HERE> in m/%s/
 
 (F) Missing right brace in C<\x{...}>, C<\p{...}>, C<\P{...}>, or C<\N{...}>.
@@ -4330,6 +4334,10 @@ format) are considered the same; if a program uses $c only once
 but also uses any of the others it will not trigger this warning.
 Symbols beginning with an underscore and symbols using special
 identifiers (q.v. L<perldata>) are exempt from this warning.
+
+=item Named parameters must actually have a name
+
+(F) TODO signature-named-params
 
 =item Need exactly 3 octal digits in regex; marked by S<<-- HERE> in m/%s/
 
@@ -4837,6 +4845,10 @@ take place when going past the end of the string when either
 C<sysread()>ing a file, or when seeking past the end of a scalar opened
 for I/O (in anticipation of future reads and to imitate the behavior
 with real files).
+
+=item Only a scalar parameter may be named
+
+(F) TODO signature-named-params
 
 =item Only scalar fields can take a :param attribute
 
@@ -5425,6 +5437,10 @@ fine from VMS' perspective, it's probably not what you intended.
 =item 'P' must have an explicit size in unpack
 
 (F) The unpack format P must have an explicit size, not "*".
+
+=item Positional parameter follows named parameter
+
+(F) TODO signature-named-params
 
 =item POSIX class [:%s:] unknown in regex; marked by S<<-- HERE> in m/%s/
 
@@ -7459,6 +7475,10 @@ whereabouts in the regular expression the escape was discovered.
 
 (F) You attempted to add a named attribute to a C<field> definition, but
 perl does not recognise the name of the requested attribute.
+
+=item Unrecognized named parameter '%s' to subroutine '%s'
+
+(F) TODO signature-named-params
 
 =item Unrecognised parameters for "%s" constructor: %s
 

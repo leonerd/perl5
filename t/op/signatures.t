@@ -1031,6 +1031,35 @@ is eval("t084(456, 789, 987, 654)"), undef;
 like $@, _create_mismatch_regexp('main::t084', 4, 2);
 is $a, 123;
 
+sub tnamed01 (:$alpha, :$beta) { "alpha=$alpha beta=$beta"; }
+is prototype(\&tnamed01), undef;
+is eval("tnamed01(alpha => 123, beta => 456)"), "alpha=123 beta=456";
+is eval("tnamed01(beta => 654, alpha => 321)"), "alpha=321 beta=654";
+is eval("tnamed01(alpha => 1)"), undef;
+like $@, qr/^Missing required named parameter 'beta' to subroutine 'main::tnamed01' at /;
+is eval("tnamed01(alpha => 1, beta => 2, gamma => 3)"), undef;
+like $@, qr/^Unrecognized named parameter 'gamma' to subroutine 'main::tnamed01' at /;
+is eval("tnamed01(alpha => 1, beta => 2, beta => 3, beta => 4)"), "alpha=1 beta=4";
+
+sub tnamed02 (:$alpha = "A", :$beta = "B") { "alpha=$alpha beta=$beta"; }
+is prototype(\&tnamed02), undef;
+is eval("tnamed02(alpha => 98, beta => 76)"), "alpha=98 beta=76";
+is eval("tnamed02(alpha => 98)"), "alpha=98 beta=B";
+is eval("tnamed02(beta => 76)"), "alpha=A beta=76";
+is eval("tnamed02()"), "alpha=A beta=B";
+
+sub tnamed03 ($a, $b, :$x, :$y) { "a=$a b=$b x=$x y=$y"; }
+is prototype(\&tnamed03), undef;
+is eval("tnamed03(12, 34, x => 'X', y => 'Y')"), "a=12 b=34 x=X y=Y";
+
+sub tnamed04 (:$x, :$y, @rest) { "x=$x y=$y <@rest>"; }
+is prototype(\&tnamed04), undef;
+is eval("tnamed04(w => 'W', x => 'X', y => 'Y', z => 'Z')"), "x=X y=Y <w W z Z>";
+
+sub tnamed05 (:$x, :$y, %rest) { "x=$x y=$y " . join(",", map { "$_=$rest{$_}" } sort keys %rest); }
+is prototype(\&tnamed05), undef;
+is eval("tnamed05(w => 'W', x => 'X', y => 'Y', z => 'Z')"), "x=X y=Y w=W,z=Z";
+
 sub t085
     (
     $

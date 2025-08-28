@@ -1171,6 +1171,13 @@ syntax error at foo line 8, near "($a 123"
 Execution of foo aborted due to compilation errors.
 EOF
 
+eval "#line 8 foo\nsub t096_named (:\$a :\$b) { }";
+is $@, <<'EOF';
+Illegal operator following parameter in a subroutine signature at foo line 8, near "(:$a "
+syntax error at foo line 8, near "(:$a "
+Execution of foo aborted due to compilation errors.
+EOF
+
 eval "#line 8 foo\nsub t097 (\$a { }) { }";
 is $@, <<'EOF';
 Illegal operator following parameter in a subroutine signature at foo line 8, near "($a { }"

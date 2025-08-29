@@ -1060,6 +1060,12 @@ sub tnamed05 (:$x, :$y, %rest) { "x=$x y=$y " . join(",", map { "$_=$rest{$_}" }
 is prototype(\&tnamed05), undef;
 is eval("tnamed05(w => 'W', x => 'X', y => 'Y', z => 'Z')"), "x=X y=Y w=W,z=Z";
 
+eval q(sub tnamed06 (:$x,$y) { ... } );
+like $@,qr/Positional parameter follows named parameter at .*?, near "\$y/;
+
+eval q(sub tnamed07 (:$x,$y = $ARGV[0]) { ... } );
+like $@,qr/Positional parameter follows named parameter at .*?, near "\$y/;
+
 sub t085
     (
     $

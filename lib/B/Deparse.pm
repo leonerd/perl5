@@ -1212,15 +1212,9 @@ sub deparse_multiparam {
                     and (   _op_is_or_was($last, OP_NEXTSTATE)
                          or _op_is_or_was($last, OP_DBSTATE));
 
-    # first OP_NEXTSTATE
-
-    my $o = $topop->first;
-    return unless $$o;
-    return if $o->label;
-
     # OP_MULTIPARAM
 
-    $o = $o->sibling;
+    my $o = $topop->first;
     return unless $$o and $o->name eq 'multiparam';
 
     my ($min_args, $max_args, $slurpy, @rest) = $o->aux_list($cv);

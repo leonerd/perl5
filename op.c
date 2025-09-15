@@ -16985,10 +16985,6 @@ Perl_subsignature_finish(pTHX)
 
     OP *sigops = NULL;
 
-    /* a nextstate right at the beginning */
-    sigops = op_append_elem(OP_LINESEQ, sigops,
-            newSTATEOP(0, NULL, NULL));
-
     size_t end_argix = signature->next_argix;
 
     struct op_multiparam_aux *aux = (struct op_multiparam_aux *)PerlMemShared_malloc(
@@ -17000,7 +16996,15 @@ Perl_subsignature_finish(pTHX)
     aux->slurpy       = signature->slurpy;
     aux->slurpy_padix = 0;
 
-    OP *multiparam = newUNOP_AUX(OP_MULTIPARAM, 0, NULL, (UNOP_AUX_item *)aux);
+    /* A nextstate right at the beginning would trash the arguments on the
+     * stack that pp_entersub has left us. Instead we'll generate one to store
+     * in PL_curcop but de-thread it from execution by storing it as a
+     * non-executed child of the OP_MULTIPARAM. */
+    OP *initial_cop = newSTATEOP(0, NULL, NULL);
+
+    OP *multiparam = newUNOP_AUX(OP_MULTIPARAM, 0, initial_cop, (UNOP_AUX_item *)aux);
+
+    multiparam->op_next = multiparam;
 
     sigops = op_append_elem(OP_LINESEQ, sigops,
             multiparam);

@@ -25,15 +25,15 @@ eval q{
 };
 is $@, "";
 is_deeply \@t, [
-	['nextstate:4', 'multiparam:2..2:-:$x=0:$y=1' ],
-	['nextstate:5', 'multiparam:2..2:-:$z=0:(anon)=1',],
-	['nextstate:6', 'multiparam:0..0:@:@rest=*'],
-	['nextstate:7', 'multiparam:0..0:%:%rest=*'],
-	['nextstate:8', 'multiparam:0..1:-:$one=0?'],
+	['multiparam:2..2:-:$x=0:$y=1',     'nextstate:4'],
+	['multiparam:2..2:-:$z=0:(anon)=1', 'nextstate:5'],
+	['multiparam:0..0:@:@rest=*',       'nextstate:6'],
+	['multiparam:0..0:%:%rest=*',       'nextstate:7'],
+	['multiparam:0..1:-:$one=0?',       'nextstate:8'],
 
-	['nextstate:11', 'multiparam:0..0:-'],
-	['nextstate:12', 'multiparam:0..0:-'],
-	['nextstate:13', 'multiparam:0..0:-'],
+	['multiparam:0..0:-', 'nextstate:11'],
+	['multiparam:0..0:-', 'nextstate:12'],
+	['multiparam:0..0:-', 'nextstate:13'],
 ];
 
 done_testing;

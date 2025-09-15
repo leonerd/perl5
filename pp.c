@@ -7898,6 +7898,14 @@ PP(pp_multiparam)
     PADOFFSET *param_padix = aux->param_padix;
     AV  *defav = GvAV(PL_defgv); /* @_ */
 
+    /* Do some of the work of the missing OP_NEXTSTATE. We specifically do
+     * not reset the stack pointer or call FREETMPS.
+     */
+    if(cUNOP_AUX->op_first && cUNOP_AUX->op_first->op_type == OP_NEXTSTATE)
+        PL_curcop = (COP*)cUNOP_AUX->op_first;
+    TAINT_NOT;
+    PERL_ASYNC_CHECK();
+
     assert(!SvMAGICAL(defav));
     size_t argc = (AvFILLp(defav) + 1);
 

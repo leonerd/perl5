@@ -442,6 +442,13 @@ void
 Perl_mg_infect(pTHX_ SV *ssv, SV *dsv)
 {
     PERL_ARGS_ASSERT_MG_INFECT;
+    mg_infect_common(ssv, dsv, false);
+}
+
+void
+Perl_mg_infect_common(pTHX_ SV *ssv, SV *dsv, bool also_vstring)
+{
+    PERL_ARGS_ASSERT_MG_INFECT_COMMON;
 
     if(SvTYPE(ssv) < SVt_PVMG || !SvMAGICAL(ssv))
         return;
@@ -450,6 +457,8 @@ Perl_mg_infect(pTHX_ SV *ssv, SV *dsv)
         if (!MgIsV2(smg))
             continue;
 
+        if (smg->mg_type == PERL_MAGIC_vstring && !also_vstring)
+            continue;
         if (HkFUNCS(smg)->shape != HKs_SCALARVALUE)
             continue;
 

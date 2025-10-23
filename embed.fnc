@@ -3429,6 +3429,8 @@ Adp	|int	|sv_isa 	|NULLOK SV *sv				\
 ARdp	|bool	|sv_isa_sv	|NN SV *sv				\
 				|NN SV *namesv
 Adp	|int	|sv_isobject	|NULLOK SV *sv
+
+Adp	|bool	|sv_is_vstring	|NN const SV *sv
 Adip	|IV	|SvIV		|NN SV *sv
 Cmp	|IV	|sv_2iv 	|NN SV *sv
 Adp	|IV	|sv_2iv_flags	|NN SV * const sv			\
@@ -4358,6 +4360,10 @@ EXpx	|SV *	|sv_setsv_cow	|NULLOK SV *dsv 			\
 p	|void	|mg_disinfect	|NN SV *sv
 p	|void	|mg_infect	|NN SV *ssv				\
 				|NULLOK SV *dsv
+p	|void	|mg_infect_common					\
+				|NN SV *ssv				\
+				|NULLOK SV *dsv 			\
+				|bool also_vstring
 p	|void	|opslab_force_free					\
 				|NN OPSLAB *slab
 p	|void	|opslab_free	|NN OPSLAB *slab
@@ -6151,6 +6157,11 @@ S	|void	|glob_assign_glob					\
 				|NN SV * const ssv			\
 				|const int dtype
 S	|bool	|glob_2number	|NN GV * const gv
+S	|void	|mg_disinfect_vstring					\
+				|NN SV *sv
+S	|void	|mg_infect_also_vstring 				\
+				|NN SV *ssv				\
+				|NN SV *dsv
 S	|void	|not_a_number	|NN SV * const sv
 S	|void	|not_incrementable					\
 				|NN SV * const sv

@@ -1102,8 +1102,7 @@ in gv.h: */
                                                   SVf_IVisUV),		\
                                     SvFLAGS(sv) |= (SVf_POK|SVp_POK))
 
-#define SvVOK(sv)		(SvMAGICAL(sv)				\
-                                 && mg_find(sv,PERL_MAGIC_vstring))
+#define SvVOK(sv)		(SvMAGICAL(sv) && sv_is_vstring(sv))
 /*
 =for apidoc Am|MAGIC*|SvVSTRING_mg|SV * sv
 
@@ -1111,8 +1110,7 @@ Returns the vstring magic, or NULL if none
 
 =cut
 */
-#define SvVSTRING_mg(sv)	(SvMAGICAL(sv) \
-                                 ? mg_find(sv,PERL_MAGIC_vstring) : NULL)
+#define SvVSTRING_mg(sv)	(SvVOK(sv) ? (croak("ARGH don't call SvVSTRING_mg at %s line %d", __FILE__, __LINE__),NULL) : NULL)
 
 #define SvOOK(sv)		(SvFLAGS(sv) & SVf_OOK)
 #define SvOOK_on(sv)		(SvFLAGS(sv) |= SVf_OOK)

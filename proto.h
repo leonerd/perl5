@@ -4706,6 +4706,11 @@ Perl_sv_insert_flags(pTHX_ SV * const bigstr, const STRLEN offset, const STRLEN 
 #define PERL_ARGS_ASSERT_SV_INSERT_FLAGS        \
         assert(bigstr); assert(little)
 
+PERL_CALLCONV bool
+Perl_sv_is_vstring(pTHX_ const SV *sv);
+#define PERL_ARGS_ASSERT_SV_IS_VSTRING          \
+        assert(sv)
+
 PERL_CALLCONV int
 Perl_sv_isa(pTHX_ SV *sv, const char * const name);
 #define PERL_ARGS_ASSERT_SV_ISA                 \
@@ -6025,6 +6030,12 @@ PERL_CALLCONV void
 Perl_mg_infect(pTHX_ SV *ssv, SV *dsv)
         __attribute__visibility__("hidden");
 # define PERL_ARGS_ASSERT_MG_INFECT             \
+        assert(ssv)
+
+PERL_CALLCONV void
+Perl_mg_infect_common(pTHX_ SV *ssv, SV *dsv, bool also_vstring)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_INFECT_COMMON      \
         assert(ssv)
 
 PERL_CALLCONV void
@@ -9295,6 +9306,16 @@ STATIC void
 S_glob_assign_glob(pTHX_ SV * const dsv, SV * const ssv, const int dtype);
 # define PERL_ARGS_ASSERT_GLOB_ASSIGN_GLOB      \
         assert(dsv); assert(ssv)
+
+STATIC void
+S_mg_disinfect_vstring(pTHX_ SV *sv);
+# define PERL_ARGS_ASSERT_MG_DISINFECT_VSTRING  \
+        assert(sv)
+
+STATIC void
+S_mg_infect_also_vstring(pTHX_ SV *ssv, SV *dsv);
+# define PERL_ARGS_ASSERT_MG_INFECT_ALSO_VSTRING \
+        assert(ssv); assert(dsv)
 
 STATIC void
 S_not_a_number(pTHX_ SV * const sv);

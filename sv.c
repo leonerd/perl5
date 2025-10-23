@@ -4786,14 +4786,6 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
                 assert(!(SvFLAGS(dsv) & SVf_POK)); 
             }
         }
-
-        {
-            const char *vstr_pv;
-            STRLEN vstr_len;
-            if ((vstr_pv = SvVSTRING(ssv, vstr_len))) {
-                sv_vstring_apply(dsv, vstr_pv, vstr_len);
-            }
-        }
     }
     else if (sflags & (SVp_IOK|SVp_NOK)) {
         (void)SvOK_off(dsv);
@@ -4818,7 +4810,7 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
 
     if (stype >= SVt_PVMG)
         // TODO: performance, might want a new flag for "has viral value magic"
-        mg_infect(ssv, dsv);
+        mg_infect_also_vstring(ssv, dsv);
 }
 
 /* A helper for newSVsv_flags_NN, which does the heavy lifting for
@@ -5998,7 +5990,7 @@ Perl_sv_force_normal_flags(pTHX_ SV *const sv, const U32 flags)
         SvREFCNT_dec_NN(temp);
     }
     else if (SvMAGICAL(sv)) {
-        if (SvVOK(sv)) sv_unmagic(sv, PERL_MAGIC_vstring);
+        mg_disinfect_vstring(sv);
     }
 }
 
@@ -6545,6 +6537,10 @@ Perl_hk_copy(pTHX_ const MAGIC *smg, MAGIC *dmg)
     HkAUXSV_set(dmg, HkAUXSV(smg));
     /* TODO: copy userstruct */
 
+    /* Normally this wouldn't matter but we need to ensure that copied vstring
+     * values keep their hacked-up PERL_MAGIC_vstring value */
+    dmg->mg_type = smg->mg_type;
+
     void *sptr = HkPTR(smg);
     STRLEN slen = HkPTRLEN(smg);
     if(sptr && slen)
@@ -6794,6 +6790,29 @@ Perl_sv_has_valuemagic(pTHX_ const SV *sv)
      * magic chain
      */
     return (bool)S_sv_hook_find(aTHX_ sv, &S_filter_hook_viralvalue, NULL, NULL);
+}
+
+void
+S_mg_infect_also_vstring(pTHX_ SV *ssv, SV *dsv)
+{
+    PERL_ARGS_ASSERT_MG_INFECT_ALSO_VSTRING;
+
+    mg_infect_common(ssv, dsv, true);
+}
+
+STATIC bool
+S_filter_hook_vstring(pTHX_ MAGIC *mg, const void *key)
+{
+    PERL_UNUSED_ARG(key);
+    return mg->mg_type == PERL_MAGIC_vstring;
+}
+
+void
+S_mg_disinfect_vstring(pTHX_ SV *sv)
+{
+    PERL_ARGS_ASSERT_MG_DISINFECT_VSTRING;
+
+    S_sv_hook_remove(aTHX_ sv, &S_filter_hook_vstring, NULL);
 }
 
 MAGIC *
@@ -18988,6 +19007,30 @@ Perl_sv_regex_global_pos_clear(pTHX_ SV *sv)
         mg->mg_len = -1;
 }
 
+static const struct ScalarValueHookFunctions vstring_hook = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVALUE,
+    .flags = HKf_SCALARVALUE_INFECTIOUS,
+    .debug_name = "vstring",
+};
+
+/*
+=for apidoc sv_is_vstring
+
+Returns true if the given SV has vstring magic.  It is better to call the
+C<SvVOK> macro, which is implemented using this function.
+
+=cut
+*/
+
+bool
+Perl_sv_is_vstring(pTHX_ const SV *sv)
+{
+    PERL_ARGS_ASSERT_SV_IS_VSTRING;
+
+    return sv_hook_exists_by_funcs(sv, (const struct HookFunctions *)&vstring_hook);
+}
+
 /*
 =for apidoc sv_vstring_get
 
@@ -19009,11 +19052,11 @@ Perl_sv_vstring_get(pTHX_ SV * const sv, STRLEN *lenp)
 {
     PERL_ARGS_ASSERT_SV_VSTRING_GET;
 
-    MAGIC *mg = SvVSTRING_mg(sv);
+    MAGIC *mg = sv_hook_find_by_funcs(sv, (const struct HookFunctions *)&vstring_hook);
     if(!mg) return NULL;
 
-    if(lenp) *lenp = mg->mg_len;
-    return mg->mg_ptr;
+    if(lenp) *lenp = HkPTRLEN(mg);
+    return (char *)HkPTR(mg);
 }
 
 /*
@@ -19030,8 +19073,20 @@ Perl_sv_vstring_apply(pTHX_ SV *sv, const char *vstr_pv, STRLEN vstr_len)
 {
     PERL_ARGS_ASSERT_SV_VSTRING_APPLY;
 
-    sv_magic(sv, NULL, PERL_MAGIC_vstring, vstr_pv, vstr_len);
+    MAGIC *mg = sv_hook_add(sv, (const struct HookFunctions *)&vstring_hook, 0, NULL);
+
+    hk_ptr_store(mg, vstr_pv, vstr_len);
     SvRMAGICAL_on(sv);
+
+    /* There's a lot of existing code on CPAN and elsewhere that predates any
+     * standard APIs to inspect vstrings, so attempts to manually walk the
+     * magic chain and look at the ->mg_ptr field of any magic whose
+     * ->mg_type is 'V'. In order to not break all of that, we'll overwrite
+     * the type value in the MAGIC structure here.
+     * Additionally, this lets us identify vstring magic to remove it
+     * specially.
+     */
+    mg->mg_type = PERL_MAGIC_vstring;
 }
 
 /*

@@ -1017,7 +1017,6 @@
 #   define list(a)                              Perl_list(aTHX_ a)
 #   define localize(a,b)                        Perl_localize(aTHX_ a,b)
 #   define magic_clear_all_env(a,b)             Perl_magic_clear_all_env(aTHX_ a,b)
-#   define magic_cleararylen_p(a,b)             Perl_magic_cleararylen_p(aTHX_ a,b)
 #   define magic_clearenv(a,b)                  Perl_magic_clearenv(aTHX_ a,b)
 #   define magic_clearhint(a,b)                 Perl_magic_clearhint(aTHX_ a,b)
 #   define magic_clearhints(a,b)                Perl_magic_clearhints(aTHX_ a,b)
@@ -1028,12 +1027,10 @@
 #   define magic_clearsig(a,b)                  Perl_magic_clearsig(aTHX_ a,b)
 #   define magic_copycallchecker(a,b,c,d,e)     Perl_magic_copycallchecker(aTHX_ a,b,c,d,e)
 #   define magic_existspack(a,b)                Perl_magic_existspack(aTHX_ a,b)
-#   define magic_freearylen_p(a,b)              Perl_magic_freearylen_p(aTHX_ a,b)
 #   define magic_freemglob(a,b)                 Perl_magic_freemglob(aTHX_ a,b)
 #   define magic_freeovrld(a,b)                 Perl_magic_freeovrld(aTHX_ a,b)
 #   define magic_freeutf8(a,b)                  Perl_magic_freeutf8(aTHX_ a,b)
 #   define magic_get(a,b)                       Perl_magic_get(aTHX_ a,b)
-#   define magic_getarylen(a,b)                 Perl_magic_getarylen(aTHX_ a,b)
 #   define magic_getdefelem(a,b)                Perl_magic_getdefelem(aTHX_ a,b)
 #   define magic_getnkeys(a,b)                  Perl_magic_getnkeys(aTHX_ a,b)
 #   define magic_getpack(a,b)                   Perl_magic_getpack(aTHX_ a,b)
@@ -1049,7 +1046,6 @@
 #   define magic_scalarpack(a,b)                Perl_magic_scalarpack(aTHX_ a,b)
 #   define magic_set(a,b)                       Perl_magic_set(aTHX_ a,b)
 #   define magic_set_all_env(a,b)               Perl_magic_set_all_env(aTHX_ a,b)
-#   define magic_setarylen(a,b)                 Perl_magic_setarylen(aTHX_ a,b)
 #   define magic_setdbline(a,b)                 Perl_magic_setdbline(aTHX_ a,b)
 #   define magic_setdefelem(a,b)                Perl_magic_setdefelem(aTHX_ a,b)
 #   define magic_setenv(a,b)                    Perl_magic_setenv(aTHX_ a,b)
@@ -1225,9 +1221,6 @@
 #   endif
 #   if !defined(PERL_DEFAULT_DO_EXEC3_IMPLEMENTATION)
 #     define do_exec(a)                         Perl_do_exec(aTHX_ a)
-#   endif
-#   if defined(PERL_IN_AV_C)
-#     define get_aux_mg(a)                      S_get_aux_mg(aTHX_ a)
 #   endif
 #   if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
 #     define av_flip_arylen_weakrefs(a)         Perl_av_flip_arylen_weakrefs(aTHX_ a)

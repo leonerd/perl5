@@ -1189,56 +1189,119 @@ Perl_av_exists(pTHX_ AV *av, SSize_t key)
         return FALSE;
 }
 
-static MAGIC *
-S_get_aux_mg(pTHX_ AV *av) {
-    MAGIC *mg;
+/* The array length ($#array) scalar hook */
 
-    PERL_ARGS_ASSERT_GET_AUX_MG;
+static void
+arylen_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    AV *av = (AV *)HkAUXSV(mg);
+    assert(!av || SvTYPE(av) == SVt_PVAV);
 
-    mg = mg_find((const SV *)av, PERL_MAGIC_arylen_p);
-
-    if (!mg) {
-        mg = sv_magicext(MUTABLE_SV(av), 0, PERL_MAGIC_arylen_p,
-                         &PL_vtbl_arylen_p, 0, 0);
-        assert(mg);
-        /* sv_magicext won't set this for us because we pass in a NULL obj  */
-        mg->mg_flags |= MGf_REFCOUNTED;
-    }
-    return mg;
+    if (av)
+        sv_setiv(sv, AvFILL(av));
+    else
+        sv_set_undef(sv);
 }
+
+static void
+arylen_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    AV *av = (AV *)HkAUXSV(mg);
+    assert(!av || SvTYPE(av) == SVt_PVAV);
+
+    if (av)
+        av_fill(av, SvIV(sv));
+    else
+        ck_warner(packWARN(WARN_MISC),
+                  "Attempt to set length of freed array");
+}
+
+static const struct ScalarVarHookFunctions arylen_hook = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_ALWAYS_WEAK_AUXSV,
+    .debug_name = "arylen",
+
+    .pre_get  = arylen_get,
+    .post_set = arylen_set,
+};
+
+/* Extra storage on AVs, to store the arylen SV (stored in HkAUXSV of this)
+ * Also while we're there, we also put an IV in HkUSERSTRUCT to use as the
+ * iter position storage
+ */
+
+static void
+avaux_free(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_UNUSED_ARG(sv);
+
+    /* during global destruction, mg_obj may already have been freed */
+    if (PL_in_clean_all)
+        return;
+
+    SV *arylen_sv = HkAUXSV(mg);
+    if(!arylen_sv)
+        return;
+
+    MAGIC *arylen_mg = sv_hook_find_by_funcs(arylen_sv, (const struct HookFunctions *)&arylen_hook);
+
+    if (arylen_mg) {
+        /* arylen scalar holds a pointer back to the array, but doesn't own a
+           reference. Hence the we (the array) are about to go away with it
+           still pointing at us. Clear its pointer, else it would be pointing
+           at free memory. See the comment in sv_magic about reference loops,
+           and why it can't own a reference to us.  */
+        HkAUXSV_set(arylen_mg, NULL);
+    }
+}
+
+static void
+avaux_clear(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_UNUSED_ARG(sv);
+
+    /* Clear the iterator position when the AV is cleared */
+    *HkUSERSTRUCT(mg, IV *) = 0;
+}
+
+static const struct ArrayVarHookFunctions avaux_hook = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_ARRAYVAR,
+    .debug_name = "avaux",
+    .user_size = sizeof(IV),
+
+    .free  = avaux_free,
+    .clear = avaux_clear,
+};
 
 SV *
 Perl_av_get_arylen_sv(pTHX_ AV *av)
 {
     PERL_ARGS_ASSERT_AV_GET_ARYLEN_SV;
 
-    MAGIC *const mg = get_aux_mg(av);
+    MAGIC *mg = sv_hook_find_or_add((SV *)av, (const struct HookFunctions *)&avaux_hook);
 
-    if (!mg->mg_obj) {
-        mg->mg_obj = newSV_type(SVt_PVMG);
-        sv_magic(mg->mg_obj, MUTABLE_SV(av), PERL_MAGIC_arylen, NULL, 0);
+    if (!HkAUXSV(mg)) {
+        SV *arylen = newSV_type(SVt_PVMG);
+        sv_hook_add(arylen, (const struct HookFunctions *)&arylen_hook, 0,
+            MUTABLE_SV(av));
+
+        HkAUXSV_set(mg, arylen);
+        HkWEAK_AUXSV_on(mg);
     }
 
-    return mg->mg_obj;
+    return HkAUXSV(mg);
 }
 
 IV *
-Perl_av_iter_p(pTHX_ AV *av) {
-    MAGIC *const mg = get_aux_mg(av);
-
+Perl_av_iter_p(pTHX_ AV *av)
+{
     PERL_ARGS_ASSERT_AV_ITER_P;
 
-    if (sizeof(IV) == sizeof(SSize_t)) {
-        return (IV *)&(mg->mg_len);
-    } else {
-        if (!mg->mg_ptr) {
-            IV *temp;
-            mg->mg_len = IVSIZE;
-            Newxz(temp, 1, IV);
-            mg->mg_ptr = (char *) temp;
-        }
-        return (IV *)mg->mg_ptr;
-    }
+    MAGIC *mg = sv_hook_find_or_add((SV *)av, (const struct HookFunctions *)&avaux_hook);
+
+    return HkUSERSTRUCT(mg, IV *);
 }
 
 SV *
@@ -1256,18 +1319,18 @@ Perl_av_flip_arylen_weakrefs(pTHX_ AV *av)
 {
     PERL_ARGS_ASSERT_AV_FLIP_ARYLEN_WEAKREFS;
 
-    MAGIC *mg_av = mg_find((const SV *)av, PERL_MAGIC_arylen_p);
-    assert(mg_av);
+    MAGIC *hk_av = sv_hook_find_by_funcs((SV *)av, (const struct HookFunctions *)&avaux_hook);
+    assert(hk_av);
 
-    SV *arylen_sv = mg_av->mg_obj;
+    SV *arylen_sv = HkAUXSV(hk_av);
 
-    MAGIC *mg_al = mg_find(arylen_sv, PERL_MAGIC_arylen);
-    assert(mg_al);
+    MAGIC *hk_al = sv_hook_find_by_funcs((SV *)arylen_sv, (const struct HookFunctions *)&arylen_hook);
+    assert(hk_al);
 
-    assert(  mg_av->mg_flags & MGf_REFCOUNTED);
-    assert(!(mg_al->mg_flags & MGf_REFCOUNTED));
-    mg_av->mg_flags &= ~MGf_REFCOUNTED;
-    mg_al->mg_flags |=  MGf_REFCOUNTED;
+    assert(!HkWEAK_AUXSV(hk_av));
+    assert( HkWEAK_AUXSV(hk_al));
+    HkWEAK_AUXSV_on(hk_av);
+    HkWEAK_AUXSV_off(hk_al);
 }
 
 /*

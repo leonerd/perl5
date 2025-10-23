@@ -8,12 +8,8 @@
 
     { '\0', "want_vtbl_sv | PERL_MAGIC_READONLY_ACCEPTABLE",
       "/* sv '\\0' Special scalar variable */" },
-    { '#', "want_vtbl_arylen | PERL_MAGIC_VALUE_MAGIC",
-      "/* arylen '#' Array length ($#ary) */" },
     { '<', "want_vtbl_backref | PERL_MAGIC_READONLY_ACCEPTABLE | PERL_MAGIC_VALUE_MAGIC",
       "/* backref '<' For weak ref data */" },
-    { '@', "magic_vtable_max | PERL_MAGIC_VALUE_MAGIC",
-      "/* arylen_p '@' To move arylen out of XPVAV */" },
     { 'B', "want_vtbl_regexp | PERL_MAGIC_READONLY_ACCEPTABLE | PERL_MAGIC_VALUE_MAGIC",
       "/* bm 'B' Boyer-Moore (fast string search) */" },
     { 'c', "want_vtbl_ovrld",

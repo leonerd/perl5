@@ -1998,9 +1998,6 @@ CRTip	|unsigned|lsbit_pos32	|U32 word
 p	|int	|magic_clear_all_env					\
 				|NN SV *sv				\
 				|NN MAGIC *mg
-p	|int	|magic_cleararylen_p					\
-				|NN SV *sv				\
-				|NN MAGIC *mg
 : These are all indirectly referenced by globals.c. This is somewhat annoying.
 p	|int	|magic_clearenv |NN SV *sv				\
 				|NN MAGIC *mg
@@ -2030,9 +2027,6 @@ Adp	|void	|magic_dump	|NULLOK const MAGIC *mg
 p	|int	|magic_existspack					\
 				|NN SV *sv				\
 				|NN const MAGIC *mg
-p	|int	|magic_freearylen_p					\
-				|NN SV *sv				\
-				|NN MAGIC *mg
 p	|int	|magic_freemglob|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_freeovrld|NN SV *sv				\
@@ -2040,8 +2034,6 @@ p	|int	|magic_freeovrld|NN SV *sv				\
 p	|int	|magic_freeutf8 |NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_get	|NN SV *sv				\
-				|NN MAGIC *mg
-p	|int	|magic_getarylen|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_getdefelem					\
 				|NN SV *sv				\
@@ -2091,8 +2083,6 @@ p	|int	|magic_set	|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_set_all_env					\
 				|NN SV *sv				\
-				|NN MAGIC *mg
-p	|int	|magic_setarylen|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_setdbline|NN SV *sv				\
 				|NN MAGIC *mg
@@ -4454,9 +4444,6 @@ Adp	|PerlIO *|my_popen	|NN const char *cmd			\
 # if defined(USE_ITHREADS)
 i	|bool	|PerlEnv_putenv |NN char *str
 # endif
-#endif
-#if defined(PERL_IN_AV_C)
-S	|MAGIC *|get_aux_mg	|NN AV *av
 #endif
 #if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
 p	|void	|av_flip_arylen_weakrefs				\

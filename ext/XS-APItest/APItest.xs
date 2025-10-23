@@ -5484,7 +5484,6 @@ test_get_vtbl()
         test_get_this_vtable(dbline);
         test_get_this_vtable(isa);
         test_get_this_vtable(isaelem);
-        test_get_this_vtable(arylen);
         test_get_this_vtable(mglob);
         test_get_this_vtable(nkeys);
         test_get_this_vtable(taint);

@@ -2031,12 +2031,6 @@ Perl_magic_clear_all_env(pTHX_ SV *sv, MAGIC *mg)
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
-Perl_magic_cleararylen_p(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_CLEARARYLEN_P    \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
 Perl_magic_clearenv(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_CLEARENV         \
@@ -2101,12 +2095,6 @@ Perl_magic_existspack(pTHX_ SV *sv, const MAGIC *mg)
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
-Perl_magic_freearylen_p(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_FREEARYLEN_P     \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
 Perl_magic_freemglob(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_FREEMGLOB        \
@@ -2128,12 +2116,6 @@ PERL_CALLCONV int
 Perl_magic_get(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_GET              \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
-Perl_magic_getarylen(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_GETARYLEN        \
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
@@ -2230,12 +2212,6 @@ PERL_CALLCONV int
 Perl_magic_set_all_env(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_SET_ALL_ENV      \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
-Perl_magic_setarylen(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_SETARYLEN        \
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
@@ -6377,13 +6353,6 @@ Perl_my_popen(pTHX_ const char *cmd, const char *mode);
         assert(cmd); assert(mode)
 
 #endif /* !defined(PERL_IMPLICIT_SYS) */
-#if defined(PERL_IN_AV_C)
-STATIC MAGIC *
-S_get_aux_mg(pTHX_ AV *av);
-# define PERL_ARGS_ASSERT_GET_AUX_MG            \
-        assert(av); assert(SvTYPE(av) == SVt_PVAV)
-
-#endif
 #if defined(PERL_IN_AV_C) || defined(PERL_IN_PP_C)
 PERL_CALLCONV void
 Perl_av_flip_arylen_weakrefs(pTHX_ AV *av)

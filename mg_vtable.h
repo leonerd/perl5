@@ -13,9 +13,7 @@
  */
 
 #define PERL_MAGIC_sv             '\0' /* Special scalar variable */
-#define PERL_MAGIC_arylen         '#' /* Array length ($#ary) */
 #define PERL_MAGIC_backref        '<' /* For weak ref data */
-#define PERL_MAGIC_arylen_p       '@' /* To move arylen out of XPVAV */
 #define PERL_MAGIC_bm             'B' /* Boyer-Moore (fast string search) */
 #define PERL_MAGIC_overload_table 'c' /* Holds overload table (AMT) on stash */
 #define PERL_MAGIC_regdata        'D' /* Regex match position data
@@ -59,8 +57,6 @@
 #define PERL_MAGIC_ext            '~' /* Variable magic available for use by extensions */
 
 enum {		/* pass one of these to get_vtbl */
-    want_vtbl_arylen,
-    want_vtbl_arylen_p,
     want_vtbl_backref,
     want_vtbl_checkcall,
     want_vtbl_collxfrm,
@@ -96,8 +92,6 @@ enum {		/* pass one of these to get_vtbl */
 };
 
 EXTCONST char * const PL_magic_vtable_names[magic_vtable_max] INIT( {
-    "arylen",
-    "arylen_p",
     "backref",
     "checkcall",
     "collxfrm",
@@ -150,8 +144,6 @@ EXTCONST char * const PL_magic_vtable_names[magic_vtable_max] INIT( {
 
 #ifdef DOINIT
 EXT_MGVTBL PL_magic_vtables[magic_vtable_max] = {
-  { Perl_magic_getarylen, Perl_magic_setarylen, 0, 0, 0, 0, 0, 0 },
-  { 0, 0, 0, Perl_magic_cleararylen_p, Perl_magic_freearylen_p, 0, 0, 0 },
   { 0, 0, 0, 0, Perl_magic_killbackrefs, 0, 0, 0 },
   { 0, 0, 0, 0, 0, Perl_magic_copycallchecker, 0, 0 },
 #ifdef USE_LOCALE_COLLATE
@@ -195,8 +187,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max];
 #define want_vtbl_bm want_vtbl_regexp
 #define want_vtbl_fm want_vtbl_regexp
 
-#define PL_vtbl_arylen PL_magic_vtables[want_vtbl_arylen]
-#define PL_vtbl_arylen_p PL_magic_vtables[want_vtbl_arylen_p]
 #define PL_vtbl_backref PL_magic_vtables[want_vtbl_backref]
 #define PL_vtbl_bm PL_magic_vtables[want_vtbl_bm]
 #define PL_vtbl_checkcall PL_magic_vtables[want_vtbl_checkcall]

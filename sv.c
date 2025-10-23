@@ -6393,7 +6393,6 @@ Perl_sv_magicext(pTHX_ SV *const sv, SV *const obj, const int how,
 
     */
     if (!obj || obj == sv ||
-        how == PERL_MAGIC_arylen ||
         how == PERL_MAGIC_regdata ||
         how == PERL_MAGIC_regdatum ||
         (SvTYPE(obj) == SVt_PVGV &&

@@ -1601,9 +1601,7 @@ will be lost.
  (old-style char and macro)   MGVTBL         Type of magic
  --------------------------   ------         -------------
  \0 PERL_MAGIC_sv             vtbl_sv        Special scalar variable
- #  PERL_MAGIC_arylen         vtbl_arylen    Array length ($#ary)
  <  PERL_MAGIC_backref        vtbl_backref   For weak ref data
- @  PERL_MAGIC_arylen_p       (none)         To move arylen out of XPVAV
  B  PERL_MAGIC_bm             vtbl_regexp    Boyer-Moore
                                              (fast string search)
  c  PERL_MAGIC_overload_table vtbl_ovrld     Holds overload table
@@ -1661,9 +1659,7 @@ will be lost.
 
 
 =for apidoc_section $magic
-=for apidoc AmnhU||PERL_MAGIC_arylen
-=for apidoc_item ||PERL_MAGIC_arylen_p
-=for apidoc_item ||PERL_MAGIC_backref
+=for apidoc AmnhU||PERL_MAGIC_backref
 =for apidoc_item ||PERL_MAGIC_bm
 =for apidoc_item ||PERL_MAGIC_checkcall
 =for apidoc_item ||PERL_MAGIC_collxfrm

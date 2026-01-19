@@ -2044,9 +2044,6 @@ p	|int	|magic_get	|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_getarylen|NN SV *sv				\
 				|NN MAGIC *mg
-p	|int	|magic_getdebugvar					\
-				|NN SV *sv				\
-				|NN MAGIC *mg
 p	|int	|magic_getdefelem					\
 				|NN SV *sv				\
 				|NN MAGIC *mg
@@ -2101,9 +2098,6 @@ p	|int	|magic_set_all_env					\
 p	|int	|magic_setarylen|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_setdbline|NN SV *sv				\
-				|NN MAGIC *mg
-p	|int	|magic_setdebugvar					\
-				|NN SV *sv				\
 				|NN MAGIC *mg
 p	|int	|magic_setdefelem					\
 				|NN SV *sv				\

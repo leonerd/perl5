@@ -215,8 +215,6 @@ my %mg =
               readonly_acceptable => 1, value_magic => 1 },
      checkcall => { char => ']', value_magic => 1, vtable => 'checkcall',
                     desc => 'Inlining/mutation of call to this CV'},
-     debugvar => { char => '*', desc => '$DB::single, signal, trace vars',
-                   vtable => 'debugvar' },
      lvref => { char => '\\', vtable => 'lvref',
                   desc => "Lvalue reference constructor" },
 );
@@ -291,7 +289,6 @@ my %vtable_conf =
      'hintselem' => {set => 'sethint', clear => 'clearhint'},
      'hints' => {clear => 'clearhints'},
      'checkcall' => {copy => 'copycallchecker'},
-     'debugvar' => { set => 'setdebugvar', get => 'getdebugvar' },
      'lvref' => {set => 'setlvref'},
 );
 

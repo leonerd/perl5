@@ -4097,33 +4097,6 @@ Perl_magic_copycallchecker(pTHX_ SV *sv, MAGIC *mg, SV *nsv,
     return 1;
 }
 
-int
-Perl_magic_setdebugvar(pTHX_ SV *sv, MAGIC *mg) {
-    PERL_ARGS_ASSERT_MAGIC_SETDEBUGVAR;
-
-#if DBVARMG_SINGLE != 0
-    assert(mg->mg_private >= DBVARMG_SINGLE);
-#endif
-    assert(mg->mg_private < DBVARMG_COUNT);
-
-    PL_DBcontrol[mg->mg_private] = SvIV_nomg(sv);
-
-    return 1;
-}
-
-int
-Perl_magic_getdebugvar(pTHX_ SV *sv, MAGIC *mg) {
-    PERL_ARGS_ASSERT_MAGIC_GETDEBUGVAR;
-
-#if DBVARMG_SINGLE != 0
-    assert(mg->mg_private >= DBVARMG_SINGLE);
-#endif
-    assert(mg->mg_private < DBVARMG_COUNT);
-    sv_setiv(sv, PL_DBcontrol[mg->mg_private]);
-
-    return 0;
-}
-
 /*
  * ex: set ts=8 sts=4 sw=4 et:
  */

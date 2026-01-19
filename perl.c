@@ -4486,6 +4486,42 @@ Perl_init_dbargs(pTHX)
     AvREIFY_only(PL_dbargs);
 }
 
+static void
+hook_debugvar_pre_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    IV idx = HkPRIV(mg);
+
+#if DBVARMG_SINGLE != 0
+    assert(idx >= DBVARMG_SINGLE);
+#endif
+    assert(idx < DBVARMG_COUNT);
+
+    sv_setiv(sv, PL_DBcontrol[idx]);
+}
+
+static void
+hook_debugvar_post_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    IV idx = HkPRIV(mg);
+
+#if DBVARMG_SINGLE != 0
+    assert(idx >= DBVARMG_SINGLE);
+#endif
+    assert(idx < DBVARMG_COUNT);
+
+    PL_DBcontrol[idx] = SvIV_nomg(sv);
+}
+
+static const struct ScalarVarHookFunctions hooks_debugvar = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "debugvar",
+
+    .pre_get  = &hook_debugvar_pre_get,
+    .post_set = &hook_debugvar_post_set,
+};
+
 void
 Perl_init_debugger(pTHX)
 {
@@ -4501,22 +4537,22 @@ Perl_init_debugger(pTHX)
     PL_DBsingle = GvSV((gv_fetchpvs("DB::single", GV_ADDMULTI, SVt_PV)));
     if (!SvIOK(PL_DBsingle))
         sv_setiv(PL_DBsingle, 0);
-    mg = sv_magicext(PL_DBsingle, NULL, PERL_MAGIC_debugvar, &PL_vtbl_debugvar, 0, 0);
-    mg->mg_private = DBVARMG_SINGLE;
+    mg = sv_hook_add(PL_DBsingle, (struct HookFunctions *)&hooks_debugvar, 0, NULL);
+    HkPRIV(mg) = DBVARMG_SINGLE;
     SvSETMAGIC(PL_DBsingle);
 
     PL_DBtrace = GvSV((gv_fetchpvs("DB::trace", GV_ADDMULTI, SVt_PV)));
     if (!SvIOK(PL_DBtrace))
         sv_setiv(PL_DBtrace, 0);
-    mg = sv_magicext(PL_DBtrace, NULL, PERL_MAGIC_debugvar, &PL_vtbl_debugvar, 0, 0);
-    mg->mg_private = DBVARMG_TRACE;
+    mg = sv_hook_add(PL_DBtrace, (struct HookFunctions *)&hooks_debugvar, 0, NULL);
+    HkPRIV(mg) = DBVARMG_TRACE;
     SvSETMAGIC(PL_DBtrace);
 
     PL_DBsignal = GvSV((gv_fetchpvs("DB::signal", GV_ADDMULTI, SVt_PV)));
     if (!SvIOK(PL_DBsignal))
         sv_setiv(PL_DBsignal, 0);
-    mg = sv_magicext(PL_DBsignal, NULL, PERL_MAGIC_debugvar, &PL_vtbl_debugvar, 0, 0);
-    mg->mg_private = DBVARMG_SIGNAL;
+    mg = sv_hook_add(PL_DBsignal, (struct HookFunctions *)&hooks_debugvar, 0, NULL);
+    HkPRIV(mg) = DBVARMG_SIGNAL;
     SvSETMAGIC(PL_DBsignal);
 
     SvREFCNT_dec(PL_curstash);

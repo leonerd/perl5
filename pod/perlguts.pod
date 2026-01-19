@@ -1604,8 +1604,6 @@ will be lost.
  #  PERL_MAGIC_arylen         vtbl_arylen    Array length ($#ary)
  %  PERL_MAGIC_rhash          (none)         Extra data for restricted
                                              hashes
- *  PERL_MAGIC_debugvar       vtbl_debugvar  $DB::single, signal, trace
-                                             vars
  .  PERL_MAGIC_pos            vtbl_pos       pos() lvalue
  :  PERL_MAGIC_symtab         (none)         Extra data for symbol
                                              tables
@@ -1676,7 +1674,6 @@ will be lost.
 =for apidoc_item ||PERL_MAGIC_collxfrm
 =for apidoc_item ||PERL_MAGIC_dbfile
 =for apidoc_item ||PERL_MAGIC_dbline
-=for apidoc_item ||PERL_MAGIC_debugvar
 =for apidoc_item ||PERL_MAGIC_defelem
 =for apidoc_item ||PERL_MAGIC_env
 =for apidoc_item ||PERL_MAGIC_envelem

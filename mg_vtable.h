@@ -15,7 +15,6 @@
 #define PERL_MAGIC_sv             '\0' /* Special scalar variable */
 #define PERL_MAGIC_arylen         '#' /* Array length ($#ary) */
 #define PERL_MAGIC_rhash          '%' /* Extra data for restricted hashes */
-#define PERL_MAGIC_debugvar       '*' /* $DB::single, signal, trace vars */
 #define PERL_MAGIC_pos            '.' /* pos() lvalue */
 #define PERL_MAGIC_symtab         ':' /* Extra data for symbol tables */
 #define PERL_MAGIC_backref        '<' /* For weak ref data */
@@ -69,7 +68,6 @@ enum {		/* pass one of these to get_vtbl */
     want_vtbl_checkcall,
     want_vtbl_collxfrm,
     want_vtbl_dbline,
-    want_vtbl_debugvar,
     want_vtbl_defelem,
     want_vtbl_env,
     want_vtbl_envelem,
@@ -108,7 +106,6 @@ EXTCONST char * const PL_magic_vtable_names[magic_vtable_max] INIT( {
     "checkcall",
     "collxfrm",
     "dbline",
-    "debugvar",
     "defelem",
     "env",
     "envelem",
@@ -168,7 +165,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max] = {
   { 0, 0, 0, 0, 0, 0, 0, 0 },
 #endif
   { 0, Perl_magic_setdbline, 0, 0, 0, 0, 0, 0 },
-  { Perl_magic_getdebugvar, Perl_magic_setdebugvar, 0, 0, 0, 0, 0, 0 },
   { Perl_magic_getdefelem, Perl_magic_setdefelem, 0, 0, 0, 0, 0, 0 },
   { 0, Perl_magic_set_all_env, 0, Perl_magic_clear_all_env, 0, 0, 0, 0 },
   { 0, Perl_magic_setenv, 0, Perl_magic_clearenv, 0, 0, 0, 0 },
@@ -212,7 +208,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max];
 #define PL_vtbl_checkcall PL_magic_vtables[want_vtbl_checkcall]
 #define PL_vtbl_collxfrm PL_magic_vtables[want_vtbl_collxfrm]
 #define PL_vtbl_dbline PL_magic_vtables[want_vtbl_dbline]
-#define PL_vtbl_debugvar PL_magic_vtables[want_vtbl_debugvar]
 #define PL_vtbl_defelem PL_magic_vtables[want_vtbl_defelem]
 #define PL_vtbl_env PL_magic_vtables[want_vtbl_env]
 #define PL_vtbl_envelem PL_magic_vtables[want_vtbl_envelem]

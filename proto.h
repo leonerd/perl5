@@ -2142,12 +2142,6 @@ Perl_magic_getarylen(pTHX_ SV *sv, MAGIC *mg)
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
-Perl_magic_getdebugvar(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_GETDEBUGVAR      \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
 Perl_magic_getdefelem(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_GETDEFELEM       \
@@ -2259,12 +2253,6 @@ PERL_CALLCONV int
 Perl_magic_setdbline(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_SETDBLINE        \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
-Perl_magic_setdebugvar(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_SETDEBUGVAR      \
         assert(sv); assert(mg)
 
 PERL_CALLCONV int

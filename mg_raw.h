@@ -74,8 +74,6 @@
       "/* hook 'Z' %{^HOOK} hash */" },
     { 'z', "want_vtbl_hookelem",
       "/* hookelem 'z' %{^HOOK} hash element */" },
-    { '\\', "want_vtbl_lvref",
-      "/* lvref '\\' Lvalue reference constructor */" },
     { ']', "want_vtbl_checkcall | PERL_MAGIC_VALUE_MAGIC",
       "/* checkcall ']' Inlining/mutation of call to this CV */" },
     { '^', "magic_vtable_max | PERL_MAGIC_READONLY_ACCEPTABLE | PERL_MAGIC_VALUE_MAGIC",

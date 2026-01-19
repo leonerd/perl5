@@ -7696,6 +7696,141 @@ PP(pp_refassign)
     return NORMAL;
 }
 
+#define HKpLVREF_ONESHOT (1<<8)
+
+static void
+S_check_lvref_new_value(pTHX_ SV *sv, U16 priv)
+{
+    if (!SvROK(sv))
+        croak("Assigned value is not a reference");
+
+    U8 got_type = SvTYPE(SvRV(sv));
+
+    const char *bad = NULL;
+    switch(priv & OPpLVREF_TYPE) {
+        case OPpLVREF_SV:
+            if(got_type > SVt_PVLV)
+                bad = " SCALAR";
+            break;
+
+        case OPpLVREF_AV:
+            if(got_type != SVt_PVAV)
+                bad = "n ARRAY";
+            break;
+
+        case OPpLVREF_HV:
+            if(got_type != SVt_PVHV)
+                bad = " HASH";
+            break;
+
+        case OPpLVREF_CV:
+            if(got_type != SVt_PVCV)
+                bad = " CODE";
+            break;
+    }
+
+    if (bad)
+        /* diag_listed_as: Assigned value is not %s reference */
+        croak("Assigned value is not a%s reference", bad);
+}
+
+static void
+hook_lvref_padtarg_post_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    const PADOFFSET padix = HkKEYIV(mg);
+
+    S_check_lvref_new_value(aTHX_ sv, HkPRIV(mg));
+
+    SV * const osv = PAD_SV(padix);
+    PAD_SETSV(padix, SvREFCNT_inc_NN(SvRV(sv)));
+    SvREFCNT_dec(osv);
+
+    if(HkPRIV(mg) & HKpLVREF_ONESHOT)
+        sv_hook_remove(sv, mg);
+}
+
+static const struct ScalarVarHookFunctions hooks_lvref_padtarg = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "lvref_padtarg",
+
+    .post_set = &hook_lvref_padtarg_post_set,
+};
+
+static void
+hook_lvref_aelem_post_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    IV idx = HkKEYIV(mg);
+
+    assert(SvTYPE(HkAUXSV(mg)) == SVt_PVAV);
+    AV * const av = (AV *)HkAUXSV(mg);
+
+    S_check_lvref_new_value(aTHX_ sv, HkPRIV(mg));
+
+    av_store(av, idx, SvREFCNT_inc_simple_NN(SvRV(sv)));
+
+    if(HkPRIV(mg) & HKpLVREF_ONESHOT)
+        sv_hook_remove(sv, mg);
+}
+
+static const struct ScalarVarHookFunctions hooks_lvref_aelem = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "lvref_aelem",
+
+    .post_set = &hook_lvref_aelem_post_set,
+};
+
+static void
+hook_lvref_helem_post_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV * const key = HkKEYSV(mg);
+
+    assert(SvTYPE(HkAUXSV(mg)) == SVt_PVHV);
+    HV * const hv = (HV *)HkAUXSV(mg);
+
+    S_check_lvref_new_value(aTHX_ sv, HkPRIV(mg));
+
+    (void)hv_store_ent(hv, key, SvREFCNT_inc_simple_NN(SvRV(sv)), 0);
+
+    if(HkPRIV(mg) & HKpLVREF_ONESHOT)
+        sv_hook_remove(sv, mg);
+}
+
+static const struct ScalarVarHookFunctions hooks_lvref_helem = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "lvref_helem",
+
+    .post_set = &hook_lvref_helem_post_set,
+};
+
+static void
+hook_lvref_gvslot_post_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    assert(SvTYPE(HkAUXSV(mg)) == SVt_PVGV);
+    GV * const gv = (GV *)HkAUXSV(mg);
+
+    S_check_lvref_new_value(aTHX_ sv, HkPRIV(mg));
+
+    gv_setref((SV *)gv, sv);
+    SvSETMAGIC((SV *)gv);
+
+    if(HkPRIV(mg) & HKpLVREF_ONESHOT)
+        sv_hook_remove(sv, mg);
+}
+
+static const struct ScalarVarHookFunctions hooks_lvref_gvslot = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "lvref_gvslot",
+
+    .post_set = &hook_lvref_gvslot_post_set,
+};
 
 PP_wrapped(pp_lvref,
     !!(PL_op->op_private & OPpLVREF_ELEM) + !!(PL_op->op_flags & OPf_STACKED),
@@ -7705,10 +7840,51 @@ PP_wrapped(pp_lvref,
     SV * const ret = newSV_type_mortal(SVt_PVMG);
     SV * const elem = PL_op->op_private & OPpLVREF_ELEM ? POPs : NULL;
     SV * const arg = PL_op->op_flags & OPf_STACKED ? POPs : NULL;
-    MAGIC * const mg = sv_magicext(ret, arg, PERL_MAGIC_lvref,
-                                   &PL_vtbl_lvref, (char *)elem,
-                                   elem ? HEf_SVKEY : (I32)ARGTARG);
-    mg->mg_private = PL_op->op_private;
+    const bool is_iter = PL_op->op_private & OPpLVREF_ITER;
+
+    MAGIC *mg;
+
+    if(!arg) {
+        /* No obj; we won't have an elem in this case */
+        assert(!(PL_op->op_private & OPpLVREF_ELEM));
+
+        mg = sv_hook_add(ret,
+                (const struct HookFunctions *)&hooks_lvref_padtarg,
+                HKf_WITH_KEYIV, NULL);
+        HkKEYIV(mg) = ARGTARG;
+    }
+    else if(elem && SvTYPE(arg) == SVt_PVAV) {
+        /* AV arg + elem; type must be SV */
+        assert((PL_op->op_private & OPpLVREF_TYPE) == OPpLVREF_SV);
+
+        mg = sv_hook_add(ret,
+                (const struct HookFunctions *)(&hooks_lvref_aelem),
+                HKf_WITH_KEYIV, SvREFCNT_inc_NN(arg));
+        HkKEYIV(mg) = SvIV(elem);
+    }
+    else if(elem) {
+        /* HV arg + elem; type must be SV */
+        assert((PL_op->op_private & OPpLVREF_TYPE) == OPpLVREF_SV);
+        assert(SvTYPE(arg) == SVt_PVHV);
+
+        mg = sv_hook_add(ret,
+                (const struct HookFunctions *)(&hooks_lvref_helem),
+                HKf_WITH_KEYSV, SvREFCNT_inc_NN(arg));
+        HkKEYSV(mg) = SvREFCNT_inc_NN(elem);
+    }
+    else {
+        /* No elem; obj must be GV */
+        assert(SvTYPE(arg) == SVt_PVGV);
+
+        mg = sv_hook_add(ret,
+                (const struct HookFunctions *)&hooks_lvref_gvslot,
+                0, SvREFCNT_inc_NN(arg));
+    }
+
+    HkPRIV(mg) = PL_op->op_private & OPpLVREF_TYPE;
+    if (!is_iter)
+        HkPRIV(mg) |= HKpLVREF_ONESHOT;
+
     if (UNLIKELY(PL_op->op_private & OPpLVAL_INTRO)) {
       if (elem) {
         assert(arg);
@@ -7734,16 +7910,19 @@ PP_wrapped(pp_lvref,
 PP_wrapped(pp_lvrefslice, 0, 1)
 {
     dSP; dMARK;
-    AV * const av = (AV *)POPs;
+    SV * const avhv = POPs; /* could be SVt_PVAV or SVt_PVHV */
+    const bool is_av = SvTYPE(avhv) == SVt_PVAV;
     const bool localizing = PL_op->op_private & OPpLVAL_INTRO;
     bool can_preserve = FALSE;
 
     if (UNLIKELY(localizing)) {
         SV **svp;
 
-        can_preserve = SvCANEXISTDELETE(av);
+        can_preserve = SvCANEXISTDELETE(avhv);
 
-        if (SvTYPE(av) == SVt_PVAV) {
+        if (is_av) {
+            AV *av = (AV *)avhv;
+
             SSize_t max = -1;
 
             for (svp = MARK + 1; svp <= SP; svp++) {
@@ -7759,13 +7938,26 @@ PP_wrapped(pp_lvrefslice, 0, 1)
     while (++MARK <= SP) {
         SV * const elemsv = *MARK;
         if (UNLIKELY(localizing)) {
-            if (SvTYPE(av) == SVt_PVAV)
-                S_localise_aelem_lval(aTHX_ av, elemsv, can_preserve);
+            if (is_av)
+                S_localise_aelem_lval(aTHX_ (AV *)avhv, elemsv, can_preserve);
             else
-                S_localise_helem_lval(aTHX_ (HV *)av, elemsv, can_preserve);
+                S_localise_helem_lval(aTHX_ (HV *)avhv, elemsv, can_preserve);
         }
+        assert(OPpLVREF_SV == 0); /* So we know we don't have to change the default zero */
+
         *MARK = newSV_type_mortal(SVt_PVMG);
-        sv_magic(*MARK,(SV *)av,PERL_MAGIC_lvref,(char *)elemsv,HEf_SVKEY);
+        if(is_av) {
+            MAGIC *mg = sv_hook_add(*MARK,
+                    (const struct HookFunctions *)(&hooks_lvref_aelem),
+                    HKf_WITH_KEYIV, SvREFCNT_inc_NN(avhv));
+            HkKEYIV(mg) = SvIV(elemsv);
+        }
+        else {
+            MAGIC *mg = sv_hook_add(*MARK,
+                    (const struct HookFunctions *)(&hooks_lvref_helem),
+                    HKf_WITH_KEYSV, SvREFCNT_inc_NN(avhv));
+            HkKEYSV(mg) = SvREFCNT_inc_NN(elemsv);
+        }
     }
     RETURN;
 }

@@ -43,7 +43,6 @@
 	{ PERL_MAGIC_defelem,        "defelem(y)" },
 	{ PERL_MAGIC_hook,           "hook(Z)" },
 	{ PERL_MAGIC_hookelem,       "hookelem(z)" },
-	{ PERL_MAGIC_lvref,          "lvref(\\)" },
 	{ PERL_MAGIC_checkcall,      "checkcall(])" },
 	{ PERL_MAGIC_extvalue,       "extvalue(^)" },
 	{ PERL_MAGIC_ext,            "ext(~)" },

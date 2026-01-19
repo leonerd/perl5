@@ -51,7 +51,6 @@
                                          smart parameter vivification */
 #define PERL_MAGIC_hook           'Z' /* %{^HOOK} hash */
 #define PERL_MAGIC_hookelem       'z' /* %{^HOOK} hash element */
-#define PERL_MAGIC_lvref          '\\' /* Lvalue reference constructor */
 #define PERL_MAGIC_checkcall      ']' /* Inlining/mutation of call to this CV */
 #define PERL_MAGIC_extvalue       '^' /* Value magic available for use by extensions */
 #define PERL_MAGIC_ext            '~' /* Variable magic available for use by extensions */
@@ -70,7 +69,6 @@ enum {		/* pass one of these to get_vtbl */
     want_vtbl_hookelem,
     want_vtbl_isa,
     want_vtbl_isaelem,
-    want_vtbl_lvref,
     want_vtbl_mglob,
     want_vtbl_nkeys,
     want_vtbl_nonelem,
@@ -105,7 +103,6 @@ EXTCONST char * const PL_magic_vtable_names[magic_vtable_max] INIT( {
     "hookelem",
     "isa",
     "isaelem",
-    "lvref",
     "mglob",
     "nkeys",
     "nonelem",
@@ -161,7 +158,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max] = {
   { 0, Perl_magic_sethook, 0, Perl_magic_clearhook, 0, 0, 0, 0 },
   { 0, Perl_magic_setisa, 0, Perl_magic_clearisa, 0, 0, 0, 0 },
   { 0, Perl_magic_setisa, 0, 0, 0, 0, 0, 0 },
-  { 0, Perl_magic_setlvref, 0, 0, 0, 0, 0, 0 },
   { 0, Perl_magic_setmglob, 0, 0, Perl_magic_freemglob, 0, 0, 0 },
   { Perl_magic_getnkeys, Perl_magic_setnkeys, 0, 0, 0, 0, 0, 0 },
   { 0, Perl_magic_setnonelem, 0, 0, 0, 0, 0, 0 },
@@ -202,7 +198,6 @@ EXT_MGVTBL PL_magic_vtables[magic_vtable_max];
 #define PL_vtbl_hookelem PL_magic_vtables[want_vtbl_hookelem]
 #define PL_vtbl_isa PL_magic_vtables[want_vtbl_isa]
 #define PL_vtbl_isaelem PL_magic_vtables[want_vtbl_isaelem]
-#define PL_vtbl_lvref PL_magic_vtables[want_vtbl_lvref]
 #define PL_vtbl_mglob PL_magic_vtables[want_vtbl_mglob]
 #define PL_vtbl_nkeys PL_magic_vtables[want_vtbl_nkeys]
 #define PL_vtbl_nonelem PL_magic_vtables[want_vtbl_nonelem]

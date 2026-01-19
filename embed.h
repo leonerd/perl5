@@ -1058,7 +1058,6 @@
 #   define magic_sethook(a,b)                   Perl_magic_sethook(aTHX_ a,b)
 #   define magic_sethookall(a,b)                Perl_magic_sethookall(aTHX_ a,b)
 #   define magic_setisa(a,b)                    Perl_magic_setisa(aTHX_ a,b)
-#   define magic_setlvref(a,b)                  Perl_magic_setlvref(aTHX_ a,b)
 #   define magic_setmglob(a,b)                  Perl_magic_setmglob(aTHX_ a,b)
 #   define magic_setnkeys(a,b)                  Perl_magic_setnkeys(aTHX_ a,b)
 #   define magic_setnonelem(a,b)                Perl_magic_setnonelem(aTHX_ a,b)

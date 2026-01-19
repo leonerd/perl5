@@ -2257,12 +2257,6 @@ Perl_magic_setisa(pTHX_ SV *sv, MAGIC *mg)
         assert(sv); assert(mg)
 
 PERL_CALLCONV int
-Perl_magic_setlvref(pTHX_ SV *sv, MAGIC *mg)
-        __attribute__visibility__("hidden");
-#define PERL_ARGS_ASSERT_MAGIC_SETLVREF         \
-        assert(sv); assert(mg)
-
-PERL_CALLCONV int
 Perl_magic_setmglob(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 #define PERL_ARGS_ASSERT_MAGIC_SETMGLOB         \

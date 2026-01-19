@@ -1648,8 +1648,6 @@ will be lost.
                                              vivification
  Z  PERL_MAGIC_hook           vtbl_hook      %{^HOOK} hash
  z  PERL_MAGIC_hookelem       vtbl_hookelem  %{^HOOK} hash element
- \  PERL_MAGIC_lvref          vtbl_lvref     Lvalue reference
-                                             constructor
  ]  PERL_MAGIC_checkcall      vtbl_checkcall Inlining/mutation of call
                                              to this CV
  ^  PERL_MAGIC_extvalue       (none)         Value magic available for
@@ -1677,7 +1675,6 @@ will be lost.
 =for apidoc_item ||PERL_MAGIC_hookelem
 =for apidoc_item ||PERL_MAGIC_isa
 =for apidoc_item ||PERL_MAGIC_isaelem
-=for apidoc_item ||PERL_MAGIC_lvref
 =for apidoc_item ||PERL_MAGIC_nkeys
 =for apidoc_item ||PERL_MAGIC_nonelem
 =for apidoc_item ||PERL_MAGIC_overload_table

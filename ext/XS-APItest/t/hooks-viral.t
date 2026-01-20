@@ -367,4 +367,31 @@ listret_viral_ok("one,two,three", sub ($x) { ( $x =~ m/(.*),(.*),(.*)/ )[0,1,2] 
 listret_viral_ok("one,two,three", sub ($x) { $x =~ m/(.*),(.*),(.*)/ }, [qw( one two three )], "match unknown context" );
 listret_viral_ok("one,two,three", sub ($x) { $_ = $x; m/(.*),(.*),(.*)/ }, [qw( one two three )], "match unknown context on defsv" );
 
+# Tests of regexp -> dollardigit copy
+listret_viral_ok(
+    "one,two,three", sub ($x) {
+        $x =~ m/(.*),(.*),(.*)/;
+        ( $1, $2, $3 )
+    }, [qw( one two three )],
+    'basic match capture buffers' );
+
+listret_viral_ok(
+    "one,two,three", sub ($x) {
+        $x =~ m/(.*),(.*),(.*)/;
+        { "another" =~ m/(.*)/; }
+        ( $1, $2, $3 )
+    }, [qw( one two three )],
+    'match capture buffers are localised per block' );
+
+{
+    my $inp = "input string";
+    sv_hook_add($inp, viral => \"test-val");
+
+    $inp =~ m/(.*)/; my $dollar1 = $1;
+    "another string" =~ m/(.*)/; $dollar1 = $1;
+
+    is_deeply([HkAUXSV_values($1, 'viral')], [],
+        'second match in block clears viral annotations of first');
+}
+
 done_testing;

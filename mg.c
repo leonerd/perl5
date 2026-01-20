@@ -841,7 +841,10 @@ Perl_magic_regdatum_get(pTHX_ SV *sv, MAGIC *mg)
             logical_nparens = (I32)RX_NPARENS(rx);
 
         if (n != '+' && n != '-') {
+            mg_disinfect(sv);
             CALLREG_NUMBUF_FETCH(rx,paren,sv);
+            if (sv_has_valuemagic((SV *)rx))
+                mg_infect((SV *)rx, sv);
             return 0;
         }
         if (paren <= (I32)logical_nparens) {
@@ -1053,7 +1056,10 @@ Perl_magic_get(pTHX_ SV *sv, MAGIC *mg)
         paren = mg->mg_len;
         if (PL_curpm && (rx = PM_GETRE(PL_curpm))) {
           do_numbuf_fetch:
+            mg_disinfect(sv);
             CALLREG_NUMBUF_FETCH(rx,paren,sv);
+            if (sv_has_valuemagic((SV *)rx))
+                mg_infect((SV *)rx, sv);
         }
         else
             goto set_undef;

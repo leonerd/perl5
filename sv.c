@@ -6505,7 +6505,7 @@ Perl_sv_hook_add(pTHX_ SV *sv, const struct HookFunctions *funcs, U32 flags, SV 
             break;
 
         case HKs_SCALARVALUE:
-            if(svt > SVt_PVMG && svt != SVt_PVLV)
+            if(svt > SVt_PVMG && svt != SVt_PVLV && svt != SVt_REGEXP)
                 goto bad_shape;
             break;
 

@@ -3746,6 +3746,12 @@ PP(pp_match)
     const bool targ_has_valuemagic = sv_has_valuemagic(TARG);
     TAINT_NOT;
 
+    if (rx && sv_has_valuemagic((SV *)rx))
+        mg_disinfect((SV *)rx);
+    if (rx && targ_has_valuemagic)
+        /* REGEXP is still an SV; use it to store the viral annotations from targ */
+        mg_infect(TARG, (SV *)rx);
+
     /* We need to know this in case we fail out early - pos() must be reset */
     global = dynpm->op_pmflags & PMf_GLOBAL;
 

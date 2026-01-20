@@ -171,6 +171,12 @@ Perl_mg_magical(SV *sv)
                             SvRMAGICAL_on(sv);
                         break;
                     }
+
+                    case HKs_SCALARVALUE:
+                        SvRMAGICAL_on(sv);
+                        if (mg->mg_type != PERL_MAGIC_vstring)
+                            SvGMAGICAL_on(sv); /* need GMAGICAL on so that mg_get is invoked */
+                        break;
                 }
             }
             else {
@@ -430,6 +436,37 @@ Perl_mg_clear(pTHX_ SV *sv)
 
     restore_magic(INT2PTR(void*, (IV)mgs_ix));
     return 0;
+}
+
+void
+Perl_mg_infect(pTHX_ SV *ssv, SV *dsv)
+{
+    PERL_ARGS_ASSERT_MG_INFECT;
+
+    if(SvTYPE(ssv) < SVt_PVMG || !SvMAGICAL(ssv))
+        return;
+
+    for(MAGIC *smg = SvMAGIC(ssv); smg; smg = smg->mg_moremagic) {
+        if (!MgIsV2(smg))
+            continue;
+
+        if (HkFUNCS(smg)->shape != HKs_SCALARVALUE)
+            continue;
+
+        assert(dsv);
+
+        const struct ScalarValueHookFunctions *funcs =
+            (const struct ScalarValueHookFunctions *)HkFUNCS(smg);
+
+        MAGIC *dmg = NULL;
+        if(funcs->flags & HKf_SCALARVALUE_INFECTIOUS) {
+            dmg = sv_hook_attach(dsv, HkFUNCS(smg), HkFLAGS(smg));
+            hk_copy(smg, dmg);
+        }
+
+        if(funcs->infect)
+            (*funcs->infect)(aTHX_ ssv, smg, dsv, dmg);
+    }
 }
 
 static MAGIC*

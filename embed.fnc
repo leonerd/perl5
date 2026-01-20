@@ -4362,6 +4362,9 @@ EXpx	|SV *	|sv_setsv_cow	|NULLOK SV *dsv 			\
 				|NN SV *ssv
 #endif
 #if defined(PERL_CORE)
+p	|void	|mg_disinfect	|NN SV *sv
+p	|void	|mg_infect	|NN SV *ssv				\
+				|NULLOK SV *dsv
 p	|void	|opslab_force_free					\
 				|NN OPSLAB *slab
 p	|void	|opslab_free	|NN OPSLAB *slab

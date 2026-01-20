@@ -1127,6 +1127,7 @@ my @unresolved_visibility_overrides = qw(
     HKf_ALWAYS_WEAK_AUXSV
     HKf_CONTAINER
     HKf_REFCOUNTED_AUXSV
+    HKf_SCALARVALUE_INFECTIOUS
     HKf_WITH_KEYHEK
     HKf_WITH_KEYIV
     HKf_WITH_KEYSV

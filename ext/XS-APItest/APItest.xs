@@ -347,6 +347,42 @@ static const struct ArrayVarHookFunctions hooks_inc_after_clear_hash = {
     .clear = &hook_inc,
 };
 
+/* we can't make this one `static` because -Wc++-compat gets upset if we do */
+extern const struct ScalarValueHookFunctions hooks_viral;
+
+static void
+hook_infect(pTHX_ SV *osv, MAGIC *omg, SV *nsv, MAGIC *nmg)
+{
+    PERL_UNUSED_ARG(osv);
+
+    SV *auxsv = HkAUXSV(omg);
+
+    /* Only add this to nsv if it doesn't already have it
+     * TODO: This is kinda inefficient. We could make it better by storing
+     * all the annotations sorted in order of auxsv address, allowing us to
+     * bail out on average twice as fast. Such a search also gives us the
+     * right insert point to add if absent.
+     * Such logic would involve more deep internal poking at the MAGIC
+     * structure though. */
+
+    for(nmg = sv_hook_find_by_funcs(nsv, (const struct HookFunctions *)&hooks_viral);
+            nmg;
+            nmg = sv_hook_findnext_by_funcs(nsv, (const struct HookFunctions *)&hooks_viral, nmg)) {
+        if(HkAUXSV(nmg) == auxsv)
+            return;
+    }
+
+    sv_hook_add(nsv, (const struct HookFunctions *)&hooks_viral, 0, SvREFCNT_inc(auxsv));
+}
+
+const struct ScalarValueHookFunctions hooks_viral = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVALUE,
+    .debug_name = "XS::APItest/viral",
+
+    .infect = hook_infect,
+};
+
 static const struct HookFunctions *S_hookfuncs_by_name(pTHX_ SV *name)
 {
     char *namepv = SvPV_nolen(name);
@@ -362,6 +398,7 @@ static const struct HookFunctions *S_hookfuncs_by_name(pTHX_ SV *name)
     if(strEQ(namepv, "inc_after_set"))   return (struct HookFunctions *)&hooks_inc_after_set;
     if(strEQ(namepv, "inc_after_clear_arr"))  return (struct HookFunctions *)&hooks_inc_after_clear_arr;
     if(strEQ(namepv, "inc_after_clear_hash")) return (struct HookFunctions *)&hooks_inc_after_clear_hash;
+    if(strEQ(namepv, "viral"))           return (struct HookFunctions *)&hooks_viral;
     croak("Unrecognised hookfuncs name %" SVf, SVfARG(name));
 }
 

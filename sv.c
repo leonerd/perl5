@@ -4387,6 +4387,9 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
     SV_CHECK_THINKFIRST_COW_DROP(dsv);
     dtype = SvTYPE(dsv); /* THINKFIRST may have changed type */
 
+    if(dtype >= SVt_PVMG)
+        mg_disinfect(dsv);
+
     /* There's a lot of redundancy below but we're going for speed here
      * Note: some of the cases below do return; rather than break; so the
      * if-elseif-else logic below this switch does not see all cases. */
@@ -4813,6 +4816,10 @@ Perl_sv_setsv_flags(pTHX_ SV *dsv, SV* ssv, const I32 flags)
     }
     if (SvTAINTED(ssv))
         SvTAINT(dsv);
+
+    if (stype >= SVt_PVMG)
+        // TODO: performance, might want a new flag for "has viral value magic"
+        mg_infect(ssv, dsv);
 }
 
 /* A helper for newSVsv_flags_NN, which does the heavy lifting for
@@ -5991,7 +5998,9 @@ Perl_sv_force_normal_flags(pTHX_ SV *const sv, const U32 flags)
          * body. */
         SvREFCNT_dec_NN(temp);
     }
-    else if (SvVOK(sv)) sv_unmagic(sv, PERL_MAGIC_vstring);
+    else if (SvMAGICAL(sv)) {
+        if (SvVOK(sv)) sv_unmagic(sv, PERL_MAGIC_vstring);
+    }
 }
 
 /*
@@ -6505,6 +6514,11 @@ Perl_sv_hook_add(pTHX_ SV *sv, const struct HookFunctions *funcs, U32 flags, SV 
                 goto bad_shape;
             break;
 
+        case HKs_SCALARVALUE:
+            if(svt > SVt_PVMG && svt != SVt_PVLV)
+                goto bad_shape;
+            break;
+
         default:
             croak("Unrecognized hookfuncs->shape value %d", funcs->shape);
 bad_shape:
@@ -6755,6 +6769,21 @@ Perl_sv_hook_remove_by_funcs(pTHX_ SV *sv, const struct HookFunctions *funcs)
 {
     PERL_ARGS_ASSERT_SV_HOOK_REMOVE_BY_FUNCS;
     S_sv_hook_remove(aTHX_ sv, &S_filter_hook_by_funcs, funcs);
+}
+
+STATIC bool
+S_filter_hook_viralvalue(pTHX_ MAGIC *mg, const void *key)
+{
+    PERL_UNUSED_ARG(key);
+    return HkFUNCS(mg)->shape == HKs_SCALARVALUE;
+}
+
+void
+Perl_mg_disinfect(pTHX_ SV *sv)
+{
+    PERL_ARGS_ASSERT_MG_DISINFECT;
+
+    S_sv_hook_remove(aTHX_ sv, &S_filter_hook_viralvalue, NULL);
 }
 
 MAGIC *
@@ -7606,6 +7635,7 @@ Perl_sv_clear(pTHX_ SV *const orig_sv)
             else if (SvMAGIC(sv)) {
                 /* Free back-references before other types of magic. */
                 sv_unmagic(sv, PERL_MAGIC_backref);
+                mg_disinfect(sv);
                 mg_free(sv);
             }
             SvMAGICAL_off(sv);

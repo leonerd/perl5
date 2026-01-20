@@ -103,6 +103,7 @@ enum HookShape {
     HKs_SCALARVAR,
     HKs_ARRAYVAR,
     HKs_HASHVAR,
+    HKs_SCALARVALUE,
 };
 
 /* Flag constants stored in HookFunctions flags field. Defined so they don't
@@ -142,6 +143,14 @@ struct HashVarHookFunctions {
     _PERL_HOOKFUNCTIONS_COMMON_FIELDS;
 
     void (*clear)(pTHX_ SV *sv, MAGIC *mg);
+};
+
+#define HKf_SCALARVALUE_INFECTIOUS   (1<<18)
+
+struct ScalarValueHookFunctions {
+    _PERL_HOOKFUNCTIONS_COMMON_FIELDS;
+
+    void (*infect)(pTHX_ SV *ssv, MAGIC *smg, SV *dsv, MAGIC *dmg);
 };
 
 typedef struct {

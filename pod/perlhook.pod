@@ -219,6 +219,45 @@ clears the hash, such as C<undef %hash>.
 
 =back
 
+=head3 struct ScalarValueHookFunctions
+
+This structure extends the basic C<struct HookFunctions> by adding the
+following fields to store more trigger functions. It may only be applied to
+SVs that represent scalar values - i.e. whose type is C<SVt_PVMG> or below,
+or the special C<SVt_PVLV>.
+
+    struct ScalarValueHookFunctions {
+        ...
+
+        void (*infect)(pTHX_ SV *osv, MAGIC *omg, SV *nsv, MAGIC *nmg);
+    };
+
+For this structure the C<shape> field takes the value C<HKs_SCALARVALUE>.
+
+=over 4
+
+=item C<infect> trigger function
+
+An optional pointer to a function to be invoked at the time the hook is copied
+from one SV to another, around the time that the scalar value itself is
+copied. When invoked, it is passed the original and new SVs, and the original
+hook value.
+
+If the C<flags> field has the C<HKf_SCALARVALUE_INFECTIOUS> flag, then a new
+hook will be copied onto the new SV, and a pointer to it will also be passed
+to the C<infect> trigger function. If the infectious flag is not present then
+no hook will have been copied onto the new SV and so the C<nmg> argument will
+be passed as C<NULL>, though the trigger function can apply one if it wishes.
+This allows the copy to be applied conditionally, based on whether the trigger
+function decides to or not.
+
+=back
+
+In addition to any behaviour implied by the C<HKf_SCALARVALUE_INFECTIOUS>
+flag or specifically provided by the C<infect> trigger function, any hooks
+of this type on an SV will be automatically removed by operations that
+overwrite the value stored in an SV, such as C<sv_setsv()> or C<sv_clear()>.
+
 =head2 API Functions
 
 =head3 C<sv_hook_add>
@@ -467,6 +506,14 @@ that the hook should apply to the concept of the variable that it is applied
 to; i.e. the container of the value, rather than the value itself. This means
 that it gets copied to the new container SV if the variable is subject to a
 C<local> expression.
+
+=head3 HKf_SCALARVALUE_INFECTIOUS
+
+Presence of this flag on a C<struct ScalarValueHookFunctions> structure
+indicates that any new SV values that are copied from an SV with that hook
+attached should apply a copy of the hook onto the newly-written SV, as part
+of the copy operation. In effect this allows the hook's effects to be copied
+along with the value.
 
 =head1 USE CASES
 

@@ -6040,6 +6040,18 @@ Perl_sv_setsv_cow(pTHX_ SV *dsv, SV *ssv);
 #endif
 #if defined(PERL_CORE)
 PERL_CALLCONV void
+Perl_mg_disinfect(pTHX_ SV *sv)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_DISINFECT          \
+        assert(sv)
+
+PERL_CALLCONV void
+Perl_mg_infect(pTHX_ SV *ssv, SV *dsv)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_INFECT             \
+        assert(ssv)
+
+PERL_CALLCONV void
 Perl_opslab_force_free(pTHX_ OPSLAB *slab)
         __attribute__visibility__("hidden");
 # define PERL_ARGS_ASSERT_OPSLAB_FORCE_FREE     \

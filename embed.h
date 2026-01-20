@@ -1170,6 +1170,8 @@
 #   define yyparse(a)                           Perl_yyparse(aTHX_ a)
 #   define yyquit()                             Perl_yyquit(aTHX)
 #   define yyunlex()                            Perl_yyunlex(aTHX)
+#   define mg_disinfect(a)                      Perl_mg_disinfect(aTHX_ a)
+#   define mg_infect(a,b)                       Perl_mg_infect(aTHX_ a,b)
 #   define opslab_force_free(a)                 Perl_opslab_force_free(aTHX_ a)
 #   define opslab_free(a)                       Perl_opslab_free(aTHX_ a)
 #   define opslab_free_nopad(a)                 Perl_opslab_free_nopad(aTHX_ a)

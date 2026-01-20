@@ -1976,6 +1976,8 @@ Perl_do_magicv2_dump(pTHX_ I32 level, PerlIO *file, const MAGIC *mg, I32 nest, I
             case HKs_SCALARVAR: shapename = "SCALARVAR"; break;
             case HKs_ARRAYVAR:  shapename = "ARRAYVAR";  break;
             case HKs_HASHVAR:   shapename = "HASHVAR";   break;
+            case HKs_SCALARVALUE:
+                                shapename = "SCALARVALUE"; break;
         }
         if(shapename)
             Perl_dump_indent(aTHX_ level, file, "      SHAPE = %s\n", shapename);
@@ -2017,6 +2019,14 @@ Perl_do_magicv2_dump(pTHX_ I32 level, PerlIO *file, const MAGIC *mg, I32 nest, I
                     (const struct HashVarHookFunctions *)HkFUNCS(mg);
                 if(funcs->clear)
                     Perl_dump_indent(aTHX_ level, file, "      CLEAR\n");
+                break;
+            }
+            case HKs_SCALARVALUE:
+            {
+                const struct ScalarValueHookFunctions *funcs =
+                    (const struct ScalarValueHookFunctions *)HkFUNCS(mg);
+                if(funcs->infect)
+                    Perl_dump_indent(aTHX_ level, file, "      INFECT\n");
                 break;
             }
         }

@@ -917,6 +917,15 @@ symbol would not be defined on C<L</EBCDIC>> platforms.
 #  define UNLESS_PERL_MEM_LOG(code)
 #endif
 
+/* Macros for viralmagic support */
+/* TODO: allow these to be conditional like the taint ones are */
+#define VIRALMAGIC_CLEAR \
+    (UNLIKELY(PL_viralmagic_annotations && SvMAGICAL(PL_viralmagic_annotations)) && (viralmagic_clear(), false))
+#define VIRALMAGIC_FROM(ssv) \
+    if (UNLIKELY(ssv && SvMAGICAL(ssv))) { viralmagic_from(ssv); }
+#define VIRALMAGIC_APPLYTO(dsv) \
+    if (UNLIKELY(PL_viralmagic_annotations && SvMAGICAL(PL_viralmagic_annotations))) { viralmagic_applyto(dsv); }
+
 /* By compiling a perl with -DNO_TAINT_SUPPORT or -DSILENT_NO_TAINT_SUPPORT,
  * you get a perl without taint support, but doubtlessly with a lesser
  * degree of support. Do not do so unless you know exactly what it means
@@ -1025,9 +1034,12 @@ violations are fatal.
     /* Set to tainted if we are running under tainting mode */
 #   define TAINT		(PL_tainted = PL_tainting)
 
-#   define TAINT_NOT	(PL_tainted = FALSE)        /* Untaint */
+#   define TAINT_NOT	(PL_tainted = FALSE, VIRALMAGIC_CLEAR)        /* Untaint */
 #   define TAINT_IF(c)	if (UNLIKELY(c)) { TAINT; } /* Conditionally taint */
-#   define TAINT_IF_SV(sv)	if (UNLIKELY(sv && SvTAINTED(sv))) { TAINT; }
+#   define TAINT_IF_SV(sv)	STMT_START { \
+        if (UNLIKELY(sv && SvTAINTED(sv))) { TAINT; } \
+        VIRALMAGIC_FROM(sv);                          \
+        } STMT_END
 #   define TAINT_ENV()	if (UNLIKELY(PL_tainting)) { taint_env(); }
                                 /* croak or warn if tainting */
 #   define TAINT_PROPER(s)	if (UNLIKELY(PL_tainting)) {                \

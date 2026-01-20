@@ -1755,6 +1755,7 @@ Taint an SV.  Use C<SvTAINTED_on> instead.
         assert(TAINTING_get || !TAINT_get); \
         if (UNLIKELY(TAINT_get))	\
             SvTAINTED_on(sv);	        \
+        VIRALMAGIC_APPLYTO(sv);         \
     } STMT_END
 
 /*

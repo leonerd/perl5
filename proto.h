@@ -5498,6 +5498,20 @@ Perl_vform(pTHX_ const char *pat, va_list *args);
 #define PERL_ARGS_ASSERT_VFORM                  \
         assert(pat)
 
+PERL_CALLCONV void
+Perl_viralmagic_applyto(pTHX_ SV *dsv);
+#define PERL_ARGS_ASSERT_VIRALMAGIC_APPLYTO     \
+        assert(dsv)
+
+PERL_CALLCONV void
+Perl_viralmagic_clear(pTHX);
+#define PERL_ARGS_ASSERT_VIRALMAGIC_CLEAR
+
+PERL_CALLCONV void
+Perl_viralmagic_from(pTHX_ SV *ssv);
+#define PERL_ARGS_ASSERT_VIRALMAGIC_FROM        \
+        assert(ssv)
+
 #define PERL_ARGS_ASSERT_VIVIFY_DEFELEM         \
         assert(sv)
 

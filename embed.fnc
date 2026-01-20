@@ -4110,6 +4110,10 @@ Adp	|void	|vfatal_warner	|U32 err				\
 				|NULLOK va_list *args
 Adp	|char * |vform		|NN const char *pat			\
 				|NULLOK va_list *args
+Cp	|void	|viralmagic_applyto					\
+				|NN SV *dsv
+Cp	|void	|viralmagic_clear
+Cp	|void	|viralmagic_from|NN SV *ssv
 : Used by Data::Alias
 EXp	|void	|vivify_defelem |NN SV *sv
 : Used in pp.c

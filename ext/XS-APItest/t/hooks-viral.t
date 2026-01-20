@@ -102,7 +102,7 @@ use XS::APItest;
 sub viral_ok ( $code, $name )
 {
     foreach my $round (qw( first second )) {
-        my $inp;
+        my $inp = "inp for $name";
         sv_hook_add($inp, viral => \"test-val $round");
 
         my $out = $code->( $inp );
@@ -126,5 +126,86 @@ viral_ok(sub ($x) { my %hash = ( key => $x ); delete $hash{key} }, 'delete');
 # other control flow
 viral_ok(sub ($x) { my $ret = do { $x; }; $ret }, 'do BLOCK');
 viral_ok(sub ($x) { my $ret = eval { $x; }; $ret }, 'eval BLOCK');
+viral_ok(sub ($x) {
+    use feature 'try';
+    try { die $x; }
+    catch ($e) { return $e; }
+}, 'try/catch' );
+
+# Value-returning UNOPs
+sub unop_viral_ok ( $inp, $code, $want_out, $name )
+{
+    foreach my $round (qw( first second )) {
+        my @args = ($inp);
+        sv_hook_add($args[0], viral => \"test-val $name $round");
+
+        my $got_out = $code->( @args );
+        $round eq "first" and
+            is($got_out, $want_out, "$name viral hook yields correct result");
+
+        is_deeply([HkAUXSV_values($got_out, 'viral')], ["test-val $name $round"],
+            "$name unop passes viral hook");
+    }
+}
+
+unop_viral_ok(1, sub ($x) { -$x }, -1, "negate");
+unop_viral_ok(1, sub ($x) { ~$x }, ~1, "complement");
+unop_viral_ok("abc", sub ($x) { length $x }, 3, "length");
+
+# Inplace-mutating UNOPs; check variable also
+sub mut_unop_viral_ok ( $inp, $code, $want_out, $want_outvar, $name )
+{
+    foreach my $round (qw( first second )) {
+        my @args = ($inp);
+        sv_hook_add($args[0], viral => \"test-val $name $round");
+
+        my ($got_out, $got_outvar) = $code->( @args );
+        $round eq "first" and do {
+            is($got_out, $want_out, "$name viral hook yields correct result");
+            is($got_outvar, $want_outvar, "$name viral hook yields correct mutation");
+        };
+
+        is_deeply([HkAUXSV_values($got_out, 'viral')], ["test-val $name $round"],
+            "$name mutating unop passes viral hook");
+        is_deeply([HkAUXSV_values($got_outvar, 'viral')], ["test-val $name $round"],
+            "$name mutating unop preserves viral hook");
+    }
+}
+
+mut_unop_viral_ok(1,       sub ($x) { my $ret = ++$x;     $ret, $x }, 2, 2, "preinc");
+mut_unop_viral_ok(1,       sub ($x) { my $ret = --$x;     $ret, $x }, 0, 0, "predec");
+mut_unop_viral_ok(1,       sub ($x) { my $ret = $x++;     $ret, $x }, 1, 2, "postinc");
+mut_unop_viral_ok(1,       sub ($x) { my $ret = $x--;     $ret, $x }, 1, 0, "postdec");
+mut_unop_viral_ok("abc",   sub ($x) { my $ret = chop $x;  $ret, $x }, "c", "ab", "chop");
+mut_unop_viral_ok("abc\n", sub ($x) { my $ret = chomp $x; $ret, $x }, "1", "abc", "chomp");
+
+# Base-or-UNOPs; which might operate on $_
+sub base_or_unop_viral_ok( $inp, $code, $want_out, $name )
+{
+    foreach my $round (qw( first second )) {
+        my @args = ($inp);
+        sv_hook_add($args[0], viral => \"test-val $name $round");
+
+        my ($got_base, $got_un) = $code->( ( local $_ ) = @args );
+        $round eq "first" and do {
+            is($got_base, $want_out, "$name as baseop viral hook yields correct result");
+            is($got_un, $want_out, "$name as unop viral hook yields correct result");
+        };
+
+        is_deeply([HkAUXSV_values($got_base, 'viral')], ["test-val $name $round"],
+            "$name as baseop passes viral hook");
+        is_deeply([HkAUXSV_values($got_un, 'viral')], ["test-val $name $round"],
+            "$name as unop passes viral hook");
+    }
+}
+
+use feature 'fc';
+base_or_unop_viral_ok("xyz", sub ($x) { uc,      uc $x },      "XYZ", "uc");
+base_or_unop_viral_ok("xyz", sub ($x) { ucfirst, ucfirst $x }, "Xyz", "ucfirst");
+base_or_unop_viral_ok("XYZ", sub ($x) { lc,      lc $x },      "xyz", "lc");
+base_or_unop_viral_ok("XYZ", sub ($x) { lcfirst, lcfirst $x }, "xYZ", "lcfirst");
+base_or_unop_viral_ok("xyz", sub ($x) { fc,      fc $x },      fc "xyz", "fc");
+base_or_unop_viral_ok("a",   sub ($x) { ord,     ord $x },     ord "a", "ord");
+base_or_unop_viral_ok(65,    sub ($x) { chr,     chr $x },     chr 65,  "chr");
 
 done_testing;

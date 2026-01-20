@@ -222,6 +222,8 @@ Perl_mg_get(pTHX_ SV *sv)
        list of magic. svt_get() may delete the current entry, add new
        magic to the head of the list, or upgrade the SV. AMS 20010810 */
 
+    const bool use_PL_viralmagic = (PL_viralmagic_annotations != NULL);
+
     newmg = cur = head = mg = SvMAGIC(sv);
     while (mg) {
         const MGVTBL * const vtbl = mg->mg_virtual;
@@ -234,6 +236,11 @@ Perl_mg_get(pTHX_ SV *sv)
 
                 if (funcs->pre_get)
                     funcs->pre_get(aTHX_ sv, mg);
+            }
+            else if (use_PL_viralmagic &&
+                        (HkFUNCS(mg)->shape == HKs_SCALARVALUE) && 
+                        mg->mg_type != PERL_MAGIC_vstring) {
+                viralmagic_from(sv);
             }
         }
         else if (!(mg->mg_flags & MGf_GSKIP) && vtbl && vtbl->svt_get) {
@@ -4036,6 +4043,31 @@ Perl_magic_copycallchecker(pTHX_ SV *sv, MAGIC *mg, SV *nsv,
     nmg->mg_obj = SvREFCNT_inc_simple(mg->mg_obj);
     nmg->mg_flags |= MGf_REFCOUNTED;
     return 1;
+}
+
+void
+Perl_viralmagic_from(pTHX_ SV *ssv)
+{
+    PERL_ARGS_ASSERT_VIRALMAGIC_FROM;
+
+    mg_infect(ssv, PL_viralmagic_annotations);
+}
+
+void
+Perl_viralmagic_applyto(pTHX_ SV *dsv)
+{
+    PERL_ARGS_ASSERT_VIRALMAGIC_APPLYTO;
+
+    mg_disinfect(dsv);
+    mg_infect(PL_viralmagic_annotations, dsv);
+}
+
+void
+Perl_viralmagic_clear(pTHX)
+{
+    PERL_ARGS_ASSERT_VIRALMAGIC_CLEAR;
+
+    mg_disinfect(PL_viralmagic_annotations);
 }
 
 /*

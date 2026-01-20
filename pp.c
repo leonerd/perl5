@@ -4059,6 +4059,7 @@ PP(pp_chr)
 
   ret:
     SvSETMAGIC(TARG);
+    VIRALMAGIC_APPLYTO(TARG);
     rpp_replace_1_1_NN(TARG);
     return NORMAL;
 }
@@ -4462,6 +4463,7 @@ PP_wrapped(pp_ucfirst, 1, 0)
 #endif
     if (dest != source && SvTAINTED(source))
         SvTAINT(dest);
+    VIRALMAGIC_APPLYTO(dest);
     SvSETMAGIC(dest);
     return NORMAL;
 }
@@ -4791,6 +4793,7 @@ PP_wrapped(pp_uc, 1, 0)
 #endif
     if (dest != source && SvTAINTED(source))
         SvTAINT(dest);
+    VIRALMAGIC_APPLYTO(dest);
     SvSETMAGIC(dest);
     return NORMAL;
 }
@@ -5011,6 +5014,7 @@ PP_wrapped(pp_lc, 1, 0)
 #endif
     if (dest != source && SvTAINTED(source))
         SvTAINT(dest);
+    VIRALMAGIC_APPLYTO(dest);
     SvSETMAGIC(dest);
     return NORMAL;
 }
@@ -5299,6 +5303,7 @@ PP_wrapped(pp_fc, 1, 0)
 #endif
     if (SvTAINTED(source))
         SvTAINT(dest);
+    VIRALMAGIC_APPLYTO(dest);
     SvSETMAGIC(dest);
     RETURN;
 }

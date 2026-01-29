@@ -31,6 +31,12 @@ struct magic {
     char*	mg_ptr;
 };
 
+/* Flag bit for mg_flags and HkFLAGS */
+#define MGf_MGv2    0x80        /* mg_virtual points at a Hooks = Magic v2 structure */
+
+#define MgIsV2(mg)  (mg->mg_flags & MGf_MGv2)
+
+/* If MGf_MGv2 is not set, this is a MAGIC v1 structure */
 #define MGf_TAINTEDDIR 1        /* PERL_MAGIC_envelem only */
 #define MGf_MINMATCH   1        /* PERL_MAGIC_regex_global only */
 #define MGf_REQUIRE_GV 1        /* PERL_MAGIC_checkcall only */
@@ -82,6 +88,118 @@ struct magic {
 #endif
 
 #define whichsig(pv) whichsig_pv(pv)
+
+/* Hooks = Magic v2 */
+
+/* Flag constants used by HkFLAGS() */
+#define HKf_REFCOUNTED_AUXSV  (1<<1)   /* must match MGf_REFCOUNTED */
+#define HKf_WITH_MASK         (3<<3)   /* aligned with MGf_COPY|MGf_DUP */
+#define   HKf_WITH_KEYIV      (1<<3)
+#define   HKf_WITH_KEYHEK     (2<<3)   /* unimplemented */
+#define   HKf_WITH_KEYSV      (3<<3)
+
+enum HookShape {
+    HKs_BASE,
+    HKs_SCALARVAR,
+    HKs_ARRAYVAR,
+    HKs_HASHVAR,
+};
+
+/* Flag constants stored in HookFunctions flags field. Defined so they don't
+ * overlap with the set above. */
+#define HKf_CONTAINER         (1<<16)
+#define HKf_ALWAYS_WEAK_AUXSV (1<<17)
+
+/* common to all hook function structs */
+#define _PERL_HOOKFUNCTIONS_COMMON_FIELDS  \
+    MGVTBL _v1_vtbl; /* reserve space */   \
+    U32 ver;                               \
+    enum HookShape shape;                  \
+    U32 flags;                             \
+    const char *debug_name;                \
+    size_t user_size;                      \
+    void (*free) (pTHX_ SV *sv, MAGIC *mg); \
+    void (*clone)(pTHX_ SV *osv, MAGIC *omg, SV *nsv, MAGIC *nmg, CLONE_PARAMS *params)
+
+struct HookFunctions {
+    _PERL_HOOKFUNCTIONS_COMMON_FIELDS;
+};
+
+struct ScalarVarHookFunctions {
+    _PERL_HOOKFUNCTIONS_COMMON_FIELDS;
+
+    void (*pre_get) (pTHX_ SV *sv, MAGIC *mg);
+    void (*post_set)(pTHX_ SV *sv, MAGIC *mg);
+};
+
+struct ArrayVarHookFunctions {
+    _PERL_HOOKFUNCTIONS_COMMON_FIELDS;
+
+    void (*clear)(pTHX_ SV *sv, MAGIC *mg);
+};
+
+struct HashVarHookFunctions {
+    _PERL_HOOKFUNCTIONS_COMMON_FIELDS;
+
+    void (*clear)(pTHX_ SV *sv, MAGIC *mg);
+};
+
+typedef struct {
+    MAGIC  _magic;
+    IV     keyiv;
+} MAGICWithKeyIV;
+
+typedef struct {
+    MAGIC  _magic;
+    SV    *keysv;
+} MAGICWithKeySV;
+
+#define HK_SIZEOF_FLAGS(flags)  \
+    (((flags) & HKf_WITH_MASK) == HKf_WITH_KEYIV ? sizeof(MAGICWithKeyIV) : \
+     ((flags) & HKf_WITH_MASK) == HKf_WITH_KEYSV ? sizeof(MAGICWithKeySV) : \
+                                                   sizeof(MAGIC))
+
+// TODO: assert flags has MGf_MGV2
+#define HkFLAGS(mg)  ((mg)->mg_flags)
+#define HkFUNCS(mg)  ((const struct HookFunctions *)((mg)->mg_virtual))
+
+#define HkSIZEOF(mg)  HK_SIZEOF_FLAGS(HkFLAGS(mg))
+
+// PRIV just steals magic's mg_private field
+#define HkPRIV(mg)   ((mg)->mg_private)
+
+// AUXSV just steals magic's mg_obj field
+#define HkAUXSV(mg)  ((mg)->mg_obj)
+
+// WEAK_AUXSV is really !HKf_REFCOUNTED_AUXSV
+#define HkWEAK_AUXSV(mg)      (!(HkFLAGS(mg) & HKf_REFCOUNTED_AUXSV))
+#define HkWEAK_AUXSV_on(mg)   (HkFLAGS(mg) &= ~HKf_REFCOUNTED_AUXSV)
+#define HkWEAK_AUXSV_off(mg)  (HkFLAGS(mg) |=  HKf_REFCOUNTED_AUXSV)
+
+#define HkAUXSV_set(mg, sv) \
+    STMT_START { \
+        MAGIC *mg_ = mg; \
+        if(HkAUXSV(mg_) && !HkWEAK_AUXSV(mg_)) SvREFCNT_dec(HkAUXSV(mg_)); \
+        (mg_)->mg_obj = sv; \
+    } STMT_END
+
+// PTR just steals magic's mg_ptr field. Though we pretend it's a void *
+#define HkPTR(mg)           ((void *)(mg)->mg_ptr)
+#define HkPTR_set(mg, ptr)  ((mg)->mg_ptr = (char *)(ptr))
+
+// PTRLEN just steals magic's mg_len field.
+// TODO: SSize_t vs STRLEN 
+#define HkPTRLEN(mg)           ((mg)->mg_len)
+#define HkPTRLEN_set(mg, len)  ((mg)->mg_len = (len))
+
+// The optional fields need to be usable as lvalues
+#define HkHasKEYIV(mg)  ((HkFLAGS(mg) & HKf_WITH_MASK) == HKf_WITH_KEYIV)
+#define HkKEYIV(mg)  (*(assert(HkHasKEYIV(mg)), &((MAGICWithKeyIV *)mg)->keyiv))
+#define HkHasKEYSV(mg)  ((HkFLAGS(mg) & HKf_WITH_MASK) == HKf_WITH_KEYSV)
+#define HkKEYSV(mg)  (*(assert(HkHasKEYSV(mg)), &((MAGICWithKeySV *)mg)->keysv))
+
+#define HkUSERSTRUCT(mg, type)  ((type)(((char *)mg) + HkSIZEOF(mg)))
+#define HkUSER(mg)   HkUSERSTRUCT(mg, void *)
 
 /*
  * ex: set ts=8 sts=4 sw=4 et:

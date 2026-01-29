@@ -1488,6 +1488,11 @@ Perl_gv_try_downgrade(pTHX_ GV *gv);
 #define PERL_ARGS_ASSERT_GV_TRY_DOWNGRADE       \
         assert(gv)
 
+PERL_CALLCONV void
+Perl_hk_ptr_store(pTHX_ MAGIC *mg, const void *ptr, STRLEN len);
+#define PERL_ARGS_ASSERT_HK_PTR_STORE           \
+        assert(mg)
+
 PERL_CALLCONV struct xpvhv_aux *
 Perl_hv_auxalloc(pTHX_ HV *hv)
         __attribute__visibility__("hidden");
@@ -4709,6 +4714,41 @@ Perl_sv_grow_fresh(pTHX_ SV * const sv, STRLEN newlen);
 #define PERL_ARGS_ASSERT_SV_GROW_FRESH          \
         assert(sv)
 
+PERL_CALLCONV MAGIC *
+Perl_sv_hook_add(pTHX_ SV *sv, const struct HookFunctions *funcs, U32 flags, SV *auxsv);
+#define PERL_ARGS_ASSERT_SV_HOOK_ADD            \
+        assert(sv); assert(funcs)
+
+PERL_CALLCONV bool
+Perl_sv_hook_exists_by_funcs(pTHX_ const SV *sv, const struct HookFunctions *funcs);
+#define PERL_ARGS_ASSERT_SV_HOOK_EXISTS_BY_FUNCS \
+        assert(sv); assert(funcs)
+
+PERL_CALLCONV MAGIC *
+Perl_sv_hook_find_by_funcs(pTHX_ const SV *sv, const struct HookFunctions *funcs);
+#define PERL_ARGS_ASSERT_SV_HOOK_FIND_BY_FUNCS  \
+        assert(sv); assert(funcs)
+
+PERL_CALLCONV MAGIC *
+Perl_sv_hook_find_or_add(pTHX_ SV *sv, const struct HookFunctions *funcs);
+#define PERL_ARGS_ASSERT_SV_HOOK_FIND_OR_ADD    \
+        assert(sv); assert(funcs)
+
+PERL_CALLCONV MAGIC *
+Perl_sv_hook_findnext_by_funcs(pTHX_ const SV *sv, const struct HookFunctions *funcs, MAGIC *mg);
+#define PERL_ARGS_ASSERT_SV_HOOK_FINDNEXT_BY_FUNCS \
+        assert(sv); assert(funcs); assert(mg)
+
+PERL_CALLCONV void
+Perl_sv_hook_remove(pTHX_ SV *sv, MAGIC *mg);
+#define PERL_ARGS_ASSERT_SV_HOOK_REMOVE         \
+        assert(sv); assert(mg)
+
+PERL_CALLCONV void
+Perl_sv_hook_remove_by_funcs(pTHX_ SV *sv, const struct HookFunctions *funcs);
+#define PERL_ARGS_ASSERT_SV_HOOK_REMOVE_BY_FUNCS \
+        assert(sv); assert(funcs)
+
 PERL_CALLCONV void
 Perl_sv_inc(pTHX_ SV * const sv);
 #define PERL_ARGS_ASSERT_SV_INC
@@ -7455,12 +7495,24 @@ Perl_translate_substr_offsets(STRLEN curlen, IV pos1_iv, bool pos1_is_uv, IV len
 #endif
 #if defined(PERL_IN_MG_C) || defined(PERL_IN_SV_C)
 PERL_CALLCONV void
+Perl_hk_copy(pTHX_ const MAGIC *smg, MAGIC *dmg)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_HK_COPY               \
+        assert(smg); assert(dmg)
+
+PERL_CALLCONV void
 Perl_mg_free_struct(pTHX_ SV *sv, MAGIC *mg)
         __attribute__visibility__("hidden");
 # define PERL_ARGS_ASSERT_MG_FREE_STRUCT        \
         assert(sv); assert(mg)
 
-#endif
+PERL_CALLCONV MAGIC *
+Perl_sv_hook_attach(pTHX_ SV *sv, const struct HookFunctions *funcs, U32 flags)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_SV_HOOK_ATTACH        \
+        assert(sv); assert(funcs)
+
+#endif /* defined(PERL_IN_MG_C) || defined(PERL_IN_SV_C) */
 #if defined(PERL_IN_MRO_C)
 STATIC void
 S_mro_clean_isarev(pTHX_ HV * const isa, const char * const name, const STRLEN len, HV * const exceptions, U32 hash, U32 flags);

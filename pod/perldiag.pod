@@ -737,6 +737,11 @@ not a scalar (i.e. an array or hash).  At the present version, these are only
 permitted on scalar fields.  You will have to manually create a writer
 accessor method yourself.
 
+=item Cannot apply hookfuncs shape %d to SV type %d
+
+(F) An XS module attempted to attach a Magic v2 structure to an SV, but the
+value of its C<shape> field is not compatible with the type of the SV.
+
 =item Cannot assign :param(%s) to field %s because that name is already in use
 
 (F) An attempt was made to apply a parameter name to a field, when the name
@@ -6699,6 +6704,15 @@ before now.  Check your control flow.
 (F) Perl can't peek at the stdio buffer of filehandles when it doesn't
 know about your kind of stdio.  You'll have to use a filename instead.
 
+=item TODO: expected HookFunctions->ver to contain the placeholder 12345 value
+
+(F) An XS module attempted to attach a Magic v2 structure to an SV, but the
+value of its C<ver> field is not recognised as a valid version.
+
+I<This message, like the expected value itself, is currently somewhat of a
+placeholder during development, and should be adjusted to a better one
+before this branch is considered for merge.>
+
 =item Target of goto is too deeply nested
 
 (F) You tried to use C<goto> to reach a label that was too deeply nested
@@ -7548,6 +7562,12 @@ whereabouts in the regular expression the escape was discovered.
 
 (F) You attempted to add a named attribute to a C<field> definition, but
 perl does not recognise the name of the requested attribute.
+
+=item Unrecognized hookfuncs->shape value %d
+
+(F) An XS module attempted to attach a Magic v2 structure to an SV, but the
+value of its C<shape> field is not one of the recognised constants. This must
+take one of the C<HKs_*> values listed in L<perlhook>.
 
 =item Unrecognized named parameter '%s' to subroutine '%s'
 

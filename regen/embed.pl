@@ -1121,6 +1121,30 @@ my @unresolved_visibility_overrides = qw(
     HINT_STRICT_VARS
     HINT_UNI_8_BIT
     HINT_UTF8
+    HK_SIZEOF_FLAGS
+    HkAUXSV
+    HkAUXSV_set
+    HKf_ALWAYS_WEAK_AUXSV
+    HKf_CONTAINER
+    HKf_REFCOUNTED_AUXSV
+    HKf_WITH_KEYHEK
+    HKf_WITH_KEYIV
+    HKf_WITH_KEYSV
+    HKf_WITH_MASK
+    HkFLAGS
+    HkFUNCS
+    HkHasKEYIV
+    HkHasKEYSV
+    HkKEYIV
+    HkKEYSV
+    HkPRIV
+    HkPTR
+    HkPTR_set
+    HkPTRLEN
+    HkPTRLEN_set
+    HkSIZEOF
+    HkUSERSTRUCT
+    HkWEAK_AUXSV
     HS_APIVERLEN_MAX
     HS_CXT
     HSf_IMP_CXT

@@ -1629,6 +1629,9 @@ Adp	|HV *	|gv_stashsv	|NN SV *sv				\
 				|I32 flags
 Xdpx	|void	|gv_try_downgrade					\
 				|NN GV *gv
+Ap	|void	|hk_ptr_store	|NN MAGIC *mg				\
+				|NULLOK const void *ptr 		\
+				|STRLEN len
 op	|struct xpvhv_aux *|hv_auxalloc 				\
 				|NN HV *hv
 : Used in dump.c and hv.c
@@ -3409,6 +3412,28 @@ Cdp	|char * |sv_grow	|NN SV * const sv			\
 				|STRLEN newlen
 Cdp	|char * |sv_grow_fresh	|NN SV * const sv			\
 				|STRLEN newlen
+Adpx	|MAGIC *|sv_hook_add	|NN SV *sv				\
+				|NN const struct HookFunctions *funcs	\
+				|U32 flags				\
+				|NULLOK SV *auxsv
+Adpx	|bool	|sv_hook_exists_by_funcs				\
+				|NN const SV *sv			\
+				|NN const struct HookFunctions *funcs
+Adpx	|MAGIC *|sv_hook_find_by_funcs					\
+				|NN const SV *sv			\
+				|NN const struct HookFunctions *funcs
+Adpx	|MAGIC *|sv_hook_findnext_by_funcs				\
+				|NN const SV *sv			\
+				|NN const struct HookFunctions *funcs	\
+				|NN MAGIC *mg
+Adpx	|MAGIC *|sv_hook_find_or_add					\
+				|NN SV *sv				\
+				|NN const struct HookFunctions *funcs
+Adpx	|void	|sv_hook_remove |NN SV *sv				\
+				|NN MAGIC *mg
+Adpx	|void	|sv_hook_remove_by_funcs				\
+				|NN SV *sv				\
+				|NN const struct HookFunctions *funcs
 Adp	|void	|sv_inc 	|NULLOK SV * const sv
 Adp	|void	|sv_inc_nomg	|NULLOK SV * const sv
 Admp	|void	|sv_insert	|NN SV * const bigstr			\
@@ -5036,8 +5061,13 @@ Tp	|bool	|translate_substr_offsets				\
 				|NN STRLEN *lenp
 #endif
 #if defined(PERL_IN_MG_C) || defined(PERL_IN_SV_C)
+p	|void	|hk_copy	|NN const MAGIC *smg			\
+				|NN MAGIC *dmg
 p	|void	|mg_free_struct |NN SV *sv				\
 				|NN MAGIC *mg
+p	|MAGIC *|sv_hook_attach |NN SV *sv				\
+				|NN const struct HookFunctions *funcs	\
+				|U32 flags
 #endif
 #if defined(PERL_IN_MRO_C)
 S	|void	|mro_clean_isarev					\

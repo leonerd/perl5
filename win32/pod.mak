@@ -142,6 +142,7 @@ POD = perl.pod	\
 	perlhacktips.pod	\
 	perlhacktut.pod	\
 	perlhist.pod	\
+	perlhook.pod	\
 	perlintern.pod	\
 	perlinterp.pod	\
 	perlintro.pod	\
@@ -334,6 +335,7 @@ MAN = perl.man	\
 	perlhacktips.man	\
 	perlhacktut.man	\
 	perlhist.man	\
+	perlhook.man	\
 	perlintern.man	\
 	perlinterp.man	\
 	perlintro.man	\
@@ -526,6 +528,7 @@ HTML = perl.html	\
 	perlhacktips.html	\
 	perlhacktut.html	\
 	perlhist.html	\
+	perlhook.html	\
 	perlintern.html	\
 	perlinterp.html	\
 	perlintro.html	\
@@ -718,6 +721,7 @@ TEX = perl.tex	\
 	perlhacktips.tex	\
 	perlhacktut.tex	\
 	perlhist.tex	\
+	perlhook.tex	\
 	perlintern.tex	\
 	perlinterp.tex	\
 	perlintro.tex	\

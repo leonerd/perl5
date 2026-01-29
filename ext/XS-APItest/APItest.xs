@@ -198,6 +198,173 @@ S_mycopy_copy(pTHX_ SV *sv, MAGIC* mg, SV *nsv, const char *name, I32 namlen) {
 
 STATIC MGVTBL vtbl_mycopy = { 0, 0, 0, 0, 0, S_mycopy_copy, 0, 0 };
 
+/* Hooks for XS::APItest::Hooks */
+
+static void
+hook_grab_before_get(pTHX_ SV *sv, MAGIC *mg)
+{
+    SV *auxsv = HkAUXSV(mg);
+    sv_setsv_nomg(sv, auxsv);
+}
+
+static void
+hook_inc_after_set(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_UNUSED_ARG(sv);
+
+    SV *auxsv = HkAUXSV(mg);
+    if(auxsv)
+        sv_inc(auxsv);
+
+    /* flag to test sv_hook_remove during operation */
+    if(HkPRIV(mg) & 0x0001) {
+        sv_hook_remove(sv, mg);
+    }
+}
+
+static void
+hook_inc(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_UNUSED_ARG(sv);
+
+    SV *auxsv = HkAUXSV(mg);
+    if(auxsv)
+        sv_inc(auxsv);
+}
+
+static void
+hook_inc_on_clone_clone(pTHX_ SV *osv, MAGIC *omg, SV *nsv, MAGIC *nmg, CLONE_PARAMS *params)
+{
+    PERL_UNUSED_ARG(osv);
+    PERL_UNUSED_ARG(nsv);
+    PERL_UNUSED_ARG(omg);
+    PERL_UNUSED_ARG(params);
+
+    SV *auxsv = HkAUXSV(nmg);
+    if(auxsv)
+        sv_inc(auxsv);
+}
+
+static const struct HookFunctions hooks_empty = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .debug_name = "XS::APItest/empty",
+
+    /* no funcs */
+};
+
+static const struct HookFunctions hooks_weak = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .flags = HKf_ALWAYS_WEAK_AUXSV,
+    .debug_name = "XS::APItest/weak",
+
+    /* no funcs */
+};
+
+static const struct HookFunctions hooks_container_empty = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .flags = HKf_CONTAINER,
+    .debug_name = "XS::APItest/container_empty",
+
+    /* no funcs */
+};
+
+static const struct HookFunctions hooks_with_keyiv = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .flags = HKf_CONTAINER|HKf_WITH_KEYIV,
+    .debug_name = "XS::APItest/with_keyiv",
+
+    /* no funcs */
+};
+
+static const struct HookFunctions hooks_with_keysv = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .flags = HKf_CONTAINER|HKf_WITH_KEYSV,
+    .debug_name = "XS::APItest/with_keysv",
+
+    /* no funcs */
+};
+
+static const struct HookFunctions hooks_inc_on_free = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .debug_name = "XS::APItest/inc_on_free",
+
+    .free = &hook_inc,
+};
+
+static const struct HookFunctions hooks_inc_on_clone = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .debug_name = "XS::APItest/inc_on_clone",
+
+    .clone = &hook_inc_on_clone_clone,
+};
+
+struct TwoIVs { IV x, y; };
+static const struct HookFunctions hooks_userstruct = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_BASE,
+    .debug_name = "XS::APItest/userstruct",
+    .user_size = sizeof(struct TwoIVs),
+};
+
+static const struct ScalarVarHookFunctions hooks_grab_before_get = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "XS::APItest/grab_before_get",
+
+    .pre_get = &hook_grab_before_get,
+};
+
+static const struct ScalarVarHookFunctions hooks_inc_after_set = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_SCALARVAR,
+    .flags = HKf_CONTAINER,
+    .debug_name = "XS::APItest/inc_after_set",
+
+    .post_set = &hook_inc_after_set,
+};
+
+static const struct ArrayVarHookFunctions hooks_inc_after_clear_arr = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_ARRAYVAR,
+    .debug_name = "XS::APItest/inc_after_clear_arr",
+
+    .clear = &hook_inc,
+};
+
+static const struct ArrayVarHookFunctions hooks_inc_after_clear_hash = {
+    .ver   = 12345, /* TODO */
+    .shape = HKs_HASHVAR,
+    .debug_name = "XS::APItest/inc_after_clear_hash",
+
+    .clear = &hook_inc,
+};
+
+static const struct HookFunctions *S_hookfuncs_by_name(pTHX_ SV *name)
+{
+    char *namepv = SvPV_nolen(name);
+    if(strEQ(namepv, "empty"))           return &hooks_empty;
+    if(strEQ(namepv, "weak"))            return &hooks_weak;
+    if(strEQ(namepv, "container_empty")) return &hooks_container_empty;
+    if(strEQ(namepv, "with_keyiv"))      return &hooks_with_keyiv;
+    if(strEQ(namepv, "with_keysv"))      return &hooks_with_keysv;
+    if(strEQ(namepv, "inc_on_free"))     return &hooks_inc_on_free;
+    if(strEQ(namepv, "inc_on_clone"))    return &hooks_inc_on_clone;
+    if(strEQ(namepv, "userstruct"))      return &hooks_userstruct;
+    if(strEQ(namepv, "grab_before_get")) return (struct HookFunctions *)&hooks_grab_before_get;
+    if(strEQ(namepv, "inc_after_set"))   return (struct HookFunctions *)&hooks_inc_after_set;
+    if(strEQ(namepv, "inc_after_clear_arr"))  return (struct HookFunctions *)&hooks_inc_after_clear_arr;
+    if(strEQ(namepv, "inc_after_clear_hash")) return (struct HookFunctions *)&hooks_inc_after_clear_hash;
+    croak("Unrecognised hookfuncs name %" SVf, SVfARG(name));
+}
+
 /* indirect functions to test the [pa]MY_CXT macros */
 
 int
@@ -5377,6 +5544,246 @@ test_mortal_svfunc_x(SV *args)
 
 
 
+MODULE = XS::APItest            PACKAGE = XS::APItest::Hooks
+
+
+void
+sv_hook_add(SV *sv, SV *hookname, SV *auxsvref, U16 priv = 0)
+    PROTOTYPE: \[$@%]$$;$
+    CODE:
+        const struct HookFunctions *funcs = S_hookfuncs_by_name(aTHX_ hookname);
+        SV *auxsv = NULL;
+        if(auxsvref && SvROK(auxsvref))
+            auxsv = SvRV(auxsvref);
+
+        if(auxsv && !(funcs->flags & HKf_ALWAYS_WEAK_AUXSV))
+            SvREFCNT_inc(auxsv);
+
+        MAGIC *mg = sv_hook_add(SvRV(sv), funcs, 0, auxsv);
+
+        if(priv)
+            HkPRIV(mg) = priv;
+
+        if(funcs == &hooks_userstruct) {
+            struct TwoIVs *user = HkUSERSTRUCT(mg, struct TwoIVs *);
+            user->x = 123;
+            user->y = 456;
+        }
+
+bool
+sv_hook_exists(SV *sv, SV *hookname)
+    CODE:
+        RETVAL = sv_hook_exists_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+    OUTPUT:
+        RETVAL
+
+SV *
+HkAUXSV(SV *sv, SV *hookname)
+    // args different than the C macros
+    ALIAS:
+        HkAUXSV = 0
+        HkPRIV  = 2
+        HkKEYIV = 3
+        HkKEYSV = 4
+    CODE:
+    {
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_UNDEF;
+
+        RETVAL = &PL_sv_undef;
+
+        switch(ix) {
+            case 0:
+                if(HkAUXSV(mg))
+                    RETVAL = newRV_inc(HkAUXSV(mg));
+                break;
+
+            case 2:
+                RETVAL = newSVuv(HkPRIV(mg));
+                break;
+
+            case 3:
+                if(!HkHasKEYIV(mg))
+                    croak("This hook does not set HkKEYIV");
+                RETVAL = newSViv(HkKEYIV(mg));
+                break;
+
+            case 4:
+                if(!HkHasKEYSV(mg))
+                    croak("This hook does not set HkKEYSV");
+                RETVAL = newSVsv(HkKEYSV(mg));
+                break;
+        }
+    }
+    OUTPUT:
+        RETVAL
+
+void
+HkAUXSV_set(SV *sv, SV *hookname, SV *newauxsvref)
+    // args different than the C macro
+    CODE:
+    {
+        const struct HookFunctions *funcs = S_hookfuncs_by_name(aTHX_ hookname);
+        MAGIC *mg = sv_hook_find_by_funcs(sv, funcs);
+        if(!mg)
+            XSRETURN_EMPTY;
+
+        SV *auxsv = NULL;
+        if(newauxsvref && SvROK(newauxsvref))
+            auxsv = SvRV(newauxsvref);
+
+        if(auxsv && !HkWEAK_AUXSV(mg))
+            SvREFCNT_inc(auxsv);
+
+        HkAUXSV_set(mg, auxsv);
+    }
+
+SV *
+HkAUXSV_value(SV *sv, SV *hookname)
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_UNDEF;
+
+        RETVAL = newSVsv(HkAUXSV(mg));
+    OUTPUT:
+        RETVAL
+
+void
+HkAUXSV_values(SV *sv, SV *hookname)
+    PPCODE:
+        const struct HookFunctions *funcs;
+        MAGIC *mg = sv_hook_find_by_funcs(sv, (funcs = S_hookfuncs_by_name(aTHX_ hookname)));
+        if(!mg)
+            XSRETURN(0);
+
+        U32 count = 0;
+        while(mg) {
+            XPUSHs(sv_mortalcopy(HkAUXSV(mg)));
+            count++;
+
+            mg = sv_hook_findnext_by_funcs(sv, funcs, mg);
+        }
+
+        XSRETURN(count);
+
+void
+HkKEYIV_set(SV *sv, SV *hookname, IV newval)
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_EMPTY;
+
+        if(!HkHasKEYIV(mg))
+            croak("This hook does not set HkKEYIV");
+        HkKEYIV(mg) = newval;
+
+void
+HkKEYSV_set(SV *sv, SV *hookname, SV *newval)
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_EMPTY;
+
+        if(!HkHasKEYSV(mg))
+            croak("This hook does not set HkKEYSV");
+        if(HkKEYSV(mg))
+            SvREFCNT_dec(HkKEYSV(mg));
+        HkKEYSV(mg) = newSVsv(newval);
+
+SV *
+HkPTR(SV *sv, SV *hookname)
+    // args different than C macro
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg || !HkPTR(mg))
+            RETVAL = &PL_sv_undef;
+        else
+            RETVAL = newSVpvn((char *)HkPTR(mg), HkPTRLEN(mg));
+    OUTPUT:
+        RETVAL
+
+void
+HkPTR_write(SV *sv, SV *hookname, SV *newval)
+    // not actual perl API but used by hooks.t to demonstrate independence of buffers
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_EMPTY;
+        if(!HkPTR(mg) || !HkPTRLEN(mg))
+            XSRETURN_EMPTY;
+
+        STRLEN len;
+        char *pv = SvPV(newval, len);
+        if(len > (STRLEN)HkPTRLEN(mg))
+            len = HkPTRLEN(mg);
+
+        Copy(pv, HkPTR(mg), len, char);
+
+STRLEN
+HkPTRLEN(SV *sv, SV *hookname)
+    // args different than C macro
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            RETVAL = -1;
+        else
+            RETVAL = HkPTRLEN(mg);
+
+    OUTPUT:
+      RETVAL
+
+void
+HkPTRLEN_set(SV *sv, SV *hookname, STRLEN len)
+    // args different than C macro
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_EMPTY;
+
+        HkPTRLEN_set(mg, len);
+
+void
+hk_ptr_store(SV *sv, SV *hookname, SV *ptr)
+    // args different than C function
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
+        if(!mg)
+            XSRETURN_EMPTY;
+
+        STRLEN len;
+        const char *pv = SvPV(ptr, len);
+        hk_ptr_store(mg, pv, len);
+
+void
+sv_hook_get_userstruct(SV *sv)
+    PPCODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, &hooks_userstruct);
+        if(!mg)
+            XSRETURN(0);
+
+        struct TwoIVs *user = HkUSERSTRUCT(mg, struct TwoIVs *);
+        EXTEND(SP, 2);
+        mPUSHi(user->x);
+        mPUSHi(user->y);
+        XSRETURN(2);
+
+void
+sv_hook_set_userstruct(SV *sv, IV x, IV y)
+    CODE:
+        MAGIC *mg = sv_hook_find_by_funcs(sv, &hooks_userstruct);
+        if(!mg)
+            XSRETURN_EMPTY;
+
+        struct TwoIVs *user = HkUSERSTRUCT(mg, struct TwoIVs *);
+        user->x = x;
+        user->y = y;
+
+void
+sv_hook_remove(SV *sv, SV *hookname)
+    CODE:
+        sv_hook_remove_by_funcs(sv, S_hookfuncs_by_name(aTHX_ hookname));
 
 MODULE = XS::APItest            PACKAGE = XS::APItest
 

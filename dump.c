@@ -1951,6 +1951,122 @@ Perl_gv_dump(pTHX_ GV *gv)
     Perl_dump_indent(aTHX_ 0, Perl_debug_log, "}\n");
 }
 
+const struct flag_to_name mgv2_flags_names[] = {
+    /* MGv2 is implied */
+    {HKf_REFCOUNTED_AUXSV, "REFCOUNTED_AUXSV,"},
+};
+
+static void
+Perl_do_magicv2_dump(pTHX_ I32 level, PerlIO *file, const MAGIC *mg, I32 nest, I32 maxnest, bool dumpops, STRLEN pvlim)
+{
+    Perl_dump_indent(aTHX_ level, file, "  MAGICv2 = 0x%" UVxf "\n", PTR2UV(mg));
+
+    const struct HookFunctions *funcs = HkFUNCS(mg);
+    if(funcs->debug_name)
+        Perl_dump_indent(aTHX_ level, file, "    FUNCS = %s (0x%" UVxf ")\n",
+                funcs->debug_name, PTR2UV(funcs));
+    else
+        Perl_dump_indent(aTHX_ level, file, "    FUNCS = 0x%" UVxf "\n",
+                PTR2UV(funcs));
+
+    {
+        const char *shapename = NULL;
+        switch(funcs->shape) {
+            case HKs_BASE:      shapename = "BASE";      break;
+            case HKs_SCALARVAR: shapename = "SCALARVAR"; break;
+            case HKs_ARRAYVAR:  shapename = "ARRAYVAR";  break;
+            case HKs_HASHVAR:   shapename = "HASHVAR";   break;
+        }
+        if(shapename)
+            Perl_dump_indent(aTHX_ level, file, "      SHAPE = %s\n", shapename);
+        else
+            Perl_dump_indent(aTHX_ level, file, "      SHAPE = (%d)\n", funcs->shape);
+
+        if(funcs->free)
+            Perl_dump_indent(aTHX_ level, file, "      FREE\n");
+        if(funcs->clone)
+            Perl_dump_indent(aTHX_ level, file, "      CLONE\n");
+
+        switch(funcs->shape) {
+            case HKs_BASE:
+                break;
+
+            case HKs_SCALARVAR:
+            {
+                const struct ScalarVarHookFunctions *funcs =
+                    (const struct ScalarVarHookFunctions *)HkFUNCS(mg);
+                if(funcs->pre_get)
+                    Perl_dump_indent(aTHX_ level, file, "      PRE_GET\n");
+                if(funcs->post_set)
+                    Perl_dump_indent(aTHX_ level, file, "      POST_SET\n");
+                break;
+            }
+
+            case HKs_ARRAYVAR:
+            {
+                const struct ArrayVarHookFunctions *funcs =
+                    (const struct ArrayVarHookFunctions *)HkFUNCS(mg);
+                if(funcs->clear)
+                    Perl_dump_indent(aTHX_ level, file, "      CLEAR\n");
+                break;
+            }
+
+            case HKs_HASHVAR:
+            {
+                const struct HashVarHookFunctions *funcs =
+                    (const struct HashVarHookFunctions *)HkFUNCS(mg);
+                if(funcs->clear)
+                    Perl_dump_indent(aTHX_ level, file, "      CLEAR\n");
+                break;
+            }
+        }
+    }
+
+    {
+        /* flags will always contain at least MGf_MGv2 */
+        U16 flags = HkFLAGS(mg);
+        SV *flagsv = newSVpvs("MGv2,");
+        append_flags(flagsv, flags, mgv2_flags_names);
+        switch(flags & HKf_WITH_MASK) {
+            case HKf_WITH_KEYIV:  sv_catpvs(flagsv, "WITH_KEYIV,");  break;
+            case HKf_WITH_KEYHEK: sv_catpvs(flagsv, "WITH_KEYHEK,"); break;
+            case HKf_WITH_KEYSV:  sv_catpvs(flagsv, "WITH_KEYSV,");  break;
+        }
+        if(SvCUR(flagsv))  /* trim trailing comma */
+            SvPVX(flagsv)[SvCUR(flagsv)-1] = '\0';
+        Perl_dump_indent(aTHX_ level, file, "    FLAGS = (%s)\n", SvPVX(flagsv));
+    }
+
+    if(HkPRIV(mg))
+        Perl_dump_indent(aTHX_ level, file, "    PRIV = 0x%04" UVxf "\n", (UV)HkPRIV(mg));
+
+    if(HkAUXSV(mg)) {
+        Perl_dump_indent(aTHX_ level, file, "    AUXSV = 0x%" UVxf "\n", PTR2UV(HkAUXSV(mg)));
+        do_sv_dump(level+2, file, HkAUXSV(mg), nest+1, maxnest, dumpops, pvlim); /* MG is already +1 */
+    }
+
+    if(HkPTR(mg) && HkPTRLEN(mg)) {
+        /* TODO: use the temp SV trick to dump the bytes of this */
+        Perl_dump_indent(aTHX_ level, file, "    PTR = 0x%" UVxf " (LEN = %zd)\n",
+                PTR2UV(HkPTR(mg)), HkPTRLEN(mg));
+    }
+    else if(HkPTR(mg)) {
+        Perl_dump_indent(aTHX_ level, file, "    PTR = 0x%" UVxf "\n",
+                PTR2UV(HkPTR(mg)));
+    }
+    else if(HkPTRLEN(mg)) {
+        Perl_dump_indent(aTHX_ level, file, "    PTRLEN = %zd\n",
+                HkPTRLEN(mg));
+    }
+
+    if(HkHasKEYIV(mg)) {
+        Perl_dump_indent(aTHX_ level, file, "    KEYIV = %" IVdf "\n", HkKEYIV(mg));
+    }
+    else if(HkHasKEYSV(mg)) {
+        Perl_dump_indent(aTHX_ level, file, "    KEYSV = 0x%" UVxf "\n", PTR2UV(HkKEYSV(mg)));
+        /* TODO: do_sv_dump() it */
+    }
+}
 
 /* map magic types to the symbolic names
  * (with the PERL_MAGIC_ prefixed stripped)
@@ -1968,6 +2084,11 @@ Perl_do_magic_dump(pTHX_ I32 level, PerlIO *file, const MAGIC *mg, I32 nest, I32
     PERL_ARGS_ASSERT_DO_MAGIC_DUMP;
 
     for (; mg; mg = mg->mg_moremagic) {
+        if (MgIsV2(mg)) {
+            Perl_do_magicv2_dump(aTHX_ level, file, (const MAGIC *)mg, nest, maxnest, dumpops, pvlim);
+            continue;
+        }
+
         Perl_dump_indent(aTHX_ level, file,
                          "  MAGIC = 0x%" UVxf "\n", PTR2UV(mg));
         if (mg->mg_virtual) {

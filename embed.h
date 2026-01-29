@@ -26,7 +26,12 @@
 #if defined(PERL_DO_UNDEFS)
 # if !defined(PERL_CORE)
 #   undef CC_UNDERSCORE_
+#   undef HkUSER
+#   undef HkWEAK_AUXSV_off
+#   undef HkWEAK_AUXSV_on
 #   undef isFOO_or_UNDERSCORE_
+#   undef MGf_MGv2
+#   undef MgIsV2
 #   undef sv_2num
 #   undef SvRVx
 #   if !defined(PERL_EXT)
@@ -236,6 +241,7 @@
 # define gv_stashpv(a,b)                        Perl_gv_stashpv(aTHX_ a,b)
 # define gv_stashpvn(a,b,c)                     Perl_gv_stashpvn(aTHX_ a,b,c)
 # define gv_stashsv(a,b)                        Perl_gv_stashsv(aTHX_ a,b)
+# define hk_ptr_store(a,b,c)                    Perl_hk_ptr_store(aTHX_ a,b,c)
 # define hv_bucket_ratio(a)                     Perl_hv_bucket_ratio(aTHX_ a)
 # define hv_clear(a)                            Perl_hv_clear(aTHX_ a)
 # define hv_clear_placeholders(a)               Perl_hv_clear_placeholders(aTHX_ a)
@@ -663,6 +669,13 @@
 # define sv_gets(a,b,c)                         Perl_sv_gets(aTHX_ a,b,c)
 # define sv_grow(a,b)                           Perl_sv_grow(aTHX_ a,b)
 # define sv_grow_fresh(a,b)                     Perl_sv_grow_fresh(aTHX_ a,b)
+# define sv_hook_add(a,b,c,d)                   Perl_sv_hook_add(aTHX_ a,b,c,d)
+# define sv_hook_exists_by_funcs(a,b)           Perl_sv_hook_exists_by_funcs(aTHX_ a,b)
+# define sv_hook_find_by_funcs(a,b)             Perl_sv_hook_find_by_funcs(aTHX_ a,b)
+# define sv_hook_find_or_add(a,b)               Perl_sv_hook_find_or_add(aTHX_ a,b)
+# define sv_hook_findnext_by_funcs(a,b,c)       Perl_sv_hook_findnext_by_funcs(aTHX_ a,b,c)
+# define sv_hook_remove(a,b)                    Perl_sv_hook_remove(aTHX_ a,b)
+# define sv_hook_remove_by_funcs(a,b)           Perl_sv_hook_remove_by_funcs(aTHX_ a,b)
 # define sv_inc(a)                              Perl_sv_inc(aTHX_ a)
 # define sv_inc_nomg(a)                         Perl_sv_inc_nomg(aTHX_ a)
 # define sv_insert_flags(a,b,c,d,e,f)           Perl_sv_insert_flags(aTHX_ a,b,c,d,e,f)
@@ -1436,7 +1449,9 @@
 #     define translate_substr_offsets           Perl_translate_substr_offsets
 #   endif
 #   if defined(PERL_IN_MG_C) || defined(PERL_IN_SV_C)
+#     define hk_copy(a,b)                       Perl_hk_copy(aTHX_ a,b)
 #     define mg_free_struct(a,b)                Perl_mg_free_struct(aTHX_ a,b)
+#     define sv_hook_attach(a,b,c)              Perl_sv_hook_attach(aTHX_ a,b,c)
 #   endif
 #   if defined(PERL_IN_MRO_C)
 #     define mro_clean_isarev(a,b,c,d,e,f)      S_mro_clean_isarev(aTHX_ a,b,c,d,e,f)

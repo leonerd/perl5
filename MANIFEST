@@ -5145,6 +5145,8 @@ ext/XS-APItest/t/handy08.t			XS::APItest: tests for handy.h
 ext/XS-APItest/t/handy09.t			XS::APItest: tests for handy.h
 ext/XS-APItest/t/handy_base.pl			XS::APItest: tests for handy.h
 ext/XS-APItest/t/hash.t				XS::APItest: tests for hash related APIs
+ext/XS-APItest/t/hooks.t			XS::APItest: tests for Hooks related APIs
+ext/XS-APItest/t/hooks-threads.t		XS::APItest: tests for Hooks related APIs across multiple threads
 ext/XS-APItest/t/hv_macro.t			XS::APItest: tests for low level macros used in hashing
 ext/XS-APItest/t/join_with_space.t		test op_convert_list
 ext/XS-APItest/t/keyword_multiline.t		test keyword plugin parsing across lines
@@ -5829,6 +5831,7 @@ pod/perlhack.pod			Perl hackers guide
 pod/perlhacktips.pod			Tips for Perl core C code hacking
 pod/perlhacktut.pod			Walk through the creation of a simple C code patch
 pod/perlhist.pod			Perl history records
+pod/perlhook.pod			Perl's extension mechanism called "Hooks"
 pod/perlinterp.pod			Overview of the Perl interpreter source and how it works
 pod/perlintro.pod			Perl introduction for beginners
 pod/perliol.pod				C API for Perl's implementation of IO in Layers

@@ -138,14 +138,51 @@ Perl_mg_magical(SV *sv)
     SvMAGICAL_off(sv);
     if ((mg = SvMAGIC(sv))) {
         do {
-            const MGVTBL* const vtbl = mg->mg_virtual;
-            if (vtbl) {
-                if (vtbl->svt_get && !(mg->mg_flags & MGf_GSKIP))
-                    SvGMAGICAL_on(sv);
-                if (vtbl->svt_set)
-                    SvSMAGICAL_on(sv);
-                if (vtbl->svt_clear)
-                    SvRMAGICAL_on(sv);
+            if (MgIsV2(mg)) {
+                switch (HkFUNCS(mg)->shape) {
+                    case HKs_BASE:
+                        break;
+
+                    case HKs_SCALARVAR:
+                    {
+                        const struct ScalarVarHookFunctions *funcs =
+                            (const struct ScalarVarHookFunctions *)HkFUNCS(mg);
+                        if (funcs->pre_get)
+                            SvGMAGICAL_on(sv);
+                        if (funcs->post_set)
+                            SvSMAGICAL_on(sv);
+                        break;
+                    }
+
+                    case HKs_ARRAYVAR:
+                    {
+                        const struct ArrayVarHookFunctions *funcs =
+                            (const struct ArrayVarHookFunctions *)HkFUNCS(mg);
+                        if (funcs->clear)
+                            SvRMAGICAL_on(sv);
+                        break;
+                    }
+
+                    case HKs_HASHVAR:
+                    {
+                        const struct HashVarHookFunctions *funcs =
+                            (const struct HashVarHookFunctions *)HkFUNCS(mg);
+                        if (funcs->clear)
+                            SvRMAGICAL_on(sv);
+                        break;
+                    }
+                }
+            }
+            else {
+                const MGVTBL* const vtbl = mg->mg_virtual;
+                if (vtbl) {
+                    if (vtbl->svt_get && !(mg->mg_flags & MGf_GSKIP))
+                        SvGMAGICAL_on(sv);
+                    if (vtbl->svt_set)
+                        SvSMAGICAL_on(sv);
+                    if (vtbl->svt_clear)
+                        SvRMAGICAL_on(sv);
+                }
             }
         } while ((mg = mg->mg_moremagic));
         if (!(SvFLAGS(sv) & (SVs_GMG|SVs_SMG)))
@@ -184,7 +221,16 @@ Perl_mg_get(pTHX_ SV *sv)
         const MGVTBL * const vtbl = mg->mg_virtual;
         MAGIC * const nextmg = mg->mg_moremagic;	/* it may delete itself */
 
-        if (!(mg->mg_flags & MGf_GSKIP) && vtbl && vtbl->svt_get) {
+        if (MgIsV2(mg)) {
+            if (HkFUNCS(mg)->shape == HKs_SCALARVAR) {
+                const struct ScalarVarHookFunctions *funcs =
+                    (const struct ScalarVarHookFunctions *)HkFUNCS(mg);
+
+                if (funcs->pre_get)
+                    funcs->pre_get(aTHX_ sv, mg);
+            }
+        }
+        else if (!(mg->mg_flags & MGf_GSKIP) && vtbl && vtbl->svt_get) {
 
             /* taint's mg get is so dumb it doesn't need flag saving */
             if (mg->mg_type != PERL_MAGIC_taint) {
@@ -289,7 +335,17 @@ Perl_mg_set(pTHX_ SV *sv)
         if (PL_localizing == 2
             && PERL_MAGIC_TYPE_IS_VALUE_MAGIC(mg->mg_type))
             continue;
-        if (vtbl && vtbl->svt_set)
+
+        if (MgIsV2(mg)) {
+            if (HkFUNCS(mg)->shape == HKs_SCALARVAR) {
+                const struct ScalarVarHookFunctions *funcs =
+                    (const struct ScalarVarHookFunctions *)HkFUNCS(mg);
+
+                if (funcs->post_set)
+                    funcs->post_set(aTHX_ sv, mg);
+            }
+        }
+        else if (vtbl && vtbl->svt_set)
             vtbl->svt_set(aTHX_ sv, mg);
     }
 
@@ -354,7 +410,21 @@ Perl_mg_clear(pTHX_ SV *sv)
 
         nextmg = mg->mg_moremagic; /* it may delete itself */
 
-        if (vtbl && vtbl->svt_clear)
+        if (MgIsV2(mg)) {
+            if (HkFUNCS(mg)->shape == HKs_ARRAYVAR) {
+                const struct ArrayVarHookFunctions *funcs =
+                    (const struct ArrayVarHookFunctions *)HkFUNCS(mg);
+                if (funcs->clear)
+                    funcs->clear(aTHX_ sv, mg);
+            }
+            else if (HkFUNCS(mg)->shape == HKs_HASHVAR) {
+                const struct HashVarHookFunctions *funcs =
+                    (const struct HashVarHookFunctions *)HkFUNCS(mg);
+                if (funcs->clear)
+                    funcs->clear(aTHX_ sv, mg);
+            }
+        }
+        else if (vtbl && vtbl->svt_clear)
             vtbl->svt_clear(aTHX_ sv, mg);
     }
 
@@ -489,8 +559,14 @@ Perl_mg_localize(pTHX_ SV *sv, SV *nsv, bool setmagic)
         const MGVTBL* const vtbl = mg->mg_virtual;
         if (PERL_MAGIC_TYPE_IS_VALUE_MAGIC(mg->mg_type))
             continue;
-                
-        if ((mg->mg_flags & MGf_LOCAL) && vtbl->svt_local)
+
+        if (MgIsV2(mg)) {
+            MAGIC *nmg = sv_hook_attach(nsv, HkFUNCS(mg), HkFLAGS(mg));
+            hk_copy(mg, nmg);
+
+            /* TODO: invoke a `localize` if present */
+        }
+        else if ((mg->mg_flags & MGf_LOCAL) && vtbl->svt_local)
             (void)vtbl->svt_local(aTHX_ nsv, mg);
         else
             sv_magicext(nsv, mg->mg_obj, mg->mg_type, vtbl,
@@ -515,23 +591,42 @@ Perl_mg_free_struct(pTHX_ SV *sv, MAGIC *mg)
 {
     PERL_ARGS_ASSERT_MG_FREE_STRUCT;
 
-    const MGVTBL* const vtbl = mg->mg_virtual;
-    if (vtbl && vtbl->svt_free)
-        vtbl->svt_free(aTHX_ sv, mg);
+    if(MgIsV2(mg)) {
+        const struct HookFunctions *funcs = HkFUNCS(mg);
+        if (funcs->free)
+            funcs->free(aTHX_ sv, mg);
 
-    if(mg->mg_ptr) {
-        if (mg->mg_type == PERL_MAGIC_regex_global)
-            NOOP;
-        else if (mg->mg_len > 0)
-            Safefree(mg->mg_ptr);
-        else if (mg->mg_len == HEf_SVKEY)
-            SvREFCNT_dec(MUTABLE_SV(mg->mg_ptr));
-        else if (mg->mg_type == PERL_MAGIC_utf8)
-            Safefree(mg->mg_ptr);
+        if(HkHasKEYSV(mg))
+            SvREFCNT_dec(HkKEYSV(mg));
+
+        if(HkPTR(mg) && HkPTRLEN(mg)) {
+            Safefree(HkPTR(mg));
+        }
+
+        if(HkAUXSV(mg) && !HkWEAK_AUXSV(mg)) {
+            SvREFCNT_dec(HkAUXSV(mg));
+        }
+    }
+    else {
+        const MGVTBL* const vtbl = mg->mg_virtual;
+        if (vtbl && vtbl->svt_free)
+            vtbl->svt_free(aTHX_ sv, mg);
+
+        if(mg->mg_ptr) {
+            if (mg->mg_type == PERL_MAGIC_regex_global)
+                NOOP;
+            else if (mg->mg_len > 0)
+                Safefree(mg->mg_ptr);
+            else if (mg->mg_len == HEf_SVKEY)
+                SvREFCNT_dec(MUTABLE_SV(mg->mg_ptr));
+            else if (mg->mg_type == PERL_MAGIC_utf8)
+                Safefree(mg->mg_ptr);
+        }
+
+        if (mg->mg_flags & MGf_REFCOUNTED)
+            SvREFCNT_dec(mg->mg_obj);
     }
 
-    if (mg->mg_flags & MGf_REFCOUNTED)
-        SvREFCNT_dec(mg->mg_obj);
     Safefree(mg);
 }
 

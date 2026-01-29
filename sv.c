@@ -6433,6 +6433,330 @@ Perl_sv_magicext(pTHX_ SV *const sv, SV *const obj, const int how,
     return mg;
 }
 
+/* Hooks = Magic v2 */
+
+/*
+=for apidoc sv_hook_add
+
+Adds a hook to an SV, upgrading it if necessary to being of type C<SVt_PVMG>.
+
+If C<auxsv> is non-NULL it should point to a different SV than C<sv>.  It will
+be stored in the hook structure as C<HkAUXSV>, without incrementing the
+refcount.  The reference count will be automatically decremented when the hook
+is destroyed, unless the C<HkWEAK_AUXSV> flag is set.
+
+Returns a pointer to the newly-added Hook structure.
+
+=cut
+*/
+
+/* behaviour shared by sv_hook_add and mg_localize */
+MAGIC *
+Perl_sv_hook_attach(pTHX_ SV *sv, const struct HookFunctions *funcs, U32 flags)
+{
+    SvUPGRADE(sv, SVt_PVMG);
+
+    bool is_container = funcs->flags & HKf_CONTAINER;
+
+    MAGIC *mg = (MAGIC *)safecalloc(1, HK_SIZEOF_FLAGS(flags) + funcs->user_size);
+    mg->mg_moremagic = SvMAGIC(sv);
+    SvMAGIC_set(sv, mg);
+
+    mg->mg_type = (is_container) ? PERL_MAGIC_ext : PERL_MAGIC_extvalue;
+    mg->mg_virtual = (MGVTBL *)funcs;
+    mg->mg_len = 0;
+    mg->mg_ptr = NULL;
+    mg->mg_flags |= MGf_MGv2 | (flags & HKf_WITH_MASK);
+
+    mg_magical(sv);
+
+    return mg;
+}
+
+MAGIC *
+Perl_sv_hook_add(pTHX_ SV *sv, const struct HookFunctions *funcs, U32 flags, SV *auxsv)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_ADD;
+    U8 svt = SvTYPE(sv);
+
+    /* TODO:
+     * Check for a suitable value of `funcs->ver`. For now this is always 12345
+     */
+    if(funcs->ver != 12345)
+        croak("TODO: expected HookFunctions->ver to contain the placeholder 12345 value");
+
+    switch(funcs->shape) {
+        case HKs_BASE:
+            /* valid on any kind of SV */
+            break;
+
+        case HKs_SCALARVAR:
+            if(svt > SVt_PVMG && svt != SVt_PVLV)
+                goto bad_shape;
+            break;
+
+        case HKs_ARRAYVAR:
+            if(svt != SVt_PVAV)
+                goto bad_shape;
+            break;
+
+        case HKs_HASHVAR:
+            if(svt != SVt_PVHV)
+                goto bad_shape;
+            break;
+
+        default:
+            croak("Unrecognized hookfuncs->shape value %d", funcs->shape);
+bad_shape:
+            croak("Cannot apply hookfuncs shape %d to SV type %d", funcs->shape, SvTYPE(sv));
+    }
+
+    /* Do not call sv_magicext() as it won't do the right thing at all.
+     * Instead we inline a customised version of the logic here*/
+    MAGIC *mg = sv_hook_attach(sv, funcs, flags | funcs->flags);
+
+    mg->mg_obj = auxsv; /* do not bump refcount */
+
+    HkPRIV(mg)  = 0;
+
+    if(!(funcs->flags & HKf_ALWAYS_WEAK_AUXSV))
+        HkFLAGS(mg) |= HKf_REFCOUNTED_AUXSV;
+
+    return mg;
+}
+
+void
+Perl_hk_copy(pTHX_ const MAGIC *smg, MAGIC *dmg)
+{
+    HkFLAGS(dmg) = HkFLAGS(smg);
+    HkPRIV(dmg)  = HkPRIV(smg);
+    HkAUXSV_set(dmg, HkAUXSV(smg));
+    /* TODO: copy userstruct */
+
+    void *sptr = HkPTR(smg);
+    STRLEN slen = HkPTRLEN(smg);
+    if(sptr && slen)
+        hk_ptr_store(dmg, sptr, slen);
+    else if(sptr)
+        HkPTR_set(dmg, sptr);
+    else if(slen)
+        HkPTRLEN_set(dmg, slen);
+
+    if(!HkWEAK_AUXSV(smg))
+        HkWEAK_AUXSV_off(dmg);
+
+    if(HkAUXSV(dmg) && !HkWEAK_AUXSV(dmg))
+        SvREFCNT_inc_void_NN(HkAUXSV(dmg));
+
+    switch(HkFLAGS(smg) & HKf_WITH_MASK) {
+        case 0:
+            break;
+
+        case HKf_WITH_KEYIV:
+            HkKEYIV(dmg) = HkKEYIV(smg);
+            break;
+
+        case HKf_WITH_KEYSV:
+            HkKEYSV(dmg) = SvREFCNT_inc(HkKEYSV(smg));
+            break;
+    }
+}
+
+void
+Perl_hk_ptr_store(pTHX_ MAGIC *mg, const void *ptr, STRLEN len)
+{
+    PERL_ARGS_ASSERT_HK_PTR_STORE;
+
+    void *was_ptr = HkPTR(mg);
+    STRLEN was_len = HkPTRLEN(mg);
+
+    /* Copy it before releasing the old value, in case of
+     * memmove-style overlaps */
+    void *new_ptr = savepvn((const char *)ptr, len);
+    HkPTR_set(mg, new_ptr);
+    HkPTRLEN_set(mg, len);
+
+    if(was_ptr && was_len)
+        Safefree(was_ptr);
+}
+
+STATIC MAGIC *
+S_sv_hook_find(pTHX_ const SV *sv, bool (*filter)(pTHX_ MAGIC *mg, const void *key), const void *key, MAGIC *mg)
+{
+    if(SvTYPE(sv) < SVt_PVMG || !SvMAGICAL(sv))
+        return NULL;
+
+    if(mg)
+        mg = mg->mg_moremagic;
+    else
+        mg = SvMAGIC(sv);
+    for(/**/; mg; mg = mg->mg_moremagic) {
+        /* Don't really need to look at mg->mg_type since we're going to
+         * filter on the virtual table anyway
+         */
+        if(!MgIsV2(mg))
+            continue;
+
+        if((*filter)(aTHX_ (MAGIC *)mg, key))
+            return (MAGIC *)mg;
+    }
+
+    return NULL;
+}
+
+STATIC bool
+S_filter_hook_hk      (pTHX_ MAGIC *mg, const void *key) { return mg == key; }
+
+STATIC bool
+S_filter_hook_by_funcs(pTHX_ MAGIC *mg, const void *key) { return HkFUNCS(mg) == key; }
+
+/*
+=for apidoc sv_hook_find_by_funcs
+
+Finds the Hook pointer on the SV for the first Hook using the functions
+structure given by C<funcs>.  Returns C<NULL> if no such Hook is found.
+
+=cut
+*/
+
+MAGIC *
+Perl_sv_hook_find_by_funcs(pTHX_ const SV *sv, const struct HookFunctions *funcs)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_FIND_BY_FUNCS;
+    return S_sv_hook_find(aTHX_ sv, &S_filter_hook_by_funcs, funcs, NULL);
+}
+
+/*
+=for apidoc sv_hook_findnext_by_funcs
+
+Finds the Hook pointer on the SV for the next Hook using the functions
+structure given by C<funcs>, presuming that C<mg> already points at the
+previous one (as found by a previous call to this function, or
+C<sv_hook_find_by_funcs>).  Returns C<NULL> if no such Hook is found.
+
+Note that it is B<not> safe to remove hooks from the SV while iterating them
+in a loop using this function.
+
+=cut
+*/
+
+MAGIC *
+Perl_sv_hook_findnext_by_funcs(pTHX_ const SV *sv, const struct HookFunctions *funcs, MAGIC *mg)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_FINDNEXT_BY_FUNCS;
+    return S_sv_hook_find(aTHX_ sv, &S_filter_hook_by_funcs, funcs, mg);
+}
+
+/*
+=for apidoc sv_hook_exists_by_funcs
+
+Returns true if the SV has an instance of a Hook using the functions
+structure given by C<funcs>.  Returns false if no such Hook is found.
+
+=cut
+*/
+
+bool
+Perl_sv_hook_exists_by_funcs(pTHX_ const SV *sv, const struct HookFunctions *funcs)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_EXISTS_BY_FUNCS;
+    return (bool)S_sv_hook_find(aTHX_ sv, &S_filter_hook_by_funcs, funcs, NULL);
+}
+
+STATIC void
+S_sv_hook_remove(pTHX_ SV *sv, bool (*filter)(pTHX_ MAGIC *mg, const void *key), const void *key)
+{
+    /* Don't check SvMAGICAL as that is temporarily switched off while magic
+     * functions are running. This permits us to remove the very hook that
+     * is actively running, allowing hooks to remove themselves
+     */
+    if(SvTYPE(sv) < SVt_PVMG)
+        return;
+
+    bool mg_magical_again = false;
+
+    /* Can't call mg_freeext() here because it would nuke all of the hook ones */
+    MAGIC *prevmg = NULL, *nextmg;
+    for(MAGIC *mg = SvMAGIC(sv); mg; prevmg = mg, mg = nextmg) {
+        nextmg = mg->mg_moremagic;
+        if(!MgIsV2(mg))
+            continue;
+
+        if(!(*filter)(aTHX_ (MAGIC *)mg, key))
+            continue;
+
+        if(prevmg)
+            prevmg->mg_moremagic = nextmg;
+        else
+            SvMAGIC_set(sv, nextmg);
+        mg->mg_moremagic = NULL;
+        mg_magical_again = true;
+
+        mg_free_struct(sv, mg);
+        mg = prevmg;
+    }
+
+    if(mg_magical_again)
+        mg_magical(sv);
+}
+
+/*
+=for apidoc sv_hook_find_or_add
+
+A shortcut for the common behaviour of first attempting to find an existing
+hook on an SV, or creating one if it does not exist.
+
+If adding a new hook structure, this will be created with no aux SV, and zero
+flags.
+
+=cut
+*/
+
+MAGIC *
+Perl_sv_hook_find_or_add(pTHX_ SV *sv, const struct HookFunctions *funcs)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_FIND_OR_ADD;
+
+    MAGIC *mg = sv_hook_find_by_funcs(sv, funcs);
+    if(!mg)
+        mg = sv_hook_add(sv, funcs, 0, NULL);
+
+    return mg;
+}
+
+/*
+=for apidoc sv_hook_remove
+
+Removes a single instance of a Hook from the SV.
+
+It is safe to call this from within a hook trigger function, to allow a hook
+to remove itself from the SV.
+
+=cut
+*/
+
+void
+Perl_sv_hook_remove(pTHX_ SV *sv, MAGIC *mg)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_REMOVE;
+    S_sv_hook_remove(aTHX_ sv, &S_filter_hook_hk, mg);
+}
+
+/*
+=for apidoc sv_hook_remove_by_funcs
+
+Removes every Hook on the SV whose functions structure is given by C<funcs>.
+
+=cut
+*/
+
+void
+Perl_sv_hook_remove_by_funcs(pTHX_ SV *sv, const struct HookFunctions *funcs)
+{
+    PERL_ARGS_ASSERT_SV_HOOK_REMOVE_BY_FUNCS;
+    S_sv_hook_remove(aTHX_ sv, &S_filter_hook_by_funcs, funcs);
+}
+
 MAGIC *
 Perl_sv_magicext_mglob(pTHX_ SV *sv)
 {
@@ -14950,6 +15274,44 @@ Perl_mg_dup(pTHX_ MAGIC *mg, CLONE_PARAMS *const param)
             /* when joining, we let the individual SVs add themselves to
              * backref as needed. */
             continue;
+
+        if (MgIsV2(mg)) {
+            const struct HookFunctions *funcs = HkFUNCS(mg);
+            size_t hooksize = HkSIZEOF(mg) + funcs->user_size;
+
+            MAGIC *nmg = (MAGIC *)safecalloc(1, hooksize);
+            *mgprev_p = (MAGIC *)nmg;
+            mgprev_p = &(nmg->mg_moremagic);
+
+            Copy(mg, nmg, hooksize, char); /* copy the entire structure including user data */
+
+            void *optr  = HkPTR(mg);
+            STRLEN olen = HkPTRLEN(mg);
+            if(optr && olen) {
+                HkPTR_set(nmg, savepvn((char *)optr, olen));
+            }
+
+            if(HkAUXSV(nmg)) {
+                if(HkWEAK_AUXSV(nmg))
+                    nmg->mg_obj = sv_dup    (HkAUXSV(nmg), param);
+                else
+                    nmg->mg_obj = sv_dup_inc(HkAUXSV(nmg), param);
+            }
+
+            if(HkHasKEYSV(nmg)) {
+                HkKEYSV(nmg) = sv_dup_inc(HkKEYSV(nmg), param);
+            }
+
+            if(funcs->clone) {
+                /* TODO: Once we are no longer layered on top of MAGIC, then we should
+                 * have direct access to the osv and nsv values. For now we will just
+                 * pass them in as NULL
+                 */
+                (*funcs->clone)(aTHX_ /* osv = */ NULL, mg, /* nsv = */ NULL, nmg, param);
+            }
+
+            continue;
+        }
 
         Newx(nmg, 1, MAGIC);
         *mgprev_p = nmg;

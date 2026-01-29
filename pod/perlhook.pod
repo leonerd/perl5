@@ -1,0 +1,575 @@
+=head1 NAME
+
+perlhook - Perl's extension mechanism called "Hooks"
+
+=head1 SYNOPSIS
+
+    TODO
+
+=head1 DESCRIPTION
+
+This document describes the API surrounding Perl's extension mechanism that
+is currently called "Hooks". This system is still still evolving, and as
+such so is this document. Many details - especially even the name of the
+system and the internal API names of many of its parts - are still being
+designed and may be subject to change.
+
+To those familiar with Perl's MAGIC, much of this mechanism would seem very
+similar. Indeed, the entire design of Hook is intended to be an evolution of
+that. In effect, a "magic v2". As the design is still in progress, many of
+the details may yet be renamed to simply be called "magic", as a second
+version of that system. For now, everything here is named "hooks" simply to
+distinguish it from the existing magic system.
+
+=head2 Comparison With MAGIC
+
+As compared to MAGIC, the high-level overview of this mechanism is very
+similar. Both systems are concerned with attaching additional behaviour that
+lives in specific target SVs, along with extra data attached to it. In both
+cases, the additional behaviour is provided by C functions whose addresses
+are stored in a structure (in magic's case, the C<MGVTBL>; in hooks' case,
+the C<struct HookFunctions>). That structure defines an overall set of
+behaviour. Individual SVs are annotated by a different structure, which
+refers to the behaviour structure, and stores any additional per-SV data
+associated with it.
+
+Where the two systems differ is further down into the specific details of
+their design. Magic has only one definition of the C<MGVTBL>, which it
+attempts to use for various different use-cases, whereas hooks defines
+multiple different structures of function pointers for various kinds of
+target SV or situation. Owing to its development history, magic has a
+two-level arrangement for identifying different kinds of magic, with many
+internally-defined tables having API-level visible identities, whereas
+hooks are identified purely by their function pointer structure, and
+generally even most internally-defined structure are not exposed as
+API-level names.
+
+=head1 API
+
+The behaviour of a particular hook attached to a target SV is controlled by
+a structure that defines this particular kind of hook. The structure begins
+with some metadata and control fields, and is followed by a few fields that
+optionally contain pointers to C functions that provide behaviour to be
+triggered at particular times in the lifetime of the target SV to which the
+hook is attached.
+
+This structure defines a set of behaviours that a particular hook definition
+provides. It exists just once, and remains unmodified for the lifetime of the
+entire program. It can be thought of similar to a class definition in that it
+describes generic details about kinds of behaviour. Specific attachments of
+this behaviour onto specific SVs are represented by a different data
+structure, described later.
+
+In order to provide function pointers appropriate for various events that may
+happen to different kinds of SV, there are different kinds of hook functions
+structure that each relate to a particular situation. The choice of which
+specific structure to use depends on the kind of target SV it is being
+attached to, and what circumstances it should react to.
+
+=head2 Hook Functions Structures
+
+=head3 struct HookFunctions
+
+The most basic kind of hook function structure uses the following definition.
+
+    struct HookFunctions {
+        U32 ver;
+        enum HookShape shape;
+        U32 flags;
+        const char *debug_name;
+        size_t user_size;
+
+        void (*free) (pTHX_ SV *sv, MAGIC *mg);
+        void (*clone)(pTHX_ SV *osv, MAGIC *omg, SV *nsv, MAGIC *nmg,
+                        CLONE_PARAMS *params);
+    };
+
+=over 4
+
+=item C<ver> field
+
+(TODO: eventually this will contain some sort of API version number constant
+provided by the Hook author. For now this field must be the value 12345)
+
+=item C<shape> field
+
+Describes what kind of hook functions structure this actually is. This is an
+enumeration of one of the C<enum HookShape> constants. For the basic hook
+functions structure the value is C<HKs_BASE>. Other structure shapes are
+described below; each having its own corresponding constant for this field.
+
+=item C<flags> field
+
+A bitfield containing flags that provide minor adjustments to the specific
+behaviour of the hook. The particular constants are described below.
+
+=item C<debug_name> field
+
+An optional string pointer that may be used by C<sv_dump()> when printing
+details about a hook that uses this functions structure. This is purely of
+interest to human readers when debugging; perl will not otherwise use this
+field for any purpose.
+
+=item C<user_size> field
+
+An optional size in bytes that increases the memory allocation for every
+C<Hook> structure allocated for this set of functions when attached to an
+SV. This area can be accessed by the C<HkUSER> macro.
+
+=item C<free> trigger function
+
+An optional pointer to a function to be invoked at the time the hook
+attachment is destroyed. This is usually at the time the SV itself is
+destroyed (likely by a call to C<SvREFCNT_dec()> or similar); but could also
+happen earlier by a specific call to C<sv_hook_remove()>.
+
+=item C<clone> trigger function
+
+An optional pointer to a function to be invoked during the interpreter
+cloning process for creating a new thread. This is invoked just after the hook
+has been copied to the new SV in the new interpreter, after any C<HkAUXSV> or
+SV in the C<HkKEYSV> pointers have been cloned.
+
+=back
+
+=head3 struct ScalarVarHookFunctions
+
+This structure extends the basic C<struct HookFunctions> by adding the
+following fields to store more trigger functions. It may only be applied to
+SVs that represent scalar values - i.e. whose type is C<SVt_PVMG> or below,
+or the special C<SVt_PVLV>.
+
+    struct ScalarVarHookFunctions {
+        ...
+
+        void (*pre_get) (pTHX_ SV *sv, MAGIC *mg);
+        void (*post_set)(pTHX_ SV *sv, MAGIC *mg);
+    };
+
+For this structure, the C<shape> field takes the value C<HKs_SCALARVAR>.
+
+=over 4
+
+=item C<pre_get> trigger function
+
+An optional pointer to a function to be invoked just before a read-like
+operation on the SV, such as a call to C<SvIV> or C<SvPV>.
+
+As this operation runs before a value is read from the SV and returned to
+the caller, this trigger function has the opportunity to set whatever result
+it wishes the caller to observe into the SV, by using the various
+C<sv_setfoo()> API functions.
+
+=item C<post_set> trigger function
+
+An optional pointer to a function to be invoked just after a write-like
+operation on the SV, such as a call to C<sv_setiv_mg()> or C<sv_setpvn_mg()>.
+
+As this operation runs after the new value is written into the SV, this
+trigger function can inspect the updated contents of the SV to find out what
+new value was written. It should use the various C<_nomg>-suffixed versions
+of the accessor macros, to ensure it reads the actual stored value and does
+not inadvertently invoke "get" magic or "pre_get" hook functions on the SV.
+
+=back
+
+=head3 struct ArrayVarHookFunctions
+
+This structure extends the basic C<struct HookFunctions> by adding the
+following fields to store more trigger functions. It may only be applied to
+array variables - i.e. those whose type is C<SVt_PVAV>.
+
+    struct ArrayVarHookFunctions {
+        ...
+
+        void (*clear)(pTHX_ SV *sv, MAGIC *mg);
+    };
+
+For this structure, the C<shape> field takes the value C<HKs_ARRAYVAR>.
+
+=over 4
+
+=item C<clear> trigger function
+
+An optional pointer to a function to be invoked just after an operation that
+clears the array, such as C<undef @array>.
+
+=back
+
+=head3 struct HashVarHookFunctions
+
+This structure extends the basic C<struct HookFunctions> by adding the
+following fields to store more trigger functions. It may only be applied to
+hash variables - i.e. those whose type is C<SVt_PVHV>.
+
+    struct HashVarHookFunctions {
+        ...
+
+        void (*clear)(pTHX_ SV *sv, MAGIC *mg);
+    };
+
+For this structure, the C<shape> field takes the value C<HKs_HASHVAR>.
+
+=over 4
+
+=item C<clear> trigger function
+
+An optional pointer to a function to be invoked just after an operation that
+clears the hash, such as C<undef %hash>.
+
+=back
+
+=head2 API Functions
+
+=head3 C<sv_hook_add>
+
+    MAGIC *sv_hook_add(SV *sv, const struct HookFunctions *funcs,
+                        U32 flags, SV *auxsv);
+
+Attaches the given set of hook functions to the given target SV, appending
+it to the list stored in the SV. Optionally stores an additional data SV,
+called the auxilliary SV ("auxsv") into the attachment. Its behaviour is
+influenced by the provided flags, whose constants are documented below.
+
+A pointer to the specific hook attachment structure is returned, in case the
+caller wishes to adjust its fields with the various structure access macros,
+or store it for some other purpose. This is optional; the structure is
+retained by the SV itself so it is fine for the caller to ignore the return
+value.
+
+=head3 C<sv_hook_remove>
+
+    void sv_hook_remove(SV *sv, MAGIC *mg);
+
+Removes one specific instance of a hook attachment structure from the target
+SV. If the associated function structure defined a C<free> trigger function,
+it will be invoked as part of this call.
+
+=head3 C<sv_hook_find_by_funcs>
+
+    MAGIC *sv_hook_find_by_funcs(const SV *sv,
+                                 const struct HookFunctions *funcs);
+
+Given an SV, looks through the list of attached hook structures, and returns
+the first one found that uses the given functions structure. If no such hook
+is found, returns C<NULL>.
+
+=head3 C<sv_hook_findnext_by_funcs>
+
+    MAGIC *sv_hook_findnext_by_funcs(const SV *sv,
+                                     const struct HookFunctions *funcs,
+                                     MAGIC *mg);
+
+Given an SV and a pointer to a previous hook attachment structure, returns a
+pointer to the next one attached to the SV. If no such hook is found, returns
+C<NULL>.
+
+=head3 C<sv_hook_exists_by_funcs>
+
+    bool sv_hook_exists_by_funcs(const SV *sv,
+                                 const struct HookFunctions *funcs);
+
+A boolean-returning variation of C<sv_hook_find_by_funcs>. Returns true if a
+hook attachment is found, or false if not. This is equivalent to calling
+C<sv_hook_find_by_funcs> and testing the result for non-C<NULL>, but better
+documents the intention of the test.
+
+=head3 C<sv_hook_find_or_add>
+
+    MAGIC *sv_hook_find_or_add(SV *sv,
+                               const struct HookFunctions *funcs);
+
+A shortcut for the common behaviour of first attempting to find an existing
+hook on an SV, or creating one if it does not exist.
+
+If adding a new hook structure, this will be created with no aux SV, and zero
+flags.
+
+=head3 C<sv_hook_remove_by_funcs>
+
+    void sv_hook_remove_by_funcs(SV *sv,
+                                 const struct HookFunctions *funcs);
+
+Removes all specific instances of a hook attachment structure from the target
+SV that use the given functions structure. An associated C<free> trigger
+function will be invoked for each one found.
+
+=head3 C<hk_ptr_store>
+
+    void hk_ptr_store(MAGIC *mg, const void *ptr, STRLEN len);
+
+Helper function to manage the buffer storage area used by C<HkPTR> and
+C<HkPTRLEN>. A new buffer is allocated of C<len> bytes long, which is then
+initialised by a copy of that length of bytes from C<ptr>. This buffer is
+stored in the hook, to be accessed by C<HkPTR> and length C<HkPTRLEN>. If a
+prior buffer was already in place, it is deallocated afterwards.
+
+Because the new buffer is allocated and copied before the old buffer is
+deallocated, it is safe to use this function to grow or shrink that buffer by
+taking a copy of its existing contents; e.g. by passing the current value of
+C<HkPTR> as the C<ptr> argument.
+
+=head2 Hook Structure Macros
+
+These macros allow access to individual fields of the actual C<Hook>
+structure. The structure should otherwise be considered opaque; any attempt to
+directly access fields of it outside of these macros is unsupported, and may
+change or break at any time.
+
+=head3 HkFLAGS
+
+    U16 HkFLAGS(mg)
+
+This macro wraps the U16 flags field of the hook structure. It can be used to
+test or modify any of the C<HKf_...> flags that are stored in the structure.
+
+=head3 HkPRIV
+
+    U16 HkPRIV(mg)
+
+This macro wraps a U16 field of the hook structure that is otherwise unused by
+the hook system itself. It is provided for the user implementation to store
+whatever data it requires there, typically a small enumeration or set of flag
+bits for its own purpose.
+
+=head3 HkAUXSV
+
+    SV *HkAUXSV(mg)
+
+This macro returns the stored C<auxsv> pointer of the hook structure.
+
+=head3 HkAUXSV_set
+
+    void HkAUXSV_set(mg, sv)
+
+This function-like macro sets a new value for the stored C<auxsv> pointer in
+a hook structure. If the hook structure does not have the C<HkWEAK_AUXSV>
+flag set, the previous SV has its reference count reduced first. By
+comparison, the reference count of the new SV is not otherwise altered, so if
+this matters make sure to call it with C<SvREFCNT_inc()>.
+
+=head3 HkWEAK_AUXSV
+
+    bool HkWEAK_AUXSV(mg)
+
+    void HkWEAK_AUXSV_on(mg)
+    void HkWEAK_AUXSV_off(mg)
+
+These macros access a flag on the hook structure that indicates that the
+pointer stored in the C<HkAUXSV> field does not count towards the reference
+count of the referred SV. This flag disables any of the normal handling of
+reference count in the C<free> and C<local> events.
+
+It is rare to need this behaviour, hence this flag is defined as negated
+behaviour; in that presence of the flag turns it off. Normally with a zero as
+the flags, the usual reference count behaviour is provided.
+
+=head3 HkPTR and HkPTRLEN
+
+    void *HkPTR(mg)
+
+    STRLEN HkPTRLEN(mg)
+
+The C<HkPTR> macro gives access to a pointer value stored by the hook, and
+C<HkPTRLEN> gives an associated length for it. 
+
+If C<HkPTR> is C<NULL>, the user code may use C<HkPTRLEN> for its own
+purposes. The value will be copied on C<local> operations, thread cloning,
+and similar, but will not otherwise be used.
+
+If C<HkPTRLEN> is zero, the user code may use C<HkPTR> for its own purposes.
+The value will be copied on C<local> operations, thread cloning and similar,
+but will not otherwise be used.
+
+When used together, these macros create a storage area where the hook user
+can store arbitrary bytes. If C<HkPTR> is non-C<NULL> and C<HkPTRLEN> is
+non-zero when the hook is copied onto a new SV (because of C<local>
+operations, thread cloning, or similar) a new buffer is allocated of the
+given size, whose contents are initialised by taking a copy of the original.
+A buffer allocated in this manner will be automatically released when the
+hook attachment is destroted.
+
+=head3 HkPTR_set and HkPTRLEN_set
+
+    void HkPTR_set(mg, ptr)
+
+    void HkPTRLEN_set(mg, len)
+
+These macros set new values for the C<HkPTR> and C<HkPTRLEN> values stored
+in the hook attachment. If both the pointer and length values are being used
+to create an allocated buffer, it is better to use the C<hk_ptr_store>
+function to allocate a new buffer and update the storage.
+
+=head3 HkKEYIV
+
+    IV HkKEYIV(mg)
+
+This macro provides access to extra storage in the hook structure for storing
+a value in an IV, typically used for array or pad index values. This macro
+must only be used if the hook has the C<HKf_WITH_KEYIV> flag set.
+
+If this flag is not present, the extra storage space used by the key IV field
+is not even allocated, and use of this macro will cause undefined effects. On
+debugging builds an assertion is generated if the macro is used without the
+flag being set.
+
+=head3 HkKEYSV
+
+    SV *HkKEYSV(mg)
+
+This macro provides access to extra storage in the hook structure for storing
+a value in an SV pointer, typically used for hash key values. This macro must
+only be used if the hook has the C<HKf_WITH_KEYSV> flag set. If such a value
+is set, then its reference count is automatically managed during
+localisation, thread clonding, and hook destruction operations.
+
+If this flag is not present, the extra storage space used by the key SV field
+is not even allocated, and use of this macro will cause undefined effects. On
+debugging builds an assertion is generated if the macro is used without the
+flag being set.
+
+=head3 HkUSER
+
+    void *HkUSER(mg)
+
+This macro yields a pointer to the user storage area part of the hook
+structure. User code may use at most the number of bytes given by the
+C<user_size> field of the functions structure when the hook was allocated as
+additional data storage. Typically this would be cast to some sort of
+structure type, whose C<sizeof()> was given in the C<user_size> field.
+
+=head3 HkUSERSTRUCT
+
+    type HkUSERSTRUCT(mg, type)
+
+A convenient shortcut macro for casting the C<HkUSER> field to a pointer of
+a given type; likely a pointer to the user-defined structure type that your
+module uses to store its extra data.
+
+=head2 Flag Constants
+
+=head3 HKf_WITH_KEYIV
+
+Presence of this flag allows use of the C<HkKEYIV> field accessor, causing
+hook attachment structures to be allocated with enough storage space to store
+it.
+
+=head3 HKf_WITH_KEYSV
+
+Presence of this flag allows use of the C<HkKEYSV> field accessor, causing
+hook attachment structures to be allocated with enough storage space to store
+it.
+
+=head3 HKf_CONTAINER
+
+Presence of this flag on the C<struct HookFunctions> C<flags> field indicates
+that the hook should apply to the concept of the variable that it is applied
+to; i.e. the container of the value, rather than the value itself. This means
+that it gets copied to the new container SV if the variable is subject to a
+C<local> expression.
+
+=head1 USE CASES
+
+=head2 Data Storage
+
+Often the behaviour added by a hook requires storing extra data in the
+attachment to each SV. The Hooks mechanism provides three ways this can be
+achieved, offering various tradeoffs of simplicity of use vs flexibility.
+A Hook can store data in an SV pointer in C<HkAUXSV>, the storage provided
+by either C<HkKEYIV> or C<HkKEYSV>, and the extra storage offered by
+C<user_size> and C<HkUSERSTRUCT>. These three features are not alternatives
+to each other; each can be used independently of the others, or in
+combination, to achieve the desired effect.
+
+=head3 Storing an SV in C<HkAUXSV>
+
+The simplest way to store extra data in a hook attachment on an SV is to put
+that data into another SV, and store that second SV in the "aux SV" area.
+This is initially set by using the C<auxsv> parameter to the C<sv_hook_add()>
+function, and thereafter accessed by the C<HkAUXSV> macro on the hook
+structure. Any kind of SV can be used for this purpose.
+
+    SV *more_data = newSVpvs("here is my extra data");
+    MAGIC *mg = sv_hook_add(target_sv, &my_hook_funcs, 0, more_data);
+
+    warn("The extra data is %" SVf, SVfARG(HkAUXSV(mg)));
+
+When cloning the interpreter for a new thread, Perl will automatically clone
+the aux SV as well, storing the updated pointer in the hook structure in the
+new thread. When destroying the hook attachment it will automatically
+decrement the reference count in the referred SV, reclaiming it if necessary.
+This usually means the user code does not need to take any additional steps
+when using this method of storing data.
+
+=head3 Using the C<HkKEYIV> or C<HkKEYSV>
+
+If the hook attachment relates to a specific element of an AV or HV, it can
+be necessary or useful to additionally store the index or key of that element
+with the hook structure. This is the intended purpose of the C<HkKEYIV> and
+C<HkKEYSV> macros.
+
+To use these, the C<HKf_WITH_KEYIV> or C<HKf_WITH_KEYSV> flag needs to be
+present, either passed to the C<sv_hook_add> function call, or set in the
+C<flags> field of the C<struct HookFunctions> structure. Once the hook
+attachment structure is created, the relevant field access macro can be used
+as an lvalue to set it.
+
+    MAGIC *mg = sv_hook_add(target_sv, &my_hook_funcs, HKf_WITH_KEYIV,
+                           NULL);
+    HkKEYIV(mg) = idx;
+
+    warn("The element index is %" IVdf, HkKEYIV(mg));
+
+When using a SV pointer as a key argument, remember that the key is shared by
+any C<local>'ized copies of the containing variable, so it should not be
+modified once created. As it is intended to set this field initially when the
+hook is created and then leave it unmodified, note that using the C<HkKEYSV>
+macro to set its value will I<not> decrement the reference count of a previous
+SV referred there. If you are replacing the SV pointer, you must remember to
+do this manually.
+
+    if(HkKEYSV(mg))
+        SvREFCNT_dec(HkKEYSV(mg));
+
+    HkKEYSV(mg) = newSVsv(newkey);
+
+=head3 Using C<.user_size> and C<HkUSERSTRUCT>
+
+Each of these first two methods of storing extra data allow one additional
+value to be stored in the hook structure - either in the C<HkAUXSV> pointer,
+or one of the C<HkKEYIV> or C<HkKEYSV> fields. If the user code needs to store
+more different fields of data than this, it has a number of options. It could
+use some sort of aggregate data structure at the SV level (such as an AV or
+HV) to store multiple elements, but this consumes more memory and requires
+more indirect pointer accesses, impacting its performance. 
+
+A third alternative to either of these options is to use the additional data
+storage area given by the C<HkUSERSTRUCT> macro, when the C<user_size> field
+of the hook functions structure is given a non-zero value. This directly
+allocates the storage area as part of the hook attachment structure itself,
+avoiding one level of pointer indirection and the associated C<malloc> arena
+overheads. Being a structure of a size given by the user code means it can be
+sized sufficiently for whatever the user code wishes to store there (provided
+that is a single fixed size).
+
+    struct MyExtraData {
+        int x;
+        UV y;
+        size_t len;
+        char **many_ptrs;
+    };
+    struct HookFunctions my_hook_funcs = {
+        ...
+        .user_size = sizeof(struct MyExtraData),
+    };
+
+    MAGIC *mg = sv_hook_add(target_sv, &my_hook_funcs, 0, NULL);
+
+    HkUSERSTRUCT(mg, struct MyExtraData)->y = 1234;
+
+When freeing the structure or cloning it for a new interpreter thread, this
+extra storage area is accounted for and copied if necessary, so user code may
+not be required to handle basic structures that do not refer to other
+allocated memory. If other memory is allocated and stored in the structure,
+make sure to handle it correctly by providing the C<free> and C<clone>
+trigger functions.

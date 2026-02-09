@@ -1061,6 +1061,7 @@ Perl_class_add_field(pTHX_ HV *stash, PADNAME *pn)
 
     struct padname_fieldinfo *fieldinfo;
     Newxz(fieldinfo, 1, struct padname_fieldinfo);
+    PERL_SET_LINNET(fieldinfo, PERL_LINNET_VALUE_FIELDINFO);
 
     fieldinfo->refcount = 1;
     fieldinfo->fieldix = fieldix;

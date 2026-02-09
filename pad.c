@@ -2910,6 +2910,7 @@ Perl_padname_dup(pTHX_ PADNAME *src, CLONE_PARAMS *param)
             PadnameFIELDINFO(dst) = dinfo;
         else {
             Newxz(dinfo, 1, struct padname_fieldinfo);
+            PERL_SET_LINNET(dinfo, PERL_LINNET_VALUE_FIELDINFO);
             PadnameFIELDINFO(dst) = dinfo;
             ptr_table_store(PL_ptr_table, sinfo, dinfo);
 

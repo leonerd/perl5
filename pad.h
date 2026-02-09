@@ -90,10 +90,30 @@ struct padname_with_str {
 #define PADNAME_FROM_PV(s) \
     ((PADNAME *)((s) - STRUCT_OFFSET(struct padname_with_str, xpadn_str)))
 
+/* TODO(leonerd): temporary debug for GH#24150
+ * I want to turn this into a permanent generic thing sometime
+ */
+enum {
+    /* These should all be just random numbers. Avoid multiples of 4 so these
+     * numbers don't look like memory addresses
+     */
+    PERL_LINNET_VALUE_FIELDINFO = 0x57340671,
+};
+#ifdef DEBUGGING
+#  define PERL_FIELD_LINNET_          U32 linnet;
+#  define PERL_SET_LINNET(p, val)     (p)->linnet = val
+#  define PERL_ASSERT_LINNET(p, val)  assert(!(p) || ((p)->linnet == val))
+#else
+#  define PERL_FIELD_LINNET_          /**/
+#  define PERL_SET_LINNET(p, val)     NOOP
+#  define PERL_ASSERT_LINNET(p, val)  /**/
+#endif
+
 /* Most padnames are not field names. Keep all the field-related info in its
  * own substructure, stored in ->xpadn_fieldinfo.
  */
 struct padname_fieldinfo {
+    PERL_FIELD_LINNET_
     U32        refcount;
     PADOFFSET  fieldix;    /* index of this field within ObjectFIELDS() array */
     HV        *fieldstash; /* original class package which added this field */
@@ -349,7 +369,7 @@ Restore the old pad saved into the local variable C<opad> by C<PAD_SAVE_LOCAL()>
 #define PadnameREFCNT_dec(pn)	Perl_padname_free(aTHX_ pn)
 #define PadnameOURSTASH_set(pn,s) (PadnameOURSTASH(pn) = (s))
 #define PadnameTYPE_set(pn,s)	  (PadnameTYPE(pn) = (s))
-#define PadnameFIELDINFO(pn)    (pn)->xpadn_fieldinfo
+#define PadnameFIELDINFO(pn)    (*(PERL_ASSERT_LINNET((pn)->xpadn_fieldinfo, PERL_LINNET_VALUE_FIELDINFO), &(pn)->xpadn_fieldinfo))
 #define PadnameOUTER(pn)	(PadnameFLAGS(pn) & PADNAMEf_OUTER)
 #define PadnameIsSTATE(pn)	(PadnameFLAGS(pn) & PADNAMEf_STATE)
 #define PadnameLVALUE(pn)	(PadnameFLAGS(pn) & PADNAMEf_LVALUE)

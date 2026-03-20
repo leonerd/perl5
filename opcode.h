@@ -240,6 +240,8 @@ EXTCONST char* const PL_op_name[] INIT({
 	"sge",
 	"seq",
 	"sne",
+	"sequ",
+	"sneu",
 	"scmp",
 	"bit_and",
 	"bit_xor",
@@ -673,6 +675,8 @@ EXTCONST char* const PL_op_desc[] INIT({
 	"string ge",
 	"string eq",
 	"string ne",
+	"undef-aware string eq",
+	"undef-aware string ne",
 	"string comparison (cmp)",
 	"bitwise and (&)",
 	"bitwise xor (^)",
@@ -1111,6 +1115,8 @@ INIT({
 	Perl_pp_sge,	/* implemented by Perl_pp_sle */
 	Perl_pp_seq,
 	Perl_pp_sne,
+	Perl_pp_sequ,
+	Perl_pp_sneu,
 	Perl_pp_scmp,
 	Perl_pp_bit_and,
 	Perl_pp_bit_xor,	/* implemented by Perl_pp_bit_or */
@@ -1544,6 +1550,8 @@ INIT({
 	Perl_ck_scmp,		/* sge */
 	Perl_ck_scmp,		/* seq */
 	Perl_ck_scmp,		/* sne */
+	Perl_ck_scmp,		/* sequ */
+	Perl_ck_scmp,		/* sneu */
 	Perl_ck_null,		/* scmp */
 	Perl_ck_bitop,		/* bit_and */
 	Perl_ck_bitop,		/* bit_xor */
@@ -1897,9 +1905,9 @@ INIT({
 
 /* Indexes into PL_check for the comparison function pointers */
 #ifdef PERL_IN_PEEP_C
-  #define PERL_CK_NULL  429
-  #define PERL_CK_EXISTS  430
-  #define PERL_CK_DELETE  431
+  #define PERL_CK_NULL  431
+  #define PERL_CK_EXISTS  432
+  #define PERL_CK_DELETE  433
 #endif
 
 EXTCONST U32 PL_opargs[] INIT({
@@ -1995,6 +2003,8 @@ EXTCONST U32 PL_opargs[] INIT({
 	0x00011206,	/* sge */
 	0x00011206,	/* seq */
 	0x00011206,	/* sne */
+	0x00011206,	/* sequ */
+	0x00011206,	/* sneu */
 	0x0001120e,	/* scmp */
 	0x0001120e,	/* bit_and */
 	0x0001120e,	/* bit_xor */
@@ -2724,6 +2734,8 @@ EXTCONST I16  PL_op_private_bitdef_ix[]  INIT( {
       13, /* sge */
       13, /* seq */
       13, /* sne */
+      13, /* sequ */
+      13, /* sneu */
       13, /* scmp */
      105, /* bit_and */
      105, /* bit_xor */
@@ -3085,7 +3097,7 @@ EXTCONST U16  PL_op_private_bitdefs[] INIT( {
     0x077e, 0x0554, 0x1b70, 0x576c, 0x5268, 0x4225, /* const */
     0x3cfc, 0x47f9, /* gvsv */
     0x19d5, /* gv */
-    0x0067, /* gelem, lt, i_lt, gt, i_gt, le, i_le, ge, i_ge, eq, i_eq, ne, i_ne, ncmp, i_ncmp, slt, sgt, sle, sge, seq, sne, scmp, smartmatch, lslice, xor, isa */
+    0x0067, /* gelem, lt, i_lt, gt, i_gt, le, i_le, ge, i_ge, eq, i_eq, ne, i_ne, ncmp, i_ncmp, slt, sgt, sle, sge, seq, sne, sequ, sneu, scmp, smartmatch, lslice, xor, isa */
     0x3cfc, 0x5618, 0x04f7, /* padsv */
     0x3cfc, 0x5618, 0x0003, /* padsv_store, lvavref */
     0x3cfc, 0x5618, 0x06d4, 0x3dec, 0x53e9, /* padav */
@@ -3263,6 +3275,8 @@ EXTCONST U8 PL_op_private_valid[] INIT( {
     /* SGE        */ (OPpARG2_MASK),
     /* SEQ        */ (OPpARG2_MASK),
     /* SNE        */ (OPpARG2_MASK),
+    /* SEQU       */ (OPpARG2_MASK),
+    /* SNEU       */ (OPpARG2_MASK),
     /* SCMP       */ (OPpARG2_MASK),
     /* BIT_AND    */ (OPpUSEINT),
     /* BIT_XOR    */ (OPpUSEINT),

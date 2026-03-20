@@ -160,6 +160,8 @@ sle		string le		ck_scmp		ifs2	S S
 sge		string ge		ck_scmp		ifs2	S S
 seq		string eq		ck_scmp		ifs2	S S
 sne		string ne		ck_scmp		ifs2	S S
+sequ		undef-aware string eq		ck_scmp		ifs2	S S
+sneu		undef-aware string ne		ck_scmp		ifs2	S S
 scmp		string comparison (cmp)	ck_null		ifst2	S S
 
 bit_and		bitwise and (&)		ck_bitop	fst2	S S|

@@ -7,7 +7,7 @@
 # This is based on the module of the same name by Malcolm Beattie,
 # but essentially none of his code remains.
 
-package B::Deparse 1.89;
+package B::Deparse 1.90;
 use strict;
 use builtin qw( true false );
 use Carp;
@@ -3390,6 +3390,9 @@ sub pp_sgt { binop(@_, "gt", 15) }
 sub pp_sge { binop(@_, "ge", 15) }
 sub pp_sle { binop(@_, "le", 15) }
 sub pp_scmp { maybe_targmy(@_, \&binop, "cmp", 14) }
+
+sub pp_sequ { binop(@_, "equ", 14) }
+sub pp_sneu { binop(@_, "neu", 14) }
 
 sub pp_isa { binop(@_, "isa", 15) }
 

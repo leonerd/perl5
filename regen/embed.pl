@@ -1382,6 +1382,7 @@ my @unresolved_visibility_overrides = qw(
     KEY_endservent
     KEY_eof
     KEY_eq
+    KEY_equ
     KEY_eval
     KEY_evalbytes
     KEY_exec
@@ -1466,6 +1467,7 @@ my @unresolved_visibility_overrides = qw(
     KEY_msgsnd
     KEY_my
     KEY_ne
+    KEY_neu
     KEY_next
     KEY_no
     KEY_not
@@ -2003,6 +2005,7 @@ my @unresolved_visibility_overrides = qw(
     OPpENTERSUB_INARGS
     OPpENTERSUB_LVAL_MASK
     OPpENTERSUB_NOPAREN
+    OPpEQ_UNDEF
     OPpEVAL_BYTES
     OPpEVAL_COPHH
     OPpEVAL_EVALSV

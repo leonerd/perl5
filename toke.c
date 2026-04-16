@@ -7202,6 +7202,12 @@ yyl_bang(pTHX_ char *s)
             TOKEN(0);
         }
 
+        if (s[0] == '=') {
+            /* TODO: feature guard? */
+            s++;
+            ChEop(OP_NEU);
+        }
+
         ChEop(OP_NE);
     }
 
@@ -9909,6 +9915,11 @@ yyl_try(pTHX_ char *s)
                 {
                     s -= 2;
                     TOKEN(0);
+                }
+                if (s[0] == '=') {
+                    /* TODO: feature guard? */
+                    s++;
+                    ChEop(OP_EQU);
                 }
                 ChEop(OP_EQ);
             }

@@ -232,6 +232,10 @@ EXTCONST char* const PL_op_name[] INIT({
 	"i_eq",
 	"ne",
 	"i_ne",
+	"equ",
+	"i_equ",
+	"neu",
+	"i_neu",
 	"ncmp",
 	"i_ncmp",
 	"slt",
@@ -667,6 +671,10 @@ EXTCONST char* const PL_op_desc[] INIT({
 	"integer eq (==)",
 	"numeric ne (!=)",
 	"integer ne (!=)",
+	"undef-aware numeric eq (===)",
+	"undef-aware integer eq (===)",
+	"undef-aware numeric ne (!==)",
+	"undef-aware integer ne (!==)",
 	"numeric comparison (<=>)",
 	"integer comparison (<=>)",
 	"string lt",
@@ -1107,6 +1115,10 @@ INIT({
 	Perl_pp_i_eq,
 	Perl_pp_ne,
 	Perl_pp_i_ne,
+	Perl_pp_equ,
+	Perl_pp_i_equ,
+	Perl_pp_neu,
+	Perl_pp_i_neu,
 	Perl_pp_ncmp,
 	Perl_pp_i_ncmp,
 	Perl_pp_slt,	/* implemented by Perl_pp_sle */
@@ -1542,6 +1554,10 @@ INIT({
 	Perl_ck_cmp,		/* i_eq */
 	Perl_ck_cmp,		/* ne */
 	Perl_ck_cmp,		/* i_ne */
+	Perl_ck_cmp,		/* equ */
+	Perl_ck_cmp,		/* i_equ */
+	Perl_ck_cmp,		/* neu */
+	Perl_ck_cmp,		/* i_neu */
 	Perl_ck_null,		/* ncmp */
 	Perl_ck_null,		/* i_ncmp */
 	Perl_ck_scmp,		/* slt */
@@ -1905,9 +1921,9 @@ INIT({
 
 /* Indexes into PL_check for the comparison function pointers */
 #ifdef PERL_IN_PEEP_C
-  #define PERL_CK_NULL  431
-  #define PERL_CK_EXISTS  432
-  #define PERL_CK_DELETE  433
+  #define PERL_CK_NULL  435
+  #define PERL_CK_EXISTS  436
+  #define PERL_CK_DELETE  437
 #endif
 
 EXTCONST U32 PL_opargs[] INIT({
@@ -1995,6 +2011,10 @@ EXTCONST U32 PL_opargs[] INIT({
 	0x00011206,	/* i_eq */
 	0x00011226,	/* ne */
 	0x00011206,	/* i_ne */
+	0x00011226,	/* equ */
+	0x00011206,	/* i_equ */
+	0x00011226,	/* neu */
+	0x00011206,	/* i_neu */
 	0x0001122e,	/* ncmp */
 	0x0001120e,	/* i_ncmp */
 	0x00011206,	/* slt */
@@ -2726,6 +2746,10 @@ EXTCONST I16  PL_op_private_bitdef_ix[]  INIT( {
       13, /* i_eq */
       13, /* ne */
       13, /* i_ne */
+      13, /* equ */
+      13, /* i_equ */
+      13, /* neu */
+      13, /* i_neu */
       13, /* ncmp */
       13, /* i_ncmp */
       13, /* slt */
@@ -3097,7 +3121,7 @@ EXTCONST U16  PL_op_private_bitdefs[] INIT( {
     0x077e, 0x0554, 0x1b70, 0x576c, 0x5268, 0x4225, /* const */
     0x3cfc, 0x47f9, /* gvsv */
     0x19d5, /* gv */
-    0x0067, /* gelem, lt, i_lt, gt, i_gt, le, i_le, ge, i_ge, eq, i_eq, ne, i_ne, ncmp, i_ncmp, slt, sgt, sle, sge, seq, sne, sequ, sneu, scmp, smartmatch, lslice, xor, isa */
+    0x0067, /* gelem, lt, i_lt, gt, i_gt, le, i_le, ge, i_ge, eq, i_eq, ne, i_ne, equ, i_equ, neu, i_neu, ncmp, i_ncmp, slt, sgt, sle, sge, seq, sne, sequ, sneu, scmp, smartmatch, lslice, xor, isa */
     0x3cfc, 0x5618, 0x04f7, /* padsv */
     0x3cfc, 0x5618, 0x0003, /* padsv_store, lvavref */
     0x3cfc, 0x5618, 0x06d4, 0x3dec, 0x53e9, /* padav */
@@ -3267,6 +3291,10 @@ EXTCONST U8 PL_op_private_valid[] INIT( {
     /* I_EQ       */ (OPpARG2_MASK),
     /* NE         */ (OPpARG2_MASK),
     /* I_NE       */ (OPpARG2_MASK),
+    /* EQU        */ (OPpARG2_MASK),
+    /* I_EQU      */ (OPpARG2_MASK),
+    /* NEU        */ (OPpARG2_MASK),
+    /* I_NEU      */ (OPpARG2_MASK),
     /* NCMP       */ (OPpARG2_MASK),
     /* I_NCMP     */ (OPpARG2_MASK),
     /* SLT        */ (OPpARG2_MASK),

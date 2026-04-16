@@ -69,4 +69,66 @@ foreach my ( $left, $right )
     is(not($left neu $right), ($left equ $right), 'neu is a synonym for not(equ)');
 }
 
+# === behaves like == on defined numbers
+ok(123 === 123,      '=== on identical values');
+ok(0 === 0,          '=== on zero/zero');
+ok(not(123 === 456), '=== on different values');
+
+# === treats undef as distinct, equal to itself, with no warnings
+{
+    my $warnings = 0;
+    local $SIG{__WARN__} = sub { $warnings++; };
+
+    ok(undef === undef,  '=== on undef/undef');
+    ok(not(undef === 0), '=== on undef/zero');
+
+    is($warnings, 0, 'no warnings were produced by use of undef');
+}
+
+# === is chainable
+foreach my ( $x, $y, $z )
+  ( 123, 123,   123,
+    123, 123,   456,
+    123, 0,     0,
+    123, 0,     undef,
+    0,   undef, "" )
+{
+    no warnings 'uninitialized';
+
+    is($x === $y === $z, ($x === $y) && ($y === $z),
+        '=== chains correctly for ' . join("/", map { defined ? qq("$_") : 'undef' } $x, $y, $z ));
+
+    # === chaining with == behaves as expected
+    is($x === $y ==  $z, ($x === $y) && ($y ==  $z),
+        '=== and == chain correctly for ' . join("/", map { $_ // 'undef' } $x, $y, $z ));
+    is($x ==  $y === $z, ($x ==  $y) && ($y === $z),
+        '== and === chain correctly for ' . join("/", map { $_ // 'undef' } $x, $y, $z ));
+}
+
+# !== is inverted ===
+foreach my ( $left, $right )
+  ( 123, 123,
+    123, 456,
+    0, undef,
+    undef, undef )
+{
+    is(not($left !== $right), ($left === $right), '!== is a synonym for not(===)');
+}
+
+# === respects 'use integer'
+{
+    use integer;
+    my $x = 123.1;
+    ok    ($x === 123, '=== respects use integer');
+    not_ok($x !== 123, '!== respects use integer');
+
+    my $nearzero = 0.1;
+    ok    ($nearzero === 0,     '=== works under use integer');
+    not_ok($nearzero !== 0,     '!== works under use integer');
+    not_ok($nearzero === 1,     '=== works under use integer');
+    ok    ($nearzero !== 1,     '!== works under use integer');
+    not_ok($nearzero === undef, '=== works under use integer');
+    ok    ($nearzero !== undef, '!== works under use integer');
+}
+
 done_testing();

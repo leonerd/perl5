@@ -2229,6 +2229,37 @@ PP(pp_ne)
 }
 
 
+PP(pp_neu)
+{
+    // TODO: neu_amg
+    //if (rpp_try_AMAGIC_2(ne_amg, AMGf_numeric))
+    //    return NORMAL;
+
+    SV *right = PL_stack_sp[0];
+    SV *left  = PL_stack_sp[-1];
+
+    bool lundef = !SvOK(left), rundef = !SvOK(right);
+
+    if(lundef || rundef) {
+        rpp_replace_2_IMM_NN(boolSV(!(lundef && rundef)));
+        return NORMAL;
+    }
+
+    /* a copy-paste of the logic from pp_ne */
+    U32 flags_and = SvFLAGS(left) & SvFLAGS(right);
+    U32 flags_or  = SvFLAGS(left) | SvFLAGS(right);
+
+    rpp_replace_2_IMM_NN(boolSV(
+        ( (flags_and & SVf_IOK) && ((flags_or & SVf_IVisUV) ==0 ) )
+        ?    (SvIVX(left) != SvIVX(right))
+        : (flags_and & SVf_NOK)
+        ?    (SvNVX(left) != SvNVX(right))
+        : (do_ncmp(left, right) != 0)
+    ));
+    return NORMAL;
+}
+
+
 /* compare left and right SVs. Returns:
  * -1: <
  *  0: ==
@@ -3026,6 +3057,46 @@ PP(pp_i_ne)
 {
     if (rpp_try_AMAGIC_2(ne_amg, 0))
         return NORMAL;
+
+    IV left    = SvIV_nomg(PL_stack_sp[-1]);
+    IV right   = SvIV_nomg(PL_stack_sp[0]);
+
+    rpp_replace_2_IMM_NN(boolSV(left != right));
+    return NORMAL;
+}
+
+
+PP(pp_i_equ)
+{
+    // TODO: equ_amg
+    //if (rpp_try_AMAGIC_2(equ_amg, 0))
+    //    return NORMAL;
+
+    bool lundef = !SvOK(PL_stack_sp[-1]), rundef = !SvOK(PL_stack_sp[0]);
+    if(lundef || rundef) {
+        rpp_replace_2_IMM_NN(boolSV(lundef && rundef));
+        return NORMAL;
+    }
+
+    IV left    = SvIV_nomg(PL_stack_sp[-1]);
+    IV right   = SvIV_nomg(PL_stack_sp[0]);
+
+    rpp_replace_2_IMM_NN(boolSV(left == right));
+    return NORMAL;
+}
+
+
+PP(pp_i_neu)
+{
+    // TODO: neu_amg
+    //if (rpp_try_AMAGIC_2(neu_amg, 0))
+    //    return NORMAL;
+
+    bool lundef = !SvOK(PL_stack_sp[-1]), rundef = !SvOK(PL_stack_sp[0]);
+    if(lundef || rundef) {
+        rpp_replace_2_IMM_NN(boolSV(!(lundef && rundef)));
+        return NORMAL;
+    }
 
     IV left    = SvIV_nomg(PL_stack_sp[-1]);
     IV right   = SvIV_nomg(PL_stack_sp[0]);

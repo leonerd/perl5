@@ -151,6 +151,10 @@ eq		numeric eq (==)		ck_cmp		Iifs2	S S<
 i_eq		integer eq (==)		ck_cmp		ifs2	S S<
 ne		numeric ne (!=)		ck_cmp		Iifs2	S S<
 i_ne		integer ne (!=)		ck_cmp		ifs2	S S<
+equ		undef-aware numeric eq (===)	ck_cmp		Iifs2	S S<
+i_equ		undef-aware integer eq (===)	ck_cmp		ifs2	S S<
+neu		undef-aware numeric ne (!==)	ck_cmp		Iifs2	S S<
+i_neu		undef-aware integer ne (!==)	ck_cmp		ifs2	S S<
 ncmp		numeric comparison (<=>)	ck_null		Iifst2	S S<
 i_ncmp		integer comparison (<=>)	ck_null		ifst2	S S<
 

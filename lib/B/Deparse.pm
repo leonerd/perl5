@@ -3383,6 +3383,11 @@ sub pp_i_ge { binop(@_, ">=", 15) }
 sub pp_i_le { binop(@_, "<=", 15) }
 sub pp_i_ncmp { maybe_targmy(@_, \&binop, "<=>", 14) }
 
+sub pp_equ { binop(@_, "===", 14) }
+sub pp_neu { binop(@_, "!==", 14) }
+sub pp_i_equ { binop(@_, "===", 14) }
+sub pp_i_neu { binop(@_, "!==", 14) }
+
 sub pp_seq { binop(@_, "eq", 14) }
 sub pp_sne { binop(@_, "ne", 14) }
 sub pp_slt { binop(@_, "lt", 15) }

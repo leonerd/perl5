@@ -40,12 +40,16 @@ static const U8 PL_AMG_namelens[NofAMmeth] = {
     3,
     3,
     3,
+    4,
+    4,
     3,
     3,
     3,
     3,
     3,
     3,
+    4,
+    4,
     9,
     2,
     3,
@@ -123,12 +127,16 @@ static const char * const PL_AMG_names[NofAMmeth] = {
     "(>=",		/* ge         */
     "(==",		/* eq         */
     "(!=",		/* ne         */
+    "(===",		/* equ        */
+    "(!==",		/* neu        */
     "(lt",		/* slt        */
     "(le",		/* sle        */
     "(gt",		/* sgt        */
     "(ge",		/* sge        */
     "(eq",		/* seq        */
     "(ne",		/* sne        */
+    "(equ",		/* sequ       */
+    "(neu",		/* sneu       */
     "(nomethod",	/* nomethod   */
     "(+",		/* add        */
     "(+=",		/* add_ass    */

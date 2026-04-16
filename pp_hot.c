@@ -1693,9 +1693,8 @@ PP(pp_eq)
 
 PP(pp_equ)
 {
-    // TODO: equ_amg
-    //if (rpp_try_AMAGIC_2(eq_amg, AMGf_numeric))
-    //    return NORMAL;
+    if (rpp_try_AMAGIC_2(equ_amg, AMGf_numeric))
+        return NORMAL;
 
     SV *right = PL_stack_sp[0];
     SV *left  = PL_stack_sp[-1];

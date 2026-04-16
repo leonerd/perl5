@@ -145,19 +145,23 @@ neg		(neg
 iter		(<>
 int		(int
 
-# These 12 feature in the next switch statement
+# These 16 feature in the next switch statement
 lt		(<
 le		(<=
 gt		(>
 ge		(>=
 eq		(==
 ne		(!=
+equ		(===
+neu		(!==
 slt		(lt
 sle		(le
 sgt		(gt
 sge		(ge
 seq		(eq
 sne		(ne
+sequ		(equ
+sneu		(neu
 
 nomethod	(nomethod
 add		(+

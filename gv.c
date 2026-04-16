@@ -3551,6 +3551,14 @@ Perl_amagic_applies(pTHX_ SV *sv, int method, int flags)
              if (cvp[ncmp_amg])
                  return TRUE;
              break;
+         case equ_amg:
+             if (cvp[eq_amg] || cvp[ncmp_amg])
+                 return TRUE;
+             break;
+         case neu_amg:
+             if (cvp[ne_amg] || cvp[ncmp_amg])
+                 return TRUE;
+             break;
          case slt_amg:
          case sle_amg:
          case sgt_amg:
@@ -3558,6 +3566,14 @@ Perl_amagic_applies(pTHX_ SV *sv, int method, int flags)
          case seq_amg:
          case sne_amg:
              if (cvp[scmp_amg])
+                 return TRUE;
+             break;
+         case sequ_amg:
+             if (cvp[seq_amg] || cvp[scmp_amg])
+                 return TRUE;
+             break;
+         case sneu_amg:
+             if (cvp[sne_amg] || cvp[scmp_amg])
                  return TRUE;
              break;
       }
@@ -3964,7 +3980,9 @@ Perl_amagic_call(pTHX_ SV *left, SV *right, int method, int flags)
           || method==repeat_amg || method==repeat_ass_amg) {
         return NULL;		/* Delegate operation to string conversion */
       }
+      bool negate = false;
       off = -1;
+
       switch (method) {
          case lt_amg:
          case le_amg:
@@ -3974,6 +3992,35 @@ Perl_amagic_call(pTHX_ SV *left, SV *right, int method, int flags)
          case ne_amg:
              off = ncmp_amg;
              break;
+         case neu_amg:
+             negate = true;
+             /* FALLTHROUGH */
+         case equ_amg:
+             if (!SvOK(left) || !SvOK(right)) {
+                 /* result is determined */
+                 return boolSV((SvOK(left) == SvOK(right)) ^ negate);
+             }
+             /* TODO: Think about whether a missing `!==` ought to be
+              * synthesized by `not(===)`. But if so, what about != vs ==?
+              *   https://github.com/Perl/PPCs/discussions/84
+              */
+
+             /* Try to synthesize out of != / == */
+             if ((off = (negate ? ne_amg : eq_amg)) && 
+                     ocvp && (oamtp->fallback > AMGfallNEVER) && (cv = ocvp[off]))
+                 lr = -1;
+             else if(cvp && (amtp->fallback > AMGfallNEVER) && (cv = cvp[off]))
+                 lr = 1;
+             /* else try to synthesize out of <=> */
+             else if((off = ncmp_amg) &&
+                     ocvp && (oamtp->fallback > AMGfallNEVER) && (cv = ocvp[off]))
+                 lr = -1;
+             else if(cvp && (amtp->fallback > AMGfallNEVER) && (cv = cvp[off]))
+                 lr = 1;
+             /* else give up */
+             else
+                 off = -1;
+             break;
          case slt_amg:
          case sle_amg:
          case sgt_amg:
@@ -3981,6 +4028,35 @@ Perl_amagic_call(pTHX_ SV *left, SV *right, int method, int flags)
          case seq_amg:
          case sne_amg:
              off = scmp_amg;
+             break;
+         case sneu_amg:
+             negate = true;
+             /* FALLTHROUGH */
+         case sequ_amg:
+             if (!SvOK(left) || !SvOK(right)) {
+                 /* result is determined */
+                 return boolSV((SvOK(left) == SvOK(right)) ^ negate);
+             }
+             /* TODO: Think about whether a missing `neu` ought to be
+              * synthesized by `not(equ)`. But if so, what about ne vs eq?
+              *   https://github.com/Perl/PPCs/discussions/84
+              */
+
+             /* Try to synthesize out of ne / eq */
+             if ((off = (negate ? sne_amg : seq_amg)) && 
+                     ocvp && (oamtp->fallback > AMGfallNEVER) && (cv = ocvp[off]))
+                 lr = -1;
+             else if(cvp && (amtp->fallback > AMGfallNEVER) && (cv = cvp[off]))
+                 lr = 1;
+             /* else try to synthesize out of cmp */
+             else if((off = scmp_amg) &&
+                     ocvp && (oamtp->fallback > AMGfallNEVER) && (cv = ocvp[off]))
+                 lr = -1;
+             else if(cvp && (amtp->fallback > AMGfallNEVER) && (cv = cvp[off]))
+                 lr = 1;
+             /* else give up */
+             else
+                 off = -1;
              break;
          }
       if (off != -1) {
@@ -4272,7 +4348,12 @@ Perl_amagic_call(pTHX_ SV *left, SV *right, int method, int flags)
     CATCH_SET(oldcatch);
 
     if (postpr) {
+      /* Post-process the actual answer we received from the overload method
+       * given in 'off', when the caller wanted the method 'method'
+       */
       int ans;
+      bool negate = false;
+
       switch (method) {
       case le_amg:
       case sle_amg:
@@ -4292,6 +4373,27 @@ Perl_amagic_call(pTHX_ SV *left, SV *right, int method, int flags)
       case ne_amg:
       case sne_amg:
         ans=SvIV(res)!=0; break;
+      case neu_amg:
+      case sneu_amg:
+        negate = true;
+        /* FALLTHROUGH */
+      case equ_amg:
+      case sequ_amg:
+        switch(off) {
+        case eq_amg:
+        case seq_amg:
+            ans = SvTRUE_NN(res); break;
+        case ne_amg:
+        case sne_amg:
+            ans = !SvTRUE_NN(res); break;
+        case ncmp_amg:
+        case scmp_amg:
+            ans = SvIV(res) == 0; break;
+        default:
+            NOT_REACHED;
+        }
+        if (negate) ans = !ans;
+        break;
       case inc_amg:
       case dec_amg:
         SvSetSV(left,res); return left;

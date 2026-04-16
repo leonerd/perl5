@@ -2231,9 +2231,8 @@ PP(pp_ne)
 
 PP(pp_neu)
 {
-    // TODO: neu_amg
-    //if (rpp_try_AMAGIC_2(ne_amg, AMGf_numeric))
-    //    return NORMAL;
+    if (rpp_try_AMAGIC_2(neu_amg, AMGf_numeric))
+        return NORMAL;
 
     SV *right = PL_stack_sp[0];
     SV *left  = PL_stack_sp[-1];
@@ -2414,9 +2413,8 @@ PP(pp_seq)
 
 PP(pp_sequ)
 {
-    // TODO: sequ_amg
-    //if (rpp_try_AMAGIC_2(seq_amg, 0))
-    //    return NORMAL;
+    if (rpp_try_AMAGIC_2(sequ_amg, 0))
+        return NORMAL;
 
     SV *right = PL_stack_sp[0];
     SV *left  = PL_stack_sp[-1];
@@ -2448,9 +2446,8 @@ PP(pp_sne)
 
 PP(pp_sneu)
 {
-    // TODO: sneu_amg
-    //if (rpp_try_AMAGIC_2(sne_amg, 0))
-    //    return NORMAL;
+    if (rpp_try_AMAGIC_2(sneu_amg, 0))
+        return NORMAL;
 
     SV *right = PL_stack_sp[0];
     SV *left  = PL_stack_sp[-1];
@@ -3068,9 +3065,8 @@ PP(pp_i_ne)
 
 PP(pp_i_equ)
 {
-    // TODO: equ_amg
-    //if (rpp_try_AMAGIC_2(equ_amg, 0))
-    //    return NORMAL;
+    if (rpp_try_AMAGIC_2(equ_amg, 0))
+        return NORMAL;
 
     bool lundef = !SvOK(PL_stack_sp[-1]), rundef = !SvOK(PL_stack_sp[0]);
     if(lundef || rundef) {
@@ -3088,9 +3084,8 @@ PP(pp_i_equ)
 
 PP(pp_i_neu)
 {
-    // TODO: neu_amg
-    //if (rpp_try_AMAGIC_2(neu_amg, 0))
-    //    return NORMAL;
+    if (rpp_try_AMAGIC_2(neu_amg, 0))
+        return NORMAL;
 
     bool lundef = !SvOK(PL_stack_sp[-1]), rundef = !SvOK(PL_stack_sp[0]);
     if(lundef || rundef) {

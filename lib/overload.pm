@@ -6,9 +6,9 @@ no strict 'refs';
 our %ops = (
     with_assign         => "+ - * / % ** << >> x .",
     assign              => "+= -= *= /= %= **= <<= >>= x= .=",
-    num_comparison      => "< <= >  >= == !=",
+    num_comparison      => "< <= >  >= == != === !==",
     '3way_comparison'   => "<=> cmp",
-    str_comparison      => "lt le gt ge eq ne",
+    str_comparison      => "lt le gt ge eq ne equ neu",
     binary              => '& &= | |= ^ ^= &. &.= |. |.= ^. ^.=',
     unary               => "neg ! ~ ~.",
     mutators            => '++ --',
@@ -362,9 +362,9 @@ hash C<%overload::ops>:
 
     with_assign         => '+ - * / % ** << >> x .',
     assign              => '+= -= *= /= %= **= <<= >>= x= .=',
-    num_comparison      => '< <= > >= == !=',
+    num_comparison      => '< <= > >= == != === !==',
     '3way_comparison'   => '<=> cmp',
-    str_comparison      => 'lt le gt ge eq ne',
+    str_comparison      => 'lt le gt ge eq ne equ neu',
     binary              => '& &= | |= ^ ^= &. &.= |. |.= ^. ^.=',
     unary               => 'neg ! ~ ~.',
     mutators            => '++ --',

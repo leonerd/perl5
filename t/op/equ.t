@@ -69,6 +69,88 @@ foreach my ( $left, $right )
     is(not($left neu $right), ($left equ $right), 'neu is a synonym for not(equ)');
 }
 
+# performs GETMAGIC
+{
+    "abc" =~ m/(\d+)/;
+    # $1 should now be undef
+    "abc" =~ m/(\w+)/;
+    ok($1 equ "abc", 'equ performs GETMAGIC');
+}
+
+# equ is overloadable
+{
+    my $overload_called = 0;
+
+    package EquToRed {
+        use overload 'equ' => sub {
+            my ($this, $that, $swap) = @_;
+            $overload_called++;
+            return defined $that && $that eq "red";
+        };
+
+        sub new { bless [], shift }
+    }
+
+    ok    (EquToRed->new equ "red", 'overloaded equ on LHS true');
+    ok    ("red" equ EquToRed->new, 'overloaded equ on RHS true');
+    not_ok(EquToRed->new equ "NO",  'overloaded equ on LHS false');
+    not_ok("NO" equ EquToRed->new,  'overloaded equ on RHS false');
+    not_ok(EquToRed->new equ undef, 'overloaded equ on LHS false for undef');
+    not_ok(undef equ EquToRed->new, 'overloaded equ on RHS false for undef');
+
+    is($overload_called, 6, 'overloaded equ invoked with undef arg');
+}
+
+# equ overload can be synthesized from eq if equ is missing
+{
+    my $overload_called = 0;
+
+    package EquToGreen {
+        use overload 'eq' => sub {
+            my ($this, $that, $swap) = @_;
+            $overload_called++;
+            return $that eq "green";
+        },
+            fallback => 1;
+
+        sub new { bless [], shift }
+    }
+
+    ok    (EquToGreen->new equ "green", 'overloaded equ on LHS uses eq true');
+    ok    ("green" equ EquToGreen->new, 'overloaded equ on RHS uses eq true');
+    not_ok(EquToGreen->new equ "NO",    'overloaded equ on LHS uses eq false');
+    not_ok("NO" equ EquToGreen->new,    'overloaded equ on RHS uses eq false');
+    not_ok(EquToGreen->new equ undef,   'overloaded equ on LHS for undef');
+    not_ok(undef equ EquToGreen->new,   'overloaded equ on RHS for undef');
+
+    is($overload_called, 4, 'overloaded eq is not invoked with undef arg');
+}
+
+# equ overload can be synthesized from cmp if equ and eq are missing
+{
+    my $overload_called = 0;
+
+    package EquToBlue {
+        use overload 'cmp' => sub {
+            my ($this, $that, $swap) = @_;
+            $overload_called++;
+            return "blue" cmp $that;
+        },
+            fallback => 1;
+
+        sub new { bless [], shift }
+    }
+
+    ok    (EquToBlue->new equ "blue", 'overloaded equ on LHS uses cmp true');
+    ok    ("blue" equ EquToBlue->new, 'overloaded equ on RHS uses cmp true');
+    not_ok(EquToBlue->new equ "NO",   'overloaded equ on LHS uses cmp false');
+    not_ok("NO" equ EquToBlue->new,   'overloaded equ on RHS uses cmp false');
+    not_ok(EquToBlue->new equ undef,  'overloaded equ on LHS for undef');
+    not_ok(undef equ EquToBlue->new,  'overloaded equ on RHS for undef');
+
+    is($overload_called, 4, 'overloaded cmp is not invoked with undef arg');
+}
+
 # === behaves like == on defined numbers
 ok(123 === 123,      '=== on identical values');
 ok(0 === 0,          '=== on zero/zero');
@@ -129,6 +211,88 @@ foreach my ( $left, $right )
     ok    ($nearzero !== 1,     '!== works under use integer');
     not_ok($nearzero === undef, '=== works under use integer');
     ok    ($nearzero !== undef, '!== works under use integer');
+}
+
+# performs GETMAGIC
+{
+    "abc" =~ m/(\d+)/;
+    # $1 should now be undef
+    "123" =~ m/(\d+)/;
+    ok($1 === 123, '=== performs GETMAGIC');
+}
+
+# === is overloadable
+{
+    my $overload_called = 0;
+
+    package EqualToTen {
+        use overload '===' => sub {
+            my ($this, $that, $swap) = @_;
+            $overload_called++;
+            return defined $that && $that == 10;
+        };
+
+        sub new { bless [], shift }
+    }
+
+    ok    (EqualToTen->new === 10,    'overloaded === on LHS true');
+    ok    (10  === EqualToTen->new,   'overloaded === on RHS true');
+    not_ok(EqualToTen->new === 123,   'overloaded === on LHS false');
+    not_ok(123 === EqualToTen->new,   'overloaded === on RHS false');
+    not_ok(EqualToTen->new === undef, 'overloaded === on LHS false for undef');
+    not_ok(undef === EqualToTen->new, 'overloaded === on RHS false for undef');
+
+    is($overload_called, 6, 'overloaded === invoked with undef arg');
+}
+
+# === overload can be synthesized from == if === is missing
+{
+    my $overload_called = 0;
+
+    package EqualToTwenty {
+        use overload '==' => sub {
+            my ($this, $that, $swap) = @_;
+            $overload_called++;
+            return $that == 20;
+        },
+            fallback => 1;
+
+        sub new { bless [], shift }
+    }
+
+    ok    (EqualToTwenty->new === 20,    'overloaded === on LHS true');
+    ok    (20  === EqualToTwenty->new,   'overloaded === on RHS true');
+    not_ok(EqualToTwenty->new === 123,   'overloaded === on LHS false');
+    not_ok(123 === EqualToTwenty->new,   'overloaded === on RHS false');
+    not_ok(EqualToTwenty->new === undef, 'overloaded === on LHS false for undef');
+    not_ok(undef === EqualToTwenty->new, 'overloaded === on RHS false for undef');
+
+    is($overload_called, 4, 'overloaded === invoked with undef arg');
+}
+
+# === overload can be synthesized from <=> if === and == are missing
+{
+    my $overload_called = 0;
+
+    package EqualToThirty {
+        use overload '<=>' => sub {
+            my ($this, $that, $swap) = @_;
+            $overload_called++;
+            return 30 <=> $that;
+        },
+            fallback => 1;
+
+        sub new { bless [], shift }
+    }
+
+    ok    (EqualToThirty->new === 30,    'overloaded === on LHS true');
+    ok    (30  === EqualToThirty->new,   'overloaded === on RHS true');
+    not_ok(EqualToThirty->new === 123,   'overloaded === on LHS false');
+    not_ok(123 === EqualToThirty->new,   'overloaded === on RHS false');
+    not_ok(EqualToThirty->new === undef, 'overloaded === on LHS false for undef');
+    not_ok(undef === EqualToThirty->new, 'overloaded === on RHS false for undef');
+
+    is($overload_called, 4, 'overloaded === invoked with undef arg');
 }
 
 done_testing();

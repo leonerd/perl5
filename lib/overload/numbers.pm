@@ -37,12 +37,16 @@ our @names = qw#
     (>=
     (==
     (!=
+    (===
+    (!==
     (lt
     (le
     (gt
     (ge
     (eq
     (ne
+    (equ
+    (neu
     (nomethod
     (+
     (+=
@@ -115,12 +119,16 @@ our @enums = qw#
     ge
     eq
     ne
+    equ
+    neu
     slt
     sle
     sgt
     sge
     seq
     sne
+    sequ
+    sneu
     nomethod
     add
     add_ass

@@ -8450,7 +8450,7 @@ SvVSTRING(SV *sv)
 MODULE = XS::APItest            PACKAGE = XS::APItest::av
 
 void
-av_splice_simple(AV *av, IV idx, IV delcount, ...)
+av_splice(AV *av, IV idx, IV delcount, ...)
     PROTOTYPE: \@$$@
     PPCODE:
     {

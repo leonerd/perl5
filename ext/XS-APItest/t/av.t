@@ -2,7 +2,7 @@
 
 use v5.36;
 
-use Test::More tests => 35;
+use Test::More tests => 37;
 use XS::APItest;
 
 # code stolen from t/op/hash.t
@@ -129,6 +129,13 @@ sub guard :prototype(&) {
     ok !$destroyed, 'Not destroyed before av_splice as delete';
     av_splice_simple @arr, 0, 1;
     ok $destroyed, 'Destroyed after av_splice as delete';
+
+    undef $destroyed;
+    (sub {
+        ok !$destroyed, 'Not destroyed before av_splice as delete on @_';
+        av_splice_simple @_, 0, 1;
+    })->( guard { $destroyed++ } );
+    ok $destroyed, 'Destroyed after av_splice as delete on @_';
 }
 
 # to extract

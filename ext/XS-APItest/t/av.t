@@ -2,7 +2,7 @@
 
 use v5.36;
 
-use Test::More tests => 37;
+use Test::More tests => 42;
 use XS::APItest;
 
 # code stolen from t/op/hash.t
@@ -184,4 +184,34 @@ sub guard :prototype(&) {
 
     ok !eval { av_splice_simple @arr, -12, 1; } and
         like $@, qr/^Modification of non-creatable array value attempted, subscript -9 /;
+}
+
+# on tied arrays
+{
+    my $wanted;
+    my @args_in;
+    my @values_out;
+
+    package TiedArray {
+        sub TIEARRAY { return bless [] }
+        sub SPLICE {
+            (undef, @args_in) = @_;
+            $wanted = wantarray;
+            return @values_out;
+        }
+    }
+
+    tie my @tiedarr, "TiedArray";
+
+    @values_out = ("values", "out");
+    is_deeply [av_splice_simple @tiedarr, 2, 2, "args", "in"], ["values", "out"],
+        'values returned from tied SPLICE method';
+    is_deeply [@args_in], [2, 2, "args", "in"],
+        'args in to tied SPLICE method';
+    ok $wanted, 'tied SPLICE method invoked in list context';
+
+    av_splice @tiedarr, 1, 0, "void", "context";
+    is_deeply [@args_in], [1, 0, "void", "context"],
+        'args in to tied SPLICE method in void context';
+    ok !defined $wanted, 'tied SPLICE method invoked in void context';
 }

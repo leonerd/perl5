@@ -357,6 +357,13 @@ Perl_av_shift(pTHX_ AV *av)
         Perl_assert_aTHX; assert(av); assert(SvTYPE(av) == SVt_PVAV)
 
 PERL_CALLCONV Size_t
+Perl_av_splice(pTHX_ AV *av, SSize_t idx, Size_t delcount, Size_t inscount, SV **in_svs, SV **out_svs)
+        Perl_attribute_nonnull_aTHX
+        Perl_attribute_nonnull(pTHX_1);
+#define PERL_ARGS_ASSERT_AV_SPLICE              \
+        Perl_assert_aTHX; assert(av); assert(SvTYPE(av) == SVt_PVAV)
+
+PERL_CALLCONV Size_t
 Perl_av_splice_simple(pTHX_ AV *av, SSize_t idx, Size_t delcount, Size_t inscount, SV **in_svs, SV **out_svs)
         Perl_attribute_nonnull_aTHX
         Perl_attribute_nonnull(pTHX_1);

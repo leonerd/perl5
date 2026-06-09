@@ -964,11 +964,17 @@ Perl_av_shift(pTHX_ AV *av)
 /*
 =for apidoc av_splice_simple
 
+Acts equivalently to C</av_splice>, except that it must not be called on a
+tied array. It performs slightly faster since it does not have to first check
+for tie magic, so this may be preferrable to call in situations where the
+caller is in direct control of the target array and knows it will not be tied.
+
+=for apidoc av_splice
+
 Deletes a contiguous sub-sequence of elements within an array, and inserts
 another sub-sequence provided by the caller. Either sub-sequence may be empty.
 I<idx> may be negative; if so it starts counting backwards from the end of the
-initial array elements. The array must be a simple regular AV and not tied. It
-is permitted to have set magic.
+initial array elements.
 
 First, the sub-sequence of up to I<delcount> elements in the array from I<idx>
 onwards is removed, and either returned to the caller via the I<out_svs> array
@@ -982,13 +988,16 @@ sub-sequences.
 If I<delcount> is non-zero but no I<out_svs> array is provided, the deleted
 SVs are discarded by C<SvREFCNT_dec>. If an array is provided, pointers are
 copied into it without modifying the reference count and it becomes the
-caller's responsiblity to discard them.
+caller's responsiblity to discard them. If called on a tied array, the
+returned values will still have a reference count of 1 in this case.
 
 If I<inscount> is non-zero but no I<in_svs> array is provided, the
 newly-created gap is filled with NULL pointers and the caller can use API
 functions like C<av_store> to fill the elements. If an array is provided,
 pointers are copied from it into the array without modifying the reference
-count and it is caller's responsibility to increment that if required.
+count and it is caller's responsibility to increment that if required. If
+called on a tied array, the caller's argument SVs will all be mortalised,
+because the tied array logic will likely make a copy of the referred SV.
 
 There must be no pointer aliasing between I<in_svs> itself and the array
 stored in the AV. However, individual SV pointers within it may be aliased, so
@@ -996,14 +1005,20 @@ long as the caller takes care to handle reference counts correctly. This may
 be used, for example, to implement an in-place rotation of the elements in the
 AV.
 
+If an I<out_svs> array is given, returns the number of items deleted from the
+AV (which may be fewer than requested by I<delcount> if the AV did not contain
+enough); if called on a tied array the C<SPLICE> method will be inboked in
+list context.
+
+If no I<out_svs> array is given, returns the number of items that were deleted
+from a regular AV, though if called on a tied array the C<SPLICE> method will
+be called in void context and so this function will have no way to know it,
+and thus will return zero here.
+
 This is B<mostly> identical to the operation of the Perl C<splice> function,
 but with some differences.
 
 =over 4
-
-=item *
-
-I<av> must not be tied.
 
 =item *
 
@@ -1121,6 +1136,62 @@ Perl_av_splice_simple(pTHX_ AV *av, SSize_t idx, Size_t delcount, Size_t inscoun
         mg_set(MUTABLE_SV(av));
 
     return delcount;
+}
+
+Size_t
+Perl_av_splice(pTHX_ AV *av, SSize_t idx, Size_t delcount, Size_t inscount,
+        SV **in_svs, SV **out_svs)
+{
+    PERL_ARGS_ASSERT_AV_SPLICE;
+
+    MAGIC *mg = SvTIED_mg((const SV *)av, PERL_MAGIC_tied);
+    if (!mg)
+        return av_splice_simple(av, idx, delcount, inscount, in_svs, out_svs);
+
+    /* We can't quite call magic_methcall() here because of the input and
+     * output lists. But we can unroll a modified version here
+     */
+    dSP;
+    ENTER;
+
+    PUSHSTACKi(PERLSI_MAGIC);
+    PUSHMARK(SP);
+
+    EXTEND(SP, (I32)inscount + 3);
+
+    PUSHs(SvTIED_obj((SV *)av, mg));
+    mPUSHi(idx);
+    mPUSHu(delcount);
+    if (in_svs)
+        for (Size_t i = 0; i < inscount; i++)
+            mPUSHs(in_svs[i]);
+    else
+        for (Size_t i = 0; i < inscount; i++)
+            PUSHs(&PL_sv_undef);
+    PUTBACK;
+
+    U32 flags = G_METHOD_NAMED;
+    if (out_svs)
+        flags |= G_LIST;
+    else
+        flags |= G_VOID|G_DISCARD;
+
+    SSize_t retcount = call_sv(SV_CONST(SPLICE), flags);
+
+    SPAGAIN;
+
+    if (out_svs)
+        for (Size_t i = retcount; i > 0; /**/) {
+            SV *sv = POPs;
+            out_svs[--i] = SvREFCNT_inc(sv);
+        }
+
+    PUTBACK;
+
+    POPSTACK;
+    LEAVE;
+
+    return retcount;
 }
 
 /*

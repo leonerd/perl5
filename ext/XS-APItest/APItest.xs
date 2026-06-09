@@ -8470,7 +8470,7 @@ av_splice_simple(AV *av, IV idx, IV delcount, ...)
             SAVEFREEPV(out_svs);
         }
 
-        Size_t out_count = av_splice_simple(av, idx, delcount, inscount, in_svs, out_svs);
+        Size_t out_count = av_splice(av, idx, delcount, inscount, in_svs, out_svs);
 
         if (out_svs && out_count) {
             EXTEND(SP, (IV)out_count);

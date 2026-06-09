@@ -215,3 +215,21 @@ sub guard :prototype(&) {
         'args in to tied SPLICE method in void context';
     ok !defined $wanted, 'tied SPLICE method invoked in void context';
 }
+
+{
+    use Tie::Array;
+
+    package TwiceSplice {
+        use parent -norequire => qw(Tie::StdArray);
+
+        sub SPLICE ($this, @all) {
+            return ( map {; 1, 2, } $this->SUPER::SPLICE(@all) ); # the evil bit
+        }
+    }
+
+    tie my @x, "TwiceSplice";
+    @x = "a" .. "z";
+
+    is_deeply [av_splice(@x, 0, 5)], ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd', 'e', 'e'],
+        'result of TwiceSplice extract';
+}

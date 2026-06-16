@@ -3382,6 +3382,8 @@ dp	|SSize_t|sv_clean_all
 : Used only in perl.c
 dp	|void	|sv_clean_objs
 Adp	|void	|sv_clear	|NN SV * const orig_sv
+Adp	|SV *	|sv_clone	|NULLOK SV *ssv 			\
+				|U32 flags
 AMdp	|I32	|sv_cmp 	|NULLOK SV * const sv1			\
 				|NULLOK SV * const sv2
 Adp	|I32	|sv_cmp_flags	|NULLOK SV * const sv1			\

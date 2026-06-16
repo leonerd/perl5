@@ -6081,6 +6081,12 @@ Perl_sv_clear(pTHX_ SV * const orig_sv)
 #define PERL_ARGS_ASSERT_SV_CLEAR               \
         Perl_assert_aTHX; assert(orig_sv)
 
+PERL_CALLCONV SV *
+Perl_sv_clone(pTHX_ SV *ssv, U32 flags)
+        Perl_attribute_nonnull_aTHX;
+#define PERL_ARGS_ASSERT_SV_CLONE               \
+        Perl_assert_aTHX
+
 PERL_CALLCONV I32
 Perl_sv_cmp(pTHX_ SV * const sv1, SV * const sv2)
         Perl_attribute_nonnull_aTHX;

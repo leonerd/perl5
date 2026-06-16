@@ -5200,6 +5200,9 @@ newSVpvf_blank()
     OUTPUT:
         RETVAL
 
+SV *
+sv_clone(SV *sv, U32 flags)
+
 MODULE = XS::APItest PACKAGE = XS::APItest::AUTOLOADtest
 
 int

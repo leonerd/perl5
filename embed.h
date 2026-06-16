@@ -653,6 +653,7 @@
 # define sv_catsv_flags(a,b,c)                  Perl_sv_catsv_flags(aTHX_ a,b,c)
 # define sv_chop(a,b)                           Perl_sv_chop(aTHX_ a,b)
 # define sv_clear(a)                            Perl_sv_clear(aTHX_ a)
+# define sv_clone(a,b)                          Perl_sv_clone(aTHX_ a,b)
 # define sv_cmp_flags(a,b,c)                    Perl_sv_cmp_flags(aTHX_ a,b,c)
 # define sv_cmp_locale_flags(a,b,c)             Perl_sv_cmp_locale_flags(aTHX_ a,b,c)
 # define sv_copypv_flags(a,b,c)                 Perl_sv_copypv_flags(aTHX_ a,b,c)

@@ -17381,6 +17381,49 @@ Perl_clone_params_new(PerlInterpreter *const from, PerlInterpreter *const to)
 
 #endif /* USE_ITHREADS */
 
+/*
+=for apidoc sv_clone
+
+TODO write about this function here
+
+=cut
+ */
+
+SV *
+Perl_sv_clone(pTHX_ SV *ssv, U32 flags)
+{
+    PERL_ARGS_ASSERT_SV_CLONE;
+
+    assert(!(flags & ~(CLONEf_KEEP_PTR_TABLE)));
+
+    if (!ssv)
+        return NULL;
+
+    ENTER;
+
+    SAVEVPTR(PL_ptr_table);
+    PL_ptr_table = ptr_table_new();
+
+    CLONE_PARAMS params = {
+        .flags        = flags,
+        .proto_perl   = aTHX,
+        .new_perl     = aTHX,
+        .unreferenced = NULL,
+        .stashes      = NULL,
+    };
+
+    SV *dsv = sv_dup_inc(ssv, &params);
+
+    /* TODO: Consider CLONEf_KEEP_PTR_TABLE flag, but how does that interact
+     * with ENTER/LEAVE ?
+     */
+    ptr_table_free(PL_ptr_table);
+
+    LEAVE;
+
+    return dsv;
+}
+
 void
 Perl_init_constants(pTHX)
 {

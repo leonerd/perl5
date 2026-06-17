@@ -17400,6 +17400,7 @@ Perl_sv_clone(pTHX_ SV *ssv, U32 flags)
         return NULL;
 
     ENTER;
+    SAVETMPS;
 
     SAVEVPTR(PL_ptr_table);
     PL_ptr_table = ptr_table_new();
@@ -17412,13 +17413,21 @@ Perl_sv_clone(pTHX_ SV *ssv, U32 flags)
         .stashes      = NULL,
     };
 
+    params.unreferenced = newAV();
+    AvREAL_off(params.unreferenced);
+
     SV *dsv = sv_dup_inc(ssv, &params);
+
+    if (av_count(params.unreferenced)) {
+        unreferenced_to_tmp_stack(params.unreferenced);
+    }
 
     /* TODO: Consider CLONEf_KEEP_PTR_TABLE flag, but how does that interact
      * with ENTER/LEAVE ?
      */
     ptr_table_free(PL_ptr_table);
 
+    FREETMPS;
     LEAVE;
 
     return dsv;

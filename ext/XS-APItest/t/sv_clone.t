@@ -1,5 +1,7 @@
 #!perl
 
+use v5.42;
+
 use Test::More;
 use XS::APItest;
 
@@ -40,6 +42,33 @@ use XS::APItest;
     ok($zcopy->[0] == $zcopy->[1], 'copy retains referential structure [0]');
     my $ycopy = $zcopy->[0];
     ok($ycopy->[0] == $ycopy->[1], 'copy retains referential structure [1]');
+}
+
+# internal weakrefs
+{
+    my $x = [];
+    my $y = { strong => $x, weak => $x };
+    weaken $y->{weak};
+
+    my $ycopy = sv_clone($y, 0);
+    ok(defined $ycopy->{strong} && defined $ycopy->{weak},
+        'both refs defined in copy');
+    ok(refaddr $ycopy->{strong} == refaddr $ycopy->{weak},
+        'both refs point the same way in copy');
+    ok(!is_weak $ycopy->{strong} && is_weak $ycopy->{weak},
+        'refs have correct strength in copy');
+}
+
+# external weakrefs - there's nothing we can do but nuke these
+{
+    my $outside;
+
+    my $x = [\$outside];
+    weaken $x->[0];
+
+    my $xcopy = sv_clone($x, 0);
+    ok(!defined $xcopy->[0],
+        'externally pointed weakref disappears');
 }
 
 # TODO: So many things

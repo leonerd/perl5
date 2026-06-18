@@ -114,12 +114,47 @@ sub get_SvOBJECT_STASH
         'cloned OBJ object shares SvSTASH pointer with original');
 }
 
-# TODO: So many things
-#   Think about all the odd things:
-#      GLOBs
-#      IOs, etc...
-#      CVs - default to referring to subs/closures
-#          - consider some flag to emulate Clone::Closure
-#          - look at what Future::AsyncAwait or Object::Pad need here
+## TODO: These are all now tuneable behaviours. We should think about whether
+#    they should be defaults or not.
+
+# globs are shared
+{
+    no warnings 'once';
+    my $x = \*xyz;
+
+    my $xcopy = sv_clone($x, 0);
+    is(ref $xcopy, "GLOB",
+        'cloned GLOB ref is still a GLOB ref');
+    is(refaddr $xcopy, refaddr $x,
+        'cloned GLOB ref is just a pointer share');
+}
+
+# code refs are shared
+#  - consider some flag to emulate Clone::Closure
+#  - look at what Future::AsyncAwait or Object::Pad need here
+{
+    my $x = \&builtin::refaddr; # any named sub will do; we know this will exist
+
+    my $xcopy = sv_clone($x, 0);
+    is(ref $xcopy, "CODE",
+        'cloned CODE ref is still a CODE ref');
+    is(refaddr $xcopy, refaddr $x,
+        'cloned CODE ref is just a pointer share');
+}
+
+# regexps are shared
+{
+    my $x = qr/^Some pattern/;
+
+    my $xcopy = sv_clone($x, 0);
+    is(ref $xcopy, "Regexp",
+        'cloned Regexp ref is still a Regexp ref');
+    is(refaddr $xcopy, refaddr $x,
+        'cloned Regexp ref is just a pointer share');
+}
+
+# I can't think of a way to test SVt_PVIO directly, because any filehandle
+# perl code can create is actually a GLOBref that contains an IO slot, so it's
+# just handled by the SVt_PVGV case
 
 done_testing();

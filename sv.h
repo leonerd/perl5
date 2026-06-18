@@ -2668,12 +2668,19 @@ Returns a boolean as to whether or not C<sv> is a GV with a pointer to a GP
     (SvLEN(sv) < (len) ? sv_grow(sv,len) : SvPVX_mutable(sv))
 #define Sv_Grow sv_grow
 
-#define CLONEf_COPY_STACKS     0x01
-#define CLONEf_KEEP_PTR_TABLE  0x02  /* don't discard PL_ptr_table after finishing */
-#define CLONEf_CLONE_HOST      0x04
-#define CLONEf_JOIN_IN         0x08  /* this is clone of the result for thread->join */
-#define CLONEf_SHARE_STASHES   0x10  /* share SvSTASH of objects etc rather than cloning */
-#define CLONEf_EVEN_UNCLONABLE 0x20  /* even clone objects in classes that indicate CLONE_SKIP */
+#define CLONEf_COPY_STACKS     0x001
+#define CLONEf_KEEP_PTR_TABLE  0x002  /* don't discard PL_ptr_table after finishing */
+#define CLONEf_CLONE_HOST      0x004
+#define CLONEf_JOIN_IN         0x008  /* this is clone of the result for thread->join */
+#define CLONEf_SHARE_STASHES   0x010  /* share SvSTASH of objects etc rather than cloning */
+#define CLONEf_EVEN_UNCLONABLE 0x020  /* even clone objects in classes that indicate CLONE_SKIP */
+
+#define CLONEf_SHARE_GV        0x040
+#define CLONEf_SHARE_CV        0x080  /* also FMs */
+#define CLONEf_SHARE_MISC      0x100  /* IOs, REGEXPs,... anything else really */
+
+#define CLONEf_ANY_SHARE  \
+    (CLONEf_SHARE_GV|CLONEf_SHARE_CV|CLONEf_SHARE_MISC)  /* not STASHES */
 
 struct clone_params {
   AV* stashes;

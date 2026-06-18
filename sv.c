@@ -15503,6 +15503,45 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
         }
     }
 
+    if (UNLIKELY(stype > SVt_PVMG && (flags & CLONEf_ANY_SHARE))) {
+        /* Look for certain kinds of things that we've been asked to share
+         * rather than deep-clone.
+         * If we are asked to share anything, then we must not be cloning the
+         * entire interpreter
+         * Ideally this block would handle SVt_INVLIST in SHARE_MISC as well
+         * but its SvTYPE number is in the wrong bit of the range. Gah.
+         */
+        assert(param->new_perl == param->proto_perl);
+
+        const SV *ret = NULL;
+        switch (stype) {
+            case SVt_PVGV:
+                if (flags & CLONEf_SHARE_GV)
+                    ret = ssv;
+                break;
+
+            case SVt_PVCV:
+            case SVt_PVFM:
+                if (flags & CLONEf_SHARE_CV) /* TODO: checking for closures */
+                    ret = ssv;
+                break;
+
+            case SVt_REGEXP:
+            case SVt_PVIO:
+                if (flags & CLONEf_SHARE_MISC)
+                    ret = ssv;
+                break;
+
+            default:
+                break;
+        }
+
+        if (ret) {
+            ptr_table_store(PL_ptr_table, ssv, SvREFCNT_inc((SV *)ret));
+            return (SV *)ret;
+        }
+    }
+
     /* create anew and remember what it is */
     new_SV(dsv);
 
@@ -17390,6 +17429,10 @@ Perl_clone_params_new(PerlInterpreter *const from, PerlInterpreter *const to)
 =for apidoc sv_clone
 =for apidoc_flag CLONEf_SHARE_STASHES
 =for apidoc_flag CLONEf_EVEN_UNCLONABLE
+=for apidoc_flag CLONEf_SHARE_GV
+=for apidoc_flag CLONEf_SHARE_CV
+=for apidoc_flag CLONEf_SHARE_MISC
+=for apidoc_flag CLONEf_ANY_SHARE
 
 TODO write about this function here
 
@@ -17417,12 +17460,15 @@ Perl_sv_clone(pTHX_ SV *ssv, U32 flags)
     PL_ptr_table = ptr_table_new();
 
     CLONE_PARAMS params = {
-        .flags        = flags | CLONEf_SHARE_STASHES|CLONEf_EVEN_UNCLONABLE,
+        .flags        = flags | CLONEf_SHARE_STASHES|CLONEf_EVEN_UNCLONABLE|CLONEf_ANY_SHARE,
         .proto_perl   = aTHX,
         .new_perl     = aTHX,
         .unreferenced = NULL,
         .stashes      = NULL,
     };
+
+    /* TODO: a flag to tell it not to share closure-type CVs but clone
+     * those instead so we can emulate Clone::Closure */
 
     params.unreferenced = newAV();
     AvREAL_off(params.unreferenced);

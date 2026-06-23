@@ -71,9 +71,50 @@ use XS::APItest;
         'externally pointed weakref disappears');
 }
 
+# kinda like ref() but returns a plain HASHref to the stash directly
+# TODO: add a helper in XS::APItest for this
+sub get_SvOBJECT_STASH
+{
+    use B;
+    return B::svref_2object($_[0])->SvSTASH->object_2svref;
+}
+
+# blessed references
+{
+    package Some::HASH::Class {
+        sub new { bless [], __PACKAGE__ }
+    }
+
+    my $x = Some::HASH::Class->new;
+    my $xcopy = sv_clone($x, 0);
+
+    ok(defined $xcopy, 'cloned HV object is defined');
+    is(ref $xcopy, "Some::HASH::Class",
+        'cloned HV object claims correct package');
+
+    is(refaddr(get_SvOBJECT_STASH($xcopy)), refaddr(get_SvOBJECT_STASH($x)),
+        'cloned HV object shares SvSTASH pointer with original');
+}
+
+# 5.38-style SVt_PVOBJ
+{
+    use experimental 'class';
+    package Some::OBJECT::Class {
+        sub new { bless [], __PACKAGE__ }
+    }
+
+    my $x = Some::OBJECT::Class->new;
+    my $xcopy = sv_clone($x, 0);
+
+    ok(defined $xcopy, 'cloned OBJ object is defined');
+    is(ref $xcopy, "Some::OBJECT::Class",
+        'cloned OBJ object claims correct package');
+
+    is(refaddr(get_SvOBJECT_STASH($xcopy)), refaddr(get_SvOBJECT_STASH($x)),
+        'cloned OBJ object shares SvSTASH pointer with original');
+}
+
 # TODO: So many things
-#   blessed values refer to the stash, don't clone stashes
-#   5.38-style 'class' objects
 #   Think about all the odd things:
 #      GLOBs
 #      IOs, etc...

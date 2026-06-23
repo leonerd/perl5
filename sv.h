@@ -2668,10 +2668,12 @@ Returns a boolean as to whether or not C<sv> is a GV with a pointer to a GP
     (SvLEN(sv) < (len) ? sv_grow(sv,len) : SvPVX_mutable(sv))
 #define Sv_Grow sv_grow
 
-#define CLONEf_COPY_STACKS 1
-#define CLONEf_KEEP_PTR_TABLE 2
-#define CLONEf_CLONE_HOST 4
-#define CLONEf_JOIN_IN 8
+#define CLONEf_COPY_STACKS     0x01
+#define CLONEf_KEEP_PTR_TABLE  0x02  /* don't discard PL_ptr_table after finishing */
+#define CLONEf_CLONE_HOST      0x04
+#define CLONEf_JOIN_IN         0x08  /* this is clone of the result for thread->join */
+#define CLONEf_SHARE_STASHES   0x10  /* share SvSTASH of objects etc rather than cloning */
+#define CLONEf_EVEN_UNCLONABLE 0x20  /* even clone objects in classes that indicate CLONE_SKIP */
 
 struct clone_params {
   AV* stashes;

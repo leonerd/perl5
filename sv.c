@@ -15452,6 +15452,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
 {
     PERL_ARGS_ASSERT_SV_DUP_COMMON;
 
+    const U32 flags = param->flags;
     const svtype stype = SvTYPE(ssv);
     SV *dsv;
 
@@ -15528,9 +15529,9 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
 #endif
 
     /* don't clone objects whose class has asked us not to */
-    if (SvOBJECT(ssv)
-     && ! (SvFLAGS(SvSTASH(ssv)) & SVphv_CLONEABLE))
-    {
+    if (!(flags & CLONEf_EVEN_UNCLONABLE) &&
+            SvOBJECT(ssv) &&
+            !(SvFLAGS(SvSTASH(ssv)) & SVphv_CLONEABLE)) {
         SvFLAGS(dsv) = 0;
         return dsv;
     }
@@ -15632,8 +15633,12 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
             if (stype >= SVt_PVMG) {
                 if (SvMAGIC(dsv))
                     SvMAGIC_set(dsv, mg_dup(SvMAGIC(dsv), param));
-                if (SvOBJECT(dsv) && SvSTASH(dsv))
-                    SvSTASH_set(dsv, hv_dup_inc(SvSTASH(dsv), param));
+                if (SvOBJECT(dsv) && SvSTASH(dsv)) {
+                    if (flags & CLONEf_SHARE_STASHES)
+                        SvREFCNT_inc(SvSTASH(dsv));
+                    else
+                        SvSTASH_set(dsv, hv_dup_inc(SvSTASH(dsv), param));
+                }
                 else SvSTASH_set(dsv, 0); /* don't copy DESTROY cache */
             }
 
@@ -17383,8 +17388,14 @@ Perl_clone_params_new(PerlInterpreter *const from, PerlInterpreter *const to)
 
 /*
 =for apidoc sv_clone
+=for apidoc_flag CLONEf_SHARE_STASHES
+=for apidoc_flag CLONEf_EVEN_UNCLONABLE
 
 TODO write about this function here
+
+TODO I should probably write about these flags, but they are intended for
+internal use only so maybe it doesn't matter? This section just keeps
+F<regen/embed.pl> happy for the moment.
 
 =cut
  */
@@ -17406,7 +17417,7 @@ Perl_sv_clone(pTHX_ SV *ssv, U32 flags)
     PL_ptr_table = ptr_table_new();
 
     CLONE_PARAMS params = {
-        .flags        = flags,
+        .flags        = flags | CLONEf_SHARE_STASHES|CLONEf_EVEN_UNCLONABLE,
         .proto_perl   = aTHX,
         .new_perl     = aTHX,
         .unreferenced = NULL,

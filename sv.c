@@ -15452,6 +15452,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
 {
     PERL_ARGS_ASSERT_SV_DUP_COMMON;
 
+    const svtype stype = SvTYPE(ssv);
     SV *dsv;
 
     if (SvIS_FREED(ssv)) {
@@ -15468,7 +15469,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
     if(param->flags & CLONEf_JOIN_IN) {
         /** We are joining here so we don't want do clone
             something that is bad **/
-        if (SvTYPE(ssv) == SVt_PVHV) {
+        if (stype == SVt_PVHV) {
             const HEK * const hvname = HvNAME_HEK(ssv);
             if (hvname) {
                 /** don't clone stashes if they already exist **/
@@ -15478,7 +15479,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
                 return dsv;
             }
         }
-        else if (SvTYPE(ssv) == SVt_PVGV && !SvFAKE(ssv)) {
+        else if (stype == SVt_PVGV && !SvFAKE(ssv)) {
             HV *stash = GvSTASH(ssv);
             const HEK * hvname;
             if (stash && (hvname = HvNAME_HEK(stash))) {
@@ -15534,7 +15535,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
         return dsv;
     }
 
-    switch (SvTYPE(ssv)) {
+    switch (stype) {
     case SVt_NULL:
         SvANY(dsv)	= NULL;
         break;
@@ -15558,13 +15559,12 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
         {
             /* These are all the types that need complex bodies allocating.  */
             void *new_body;
-            const svtype sv_type = SvTYPE(ssv);
             const struct body_details *sv_type_details
-                = bodies_by_type + sv_type;
+                = bodies_by_type + stype;
 
-            switch (sv_type) {
+            switch (stype) {
             default:
-                Perl_croak(param->proto_perl, "Bizarre SvTYPE [%" IVdf "]", (IV)SvTYPE(ssv));
+                Perl_croak(param->proto_perl, "Bizarre SvTYPE [%" IVdf "]", (IV)stype);
                 NOT_REACHED; /* NOTREACHED */
                 break;
 
@@ -15595,7 +15595,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
                 assert(sv_type_details->body_size);
 #ifndef PURIFY
                 if (sv_type_details->arena) {
-                    new_body = S_new_body(aTHX_ sv_type);
+                    new_body = S_new_body(aTHX_ stype);
                     new_body
                         = (void*)((char*)new_body - sv_type_details->offset);
                 } else
@@ -15618,10 +15618,10 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
                  sv_type_details->body_size + sv_type_details->offset, char);
 #endif
 
-            if (sv_type != SVt_PVAV && sv_type != SVt_PVHV && sv_type != SVt_PVOBJ
+            if (stype != SVt_PVAV && stype != SVt_PVHV && stype != SVt_PVOBJ
                 && !isGV_with_GP(dsv)
                 && !isREGEXP(dsv)
-                && !(sv_type == SVt_PVIO && !(IoFLAGS(dsv) & IOf_FAKE_DIRP)))
+                && !(stype == SVt_PVIO && !(IoFLAGS(dsv) & IOf_FAKE_DIRP)))
                 rvpv_dup(dsv, ssv, param);
 
             /* The Copy above means that all the source (unduplicated) pointers
@@ -15629,7 +15629,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
                pointers in either, but it's possible that there's less cache
                missing by always going for the destination.
                FIXME - instrument and check that assumption  */
-            if (sv_type >= SVt_PVMG) {
+            if (stype >= SVt_PVMG) {
                 if (SvMAGIC(dsv))
                     SvMAGIC_set(dsv, mg_dup(SvMAGIC(dsv), param));
                 if (SvOBJECT(dsv) && SvSTASH(dsv))
@@ -15638,7 +15638,7 @@ S_sv_dup_common(pTHX_ const SV *const ssv, CLONE_PARAMS *const param)
             }
 
             /* The cast silences a GCC warning about unhandled types.  */
-            switch ((int)sv_type) {
+            switch ((int)stype) {
             case SVt_PV:
                 break;
             case SVt_PVIV:

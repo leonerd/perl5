@@ -5392,6 +5392,7 @@ lib/charnames.pm			Character names
 lib/charnames.t				See if character names work
 lib/Class/Struct.pm			Declare struct-like datatypes as Perl classes
 lib/Class/Struct.t			See if Class::Struct works
+lib/Clone.pm				DO NOT MERGE TO BLEAD
 lib/Config.t				See if Config works
 lib/Config/Extensions.pm		Convenient hash lookup for built extensions
 lib/Config/Extensions.t			See if Config::Extensions works

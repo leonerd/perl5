@@ -517,7 +517,8 @@ Perl_mg_magical(SV *sv)
                              * have to ignore it and go the long way round
                              */
                             SvVMAGICAL_on(sv);
-                        SvGMAGICAL_on(sv); /* need GMAGICAL on so that mg_get is invoked */
+                        if (mg->mg_type != PERL_MAGIC_vstring)
+                            SvGMAGICAL_on(sv); /* need GMAGICAL on so that mg_get is invoked */
                         break;
                 }
             }
@@ -579,7 +580,8 @@ Perl_mg_get(pTHX_ SV *sv)
                     funcs->pre_get(aTHX_ sv, mg);
             }
             else if (use_PL_valuemagic &&
-                        (MgFUNCS(mg)->shape == MGv2s_SCALARVALUE)) {
+                        (MgFUNCS(mg)->shape == MGv2s_SCALARVALUE) &&
+                        mg->mg_type != PERL_MAGIC_vstring) {
                 valuemagic_from(sv);
             }
         }
@@ -788,6 +790,13 @@ void
 Perl_mg_propagate(pTHX_ SV *ssv, SV *dsv)
 {
     PERL_ARGS_ASSERT_MG_PROPAGATE;
+    mg_propagate_common(ssv, dsv, false);
+}
+
+void
+Perl_mg_propagate_common(pTHX_ SV *ssv, SV *dsv, bool also_vstring)
+{
+    PERL_ARGS_ASSERT_MG_PROPAGATE_COMMON;
 
     if(SvTYPE(ssv) < SVt_PVMG || !SvMAGICAL(ssv))
         return;
@@ -796,6 +805,8 @@ Perl_mg_propagate(pTHX_ SV *ssv, SV *dsv)
         if (!MgIsV2(smg))
             continue;
 
+        if (smg->mg_type == PERL_MAGIC_vstring && !also_vstring)
+            continue;
         if (MgFUNCS(smg)->shape != MGv2s_SCALARVALUE)
             continue;
 

@@ -46,6 +46,7 @@
 #   undef KEY_neu
 #   undef MGv2f_SCALARVALUE_AUTOPROPAGATE
 #   undef MGv2f_WITH_KEYHEK
+#   undef MGv2p_NO_CREATE_VALUEMAGIC
 #   undef NETDB_R_OBSOLETE
 #   undef new_XPV
 #   undef new_XPVIV
@@ -708,6 +709,7 @@
 # define sv_inc(a)                              Perl_sv_inc(aTHX_ a)
 # define sv_inc_nomg(a)                         Perl_sv_inc_nomg(aTHX_ a)
 # define sv_insert_flags(a,b,c,d,e,f)           Perl_sv_insert_flags(aTHX_ a,b,c,d,e,f)
+# define sv_is_vstring(a)                       Perl_sv_is_vstring(aTHX_ a)
 # define sv_isa(a,b)                            Perl_sv_isa(aTHX_ a,b)
 # define sv_isa_sv(a,b)                         Perl_sv_isa_sv(aTHX_ a,b)
 # define sv_isobject(a)                         Perl_sv_isobject(aTHX_ a)
@@ -1216,6 +1218,7 @@
 #   define yyquit()                             Perl_yyquit(aTHX)
 #   define yyunlex()                            Perl_yyunlex(aTHX)
 #   define mg_propagate(a,b)                    Perl_mg_propagate(aTHX_ a,b)
+#   define mg_propagate_common(a,b,c)           Perl_mg_propagate_common(aTHX_ a,b,c)
 #   define mg_unpropagate(a)                    Perl_mg_unpropagate(aTHX_ a)
 #   define opslab_force_free(a)                 Perl_opslab_force_free(aTHX_ a)
 #   define opslab_free(a)                       Perl_opslab_free(aTHX_ a)
@@ -1712,6 +1715,8 @@
 #     define find_uninit_var(a,b,c,d)           S_find_uninit_var(aTHX_ a,b,c,d)
 #     define glob_2number(a)                    S_glob_2number(aTHX_ a)
 #     define glob_assign_glob(a,b,c)            S_glob_assign_glob(aTHX_ a,b,c)
+#     define mg_propagate_also_vstring(a,b)     S_mg_propagate_also_vstring(aTHX_ a,b)
+#     define mg_unpropagate_vstring(a)          S_mg_unpropagate_vstring(aTHX_ a)
 #     define not_a_number(a)                    S_not_a_number(aTHX_ a)
 #     define not_incrementable(a)               S_not_incrementable(aTHX_ a)
 #     define ptr_table_find                     S_ptr_table_find

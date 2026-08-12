@@ -124,6 +124,9 @@ enum MagicShape {
  * overlap with the set above. */
 #define MGv2f_ALWAYS_WEAK_AUXSV (1<<17)
 
+/* Flag constants passed to sv_hook_add() */
+#define MGv2p_NO_CREATE_VALUEMAGIC (1<<24)   /* implementation private */
+
 /*
 =for apidoc Am|U8|MgFLAGS|MAGIC *mg
 Returns the flags bitfield from the given Magic v2 instance. This must only be

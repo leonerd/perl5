@@ -4820,14 +4820,6 @@ SVt_PVMG_common:
                 assert(!(SvFLAGS(dsv) & SVf_POK)); 
             }
         }
-
-        {
-            const char *vstr_pv;
-            STRLEN vstr_len;
-            if ((vstr_pv = SvVSTRING(ssv, vstr_len))) {
-                sv_vstring_apply(dsv, vstr_pv, vstr_len);
-            }
-        }
     }
     else if (sflags & (SVp_IOK|SVp_NOK)) {
         (void)SvOK_off(dsv);
@@ -4851,7 +4843,7 @@ SVt_PVMG_common:
         SvTAINT(dsv);
 
     if (src_has_valuemagic)
-        mg_propagate(ssv, dsv);
+        mg_propagate_also_vstring(ssv, dsv);
 }
 
 /* A helper for newSVsv_flags_NN, which does the heavy lifting for
@@ -6045,7 +6037,9 @@ Perl_sv_force_normal_flags(pTHX_ SV *const sv, const U32 flags)
          * body. */
         SvREFCNT_dec_NN(temp);
     }
-    else if (SvVOK(sv)) sv_unmagic(sv, PERL_MAGIC_vstring);
+    else if (SvMAGICAL(sv)) {
+        mg_unpropagate_vstring(sv);
+    }
 }
 
 /*
@@ -6589,7 +6583,7 @@ bad_shape:
         MgFLAGS(mg) |= MGv2f_REFCOUNTED_AUXSV;
 
     if(funcs->shape == MGv2s_SCALARVALUE)
-        if(!PL_valuemagic_annotations) {
+        if(!PL_valuemagic_annotations && !(flags & MGv2p_NO_CREATE_VALUEMAGIC)) {
             PL_valuemagic_annotations = newSV_type(SVt_PVMG);
         }
 
@@ -6604,6 +6598,10 @@ Perl_mgv2_copy(pTHX_ const MAGIC *smg, MAGIC *dmg)
     MgFLAGS(dmg) = MgFLAGS(smg);
     MgPRIV(dmg)  = MgPRIV(smg);
     MgAUXSV_set(dmg, MgAUXSV(smg));
+
+    /* Normally this wouldn't matter but we need to ensure that copied vstring
+     * values keep their hacked-up PERL_MAGIC_vstring value */
+    dmg->mg_type = smg->mg_type;
 
     void *sptr = MgPTR(smg);
     STRLEN slen = MgPTRLEN(smg);
@@ -6892,6 +6890,29 @@ S_filter_mgv2_scalarvalue(pTHX_ MAGIC *mg, const void *key)
 }
 
 void
+S_mg_propagate_also_vstring(pTHX_ SV *ssv, SV *dsv)
+{
+    PERL_ARGS_ASSERT_MG_PROPAGATE_ALSO_VSTRING;
+
+    mg_propagate_common(ssv, dsv, true);
+}
+
+static bool
+S_filter_mgv2_vstring(pTHX_ MAGIC *mg, const void *key)
+{
+    PERL_UNUSED_ARG(key);
+    return mg->mg_type == PERL_MAGIC_vstring;
+}
+
+void
+S_mg_unpropagate_vstring(pTHX_ SV *sv)
+{
+    PERL_ARGS_ASSERT_MG_UNPROPAGATE_VSTRING;
+
+    S_sv_magicv2_remove(aTHX_ sv, &S_filter_mgv2_vstring, NULL);
+}
+
+void
 Perl_mg_unpropagate(pTHX_ SV *sv)
 {
     PERL_ARGS_ASSERT_MG_UNPROPAGATE;
@@ -6917,6 +6938,19 @@ Perl_sv_has_valuemagic(pTHX_ const SV *sv)
 {
     PERL_UNUSED_ARG(sv);
     return false;
+}
+
+void
+S_mg_propagate_also_vstring(pTHX_ SV *ssv, SV *dsv)
+{
+    PERL_UNUSED_ARG(ssv);
+    PERL_UNUSED_ARG(dsv);
+}
+
+void
+S_mg_unpropagate_vstring(pTHX_ SV *sv)
+{
+    PERL_UNUSED_ARG(sv);
 }
 
 void
@@ -19284,6 +19318,30 @@ Perl_sv_regex_global_pos_clear(pTHX_ SV *sv)
         mg->mg_len = -1;
 }
 
+static const struct ScalarValueMagicFunctions vstring_hook = {
+    .ver   = 2,
+    .shape = MGv2s_SCALARVALUE,
+    .flags = MGv2f_SCALARVALUE_AUTOPROPAGATE,
+    .debug_name = "vstring",
+};
+
+/*
+=for apidoc sv_is_vstring
+
+Returns true if the given SV has vstring magic.  It is better to call the
+C<SvVOK> macro, which is implemented using this function.
+
+=cut
+*/
+
+bool
+Perl_sv_is_vstring(pTHX_ const SV *sv)
+{
+    PERL_ARGS_ASSERT_SV_IS_VSTRING;
+
+    return (bool)sv_magicv2_find_by_funcs(sv, (const struct MagicFunctions *)&vstring_hook);
+}
+
 /*
 =for apidoc sv_vstring_get
 
@@ -19305,11 +19363,11 @@ Perl_sv_vstring_get(pTHX_ SV * const sv, STRLEN *lenp)
 {
     PERL_ARGS_ASSERT_SV_VSTRING_GET;
 
-    MAGIC *mg = SvVSTRING_mg(sv);
+    MAGIC *mg = sv_magicv2_find_by_funcs(sv, (const struct MagicFunctions *)&vstring_hook);
     if(!mg) return NULL;
 
-    if(lenp) *lenp = mg->mg_len;
-    return mg->mg_ptr;
+    if(lenp) *lenp = MgPTRLEN(mg);
+    return (char *)MgPTR(mg);
 }
 
 /*
@@ -19326,8 +19384,22 @@ Perl_sv_vstring_apply(pTHX_ SV *sv, const char *vstr_pv, STRLEN vstr_len)
 {
     PERL_ARGS_ASSERT_SV_VSTRING_APPLY;
 
-    sv_magic(sv, NULL, PERL_MAGIC_vstring, vstr_pv, vstr_len);
+    MAGIC *mg = sv_magicv2_add(sv, (const struct MagicFunctions *)&vstring_hook,
+            MGv2p_NO_CREATE_VALUEMAGIC, /* do not create PL_valuemagic_annotations as we won't need it */
+            NULL);
+
+    mg_ptr_store(mg, vstr_pv, vstr_len);
     SvRMAGICAL_on(sv);
+
+    /* There's a lot of existing code on CPAN and elsewhere that predates any
+     * standard APIs to inspect vstrings, so attempts to manually walk the
+     * magic chain and look at the ->mg_ptr field of any magic whose
+     * ->mg_type is 'V'. In order to not break all of that, we'll overwrite
+     * the type value in the MAGIC structure here.
+     * Additionally, this lets us identify vstring magic to remove it
+     * specially.
+     */
+    mg->mg_type = PERL_MAGIC_vstring;
 }
 
 /*

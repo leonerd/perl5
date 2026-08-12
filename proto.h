@@ -7097,6 +7097,13 @@ Perl_sv_insert_flags(pTHX_ SV * const bigstr, const STRLEN offset, const STRLEN 
 #define PERL_ARGS_ASSERT_SV_INSERT_FLAGS        \
         Perl_assert_aTHX; assert(bigstr); assert(little)
 
+PERL_CALLCONV bool
+Perl_sv_is_vstring(pTHX_ const SV *sv)
+        Perl_attribute_nonnull_aTHX
+        Perl_attribute_nonnull(pTHX_1);
+#define PERL_ARGS_ASSERT_SV_IS_VSTRING          \
+        Perl_assert_aTHX; assert(sv)
+
 PERL_CALLCONV int
 Perl_sv_isa(pTHX_ SV *sv, const char * const name)
         Perl_attribute_nonnull_aTHX
@@ -9143,6 +9150,14 @@ Perl_mg_propagate(pTHX_ SV *ssv, SV *dsv)
         Perl_attribute_nonnull(pTHX_1)
         __attribute__visibility__("hidden");
 # define PERL_ARGS_ASSERT_MG_PROPAGATE          \
+        Perl_assert_aTHX; assert(ssv)
+
+PERL_CALLCONV void
+Perl_mg_propagate_common(pTHX_ SV *ssv, SV *dsv, bool also_vstring)
+        Perl_attribute_nonnull_aTHX
+        Perl_attribute_nonnull(pTHX_1)
+        __attribute__visibility__("hidden");
+# define PERL_ARGS_ASSERT_MG_PROPAGATE_COMMON   \
         Perl_assert_aTHX; assert(ssv)
 
 PERL_CALLCONV void
@@ -13649,6 +13664,21 @@ S_glob_assign_glob(pTHX_ SV * const dsv, SV * const ssv, const int dtype)
         Perl_attribute_nonnull(pTHX_2);
 # define PERL_ARGS_ASSERT_GLOB_ASSIGN_GLOB      \
         Perl_assert_aTHX; assert(dsv); assert(ssv)
+
+static void
+S_mg_propagate_also_vstring(pTHX_ SV *ssv, SV *dsv)
+        Perl_attribute_nonnull_aTHX
+        Perl_attribute_nonnull(pTHX_1)
+        Perl_attribute_nonnull(pTHX_2);
+# define PERL_ARGS_ASSERT_MG_PROPAGATE_ALSO_VSTRING \
+        Perl_assert_aTHX; assert(ssv); assert(dsv)
+
+static void
+S_mg_unpropagate_vstring(pTHX_ SV *sv)
+        Perl_attribute_nonnull_aTHX
+        Perl_attribute_nonnull(pTHX_1);
+# define PERL_ARGS_ASSERT_MG_UNPROPAGATE_VSTRING \
+        Perl_assert_aTHX; assert(sv)
 
 static void
 S_not_a_number(pTHX_ SV * const sv)
